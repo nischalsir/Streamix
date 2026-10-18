@@ -276,6 +276,23 @@ class QueueManager(
         ) == null
     }
 
+    /**
+     * Replace the queue with a single item, keeping the current bitrate limit. Used to change Live TV channels.
+     *
+     * @return an error of type [PlayerException] or null on success.
+     */
+    suspend fun playItem(itemId: UUID): PlayerException? {
+        val maxStreamingBitrate = (getCurrentMediaSourceOrNull() as? RemoteJellyfinMediaSource)?.maxStreamingBitrate
+        currentQueue = listOf(itemId)
+        currentQueueIndex = 0
+        resetPlaybackFallback()
+        return startRemotePlayback(
+            itemId = itemId,
+            mediaSourceId = null,
+            maxStreamingBitrate = maxStreamingBitrate,
+        )
+    }
+
     fun hasPrevious(): Boolean = currentQueue.isNotEmpty() && currentQueueIndex > 0
 
     fun hasNext(): Boolean = currentQueue.isNotEmpty() && currentQueueIndex < currentQueue.lastIndex

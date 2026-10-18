@@ -92,6 +92,7 @@ import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import timber.log.Timber
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -646,6 +647,22 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application),
         viewModelScope.launch {
             queueManager.next()
         }
+    }
+
+    /**
+     * Switch to another Live TV channel: close the current live stream on the server (tuners and
+     * IPTV providers often allow only a few at once), then tune the new one.
+     *
+     * @return an error of type [PlayerException] or null on success.
+     */
+    suspend fun switchChannel(channelId: UUID): PlayerException? {
+        cancelFallbackRetry()
+        reportPlaybackStop()
+        playerOrNull?.run {
+            stop()
+            clearMediaItems()
+        }
+        return queueManager.playItem(channelId)
     }
 
     fun skipMediaSegment(mediaSegmentDto: MediaSegmentDto?) {

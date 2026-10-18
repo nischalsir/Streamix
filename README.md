@@ -27,7 +27,7 @@ It was built for a **TCL 43V6C (Google TV, 2 GB RAM)** and tuned so a budget TV 
 </p>
 
 <p align="center">
-  <img src="docs/splash.png" alt="Streamix splash screen with developer credits" width="49%">
+  <img src="docs/splash.png" alt="Streamix splash screen" width="49%">
   <img src="docs/connect.png" alt="Connect to server screen" width="49%">
 </p>
 
@@ -48,10 +48,11 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 | **Every subtitle type** | SRT, WebVTT, TTML, styled ASS/SSA (libass), PGS (Blu-ray), VobSub (DVD), DVB and MP4 text, with a theater style: white text, soft shadow, no box. |
 | **Profile-picture login** | Login shows your users' profile pictures over your server's poster-collage background. |
 | **Remote-first player** | ◀ ▶ seek 10 s instantly, holding them scrubs with thumbnails, OK plays/pauses, Back hides the controls and then exits. |
-| **Animated splash** | The ring draws itself around the logo and the play button zooms in, then it fades into your home screen once that has loaded (press OK to skip). |
+| **Live TV** | Your server's TV channels (a tuner or an IPTV / M3U playlist) in a clean grid of channel logos. OK starts a channel straight away, its logo shows while it tunes, and ▲ ▼ or CH+ / CH− flip channels like a TV box. |
+| **Animated splash** | Three colour streams glide in and merge into the Streamix play arrow, then it fades into your home screen once that has loaded (press OK to skip). |
 | **Updates itself** | Streamix checks GitHub for new releases, downloads the update and installs it, all from the TV. No USB drive needed after the first install. |
 | **Simple settings** | The TV shows only settings a viewer needs, in plain words. Technical options keep sensible defaults and stay reachable from a computer. |
-| **Everything else from Jellyfin** | Live TV, music, books, Quick Connect, multiple servers, playback speed, chapter skip, intro/outro skip, trickplay thumbnails, downloads. |
+| **Everything else from Jellyfin** | TV guide and recordings, music, books, Quick Connect, multiple servers, playback speed, chapter skip, intro/outro skip, trickplay thumbnails. |
 
 ---
 
@@ -64,8 +65,8 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 
 ## 2. Install it on your TV from a USB drive
 
-1. Download `Streamix-v1.0.0.apk` from the [latest release](https://github.com/nischalsir/Streamix/releases/latest)
-   and copy it to the USB drive.
+1. Download the APK (`Streamix-v1.2.0.apk` or newer) from the
+   [latest release](https://github.com/nischalsir/Streamix/releases/latest) and copy it to the USB drive.
 2. On the TV, install a file manager from the Play Store: **File Commander** or **FX File Explorer**.
 3. Allow that file manager to install apps:
    1. **Settings → System → About**, then select **Android TV OS build** 7 times until it says you're a developer.
@@ -183,7 +184,37 @@ TV settings to check (TCL Google TV): **Settings → Display & Sound → Audio o
 - **Change the look** (size, colour, background): **Settings → Streamix Settings → Subtitle size and colour** opens the TV's caption
   settings. Once you turn those on, they replace Streamix's theater style.
 
-## 7. Using the remote
+## 7. Live TV
+
+Streamix plays whatever Live TV your Jellyfin server has: a TV tuner (HDHomeRun and others) or an
+**IPTV playlist** (M3U).
+
+<p align="center">
+  <img src="docs/livetv.png" alt="Live TV channel grid" width="49%">
+  <img src="docs/livetv-player.png" alt="Watching a channel, with the channel banner" width="49%">
+</p>
+
+### Add channels on the server
+
+1. **Dashboard → Live TV → Tuner devices → +**.
+2. For IPTV choose **M3U Tuner** and paste the playlist address (for example a country list from
+   [iptv-org](https://github.com/iptv-org/iptv)), then **Save**. Channels appear after a minute.
+3. *(Optional)* For programme names and the guide: **Dashboard → Live TV → TV guide data providers → +** →
+   **XMLTV**, and give it an XMLTV file or address that matches your channels.
+
+### Watch on the TV
+
+- **Home → My Media → Live TV**. Without guide data it opens on **Channels**; with a guide, **Programs** shows what's on now.
+- Press **OK** on a channel (in the grid or in the **Guide**) to start it. Its logo and name show while it tunes,
+  then a banner shows the channel for a few seconds.
+- **▲ / ▼** (or **CH+ / CH−**) flip to the next or previous channel. Press several times quickly to jump further;
+  Streamix tunes once you stop.
+- **OK** shows the player controls, **Back** returns to the channel grid.
+
+> Tuning takes a few seconds: the server opens the stream and the IPTV provider sends the first video. Channels
+> marked **[Geo-blocked]** in the list only play from their own country, and free IPTV streams sometimes go offline.
+
+## 8. Using the remote
 
 | Where | Button | Action |
 |---|---|---|
@@ -192,12 +223,14 @@ TV settings to check (TCL Google TV): **Settings → Display & Sound → Audio o
 | Anywhere | **Back** | Go back. From the home screen, leave the app |
 | Player, controls hidden | **◀ / ▶** | Jump back / forward 10 s |
 | Player, controls hidden | **OK / ▲ / ▼** | Show controls |
+| Live TV, controls hidden | **▲ / ▼** | Next / previous channel |
+| Live TV | **CH+ / CH−** | Next / previous channel |
 | Player, time bar focused | **◀ / ▶** (hold) | Scrub with thumbnails, then release to jump |
 | Player, controls showing | **Back** | Hide controls. Press again to stop playback |
 | Player | **⏯ / ⏩ / ⏪** | Play/pause, fast-forward, rewind |
 | Splash | **OK** | Skip the rest of the splash once the app has loaded |
 
-## 8. Making it as smooth as possible
+## 9. Making it as smooth as possible
 
 Streamix already does the heavy lifting, and a few TV and server settings help further:
 
@@ -226,6 +259,8 @@ Streamix already does the heavy lifting, and a few TV and server settings help f
 | **Video pauses to load** | **Settings → Streamix Settings → Buffering → More** (or **Most** for big 4K files on weak Wi-Fi). |
 | **"Update now" does nothing** | Allow Streamix to install apps: Settings → Apps → Security & restrictions → Unknown sources → Streamix. |
 | **"Playback error" / video won't start** | The server couldn't read the file. Check Dashboard → Logs: `EBML header parsing failed` or `ffprobe failed` means the file is damaged or still downloading. Re-copy it and rescan the library. |
+| **A channel says "isn't available right now"** | The stream is offline or geo-blocked. Press ▲ or ▼ to try another. If no channel plays, check **Dashboard → Live TV** on the server. |
+| **Live TV guide is empty** | The playlist has no programme data. Add an XMLTV guide: [Add channels on the server](#add-channels-on-the-server). |
 | **Can't install the update** | The new APK must be signed with the same key as the installed one. If you built your own copy, uninstall the old one first. |
 
 ---
@@ -257,8 +292,10 @@ The APK is written to `app/build/outputs/apk/libre/release/Streamix-v<version>-l
 - `WebViewFragment.kt`, `assets/native/nativeshell.js`, `assets/native/streamix.css`: TV layout, splash hand-off,
   login detection, TV performance and login styling.
 - `PlayerFragment.kt`, `DisplayModeHelper.kt`: remote controls, refresh-rate matching, theater subtitles.
+- `LiveTvController.kt`, `fragment_player.xml`: Live TV tuning card, channel banner and channel flipping.
 - `StreamixRenderersFactory.kt`, `DeviceProfileBuilder.kt`: audio passthrough switch, wider audio and subtitle direct play.
-- Branding: logo, launcher icons, TV banner, colours, app name.
+- Branding: logo, launcher icons, TV banner, colours, app name. The wordmark is set in
+  [Unbounded](https://github.com/googlefonts/unbounded) (SIL Open Font License).
 
 ## Credits and license
 

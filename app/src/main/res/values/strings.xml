@@ -132,6 +132,12 @@
     <string name="pref_tv_subtitle_style">Subtitle size and colour</string>
     <string name="pref_tv_subtitle_style_summary">Opens the TV\'s caption settings</string>
     <string name="pref_category_updates">Updates</string>
+    <string name="live_tv_tuning">Tuning…</string>
+    <string name="live_tv_unavailable">This channel isn\'t available right now. Press ▲ or ▼ to try another.</string>
+    <string name="live_tv_badge">LIVE</string>
+    <string name="live_tv_channel_number">Channel %1$s</string>
+    <string name="live_tv_channel_position">Channel %1$d of %2$d</string>
+    <string name="live_tv_hint">▲ ▼  Change channel</string>
     <string name="pref_check_updates">Check for updates</string>
     <string name="pref_check_updates_summary">You have version %1$s</string>
     <string name="update_checking">Checking for updates…</string>

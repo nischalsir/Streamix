@@ -24,6 +24,8 @@ data class PlayOptions(
     val audioStreamIndex: Int?,
     val subtitleStreamIndex: Int?,
     val playFromDownloads: Boolean?,
+    /** Set when the first item is a Live TV channel, so the player can show it while it tunes */
+    val liveTvChannel: LiveTvChannelInfo? = null,
 ) : Parcelable {
     companion object {
         fun fromJson(json: String): PlayOptions? = try {
@@ -36,6 +38,13 @@ data class PlayOptions(
                 audioStreamIndex = jsonObject["audioStreamIndex"]?.jsonPrimitive?.contentOrNull?.toIntOrNull(),
                 subtitleStreamIndex = jsonObject["subtitleStreamIndex"]?.jsonPrimitive?.contentOrNull?.toIntOrNull(),
                 playFromDownloads = false,
+                liveTvChannel = jsonObject["liveTvChannel"]?.jsonObject?.let { channel ->
+                    LiveTvChannelInfo(
+                        name = channel["name"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+                        number = channel["number"]?.jsonPrimitive?.contentOrNull,
+                        imageTag = channel["imageTag"]?.jsonPrimitive?.contentOrNull,
+                    )
+                },
             )
         } catch (e: Exception) {
             Timber.e(e, "Failed to parse playback options: %s", json)
@@ -43,3 +52,10 @@ data class PlayOptions(
         }
     }
 }
+
+@Parcelize
+data class LiveTvChannelInfo(
+    val name: String,
+    val number: String?,
+    val imageTag: String?,
+) : Parcelable

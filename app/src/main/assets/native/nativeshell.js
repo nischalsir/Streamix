@@ -100,6 +100,11 @@ if (isTv) {
         );
         cards.forEach((card) => {
             card.setAttribute('data-streamix-art', '1');
+            // Live TV has no artwork of its own; it gets a designed tile instead (see streamix.css)
+            if (card.getAttribute('data-collectiontype') === 'livetv') {
+                card.classList.add('streamixLiveTvTile');
+                return;
+            }
             pickFromLibrary(card.getAttribute('data-id')).then((pick) => {
                 if (!pick) return;
                 const url = libraryArtUrl(pick, 720);
@@ -233,9 +238,11 @@ if (isTv) {
     const updateBrowseState = () => {
         const page = document.querySelector('.mainAnimatedPage:not(.hide)');
         const detail = !!page && page.classList.contains('itemDetailPage');
-        const browsing = !!page && !detail && !!page.querySelector('.card[data-id]');
+        const liveTv = !!page && page.classList.contains('liveTvPage');
+        const browsing = !!page && !detail && !liveTv && !!page.querySelector('.card[data-id]');
         root.classList.toggle('streamix-browse', browsing);
         root.classList.toggle('streamix-detail', detail);
+        root.classList.toggle('streamix-livetv', liveTv);
         if (browsing || detail) backdrop.refresh();
         if (detail) {
             skipTextLinks();
@@ -248,19 +255,52 @@ if (isTv) {
         }
     };
 
-    // Coming back from the player, settings or downloads: put remote focus on Play/Resume or the
-    // first item, so the next key press does something visible
+    // Coming back from the player, settings or downloads: put remote focus on Play/Resume, the item
+    // that was picked (say, the channel that was on), or the first item, so the next key press does
+    // something visible
+    let lastPicked = null;
     window.addEventListener('focus', () => setTimeout(() => {
         const active = document.activeElement;
         if (active && active !== document.body && active !== document.documentElement) return;
         const page = document.querySelector('.mainAnimatedPage:not(.hide)');
-        const target = page && (page.querySelector('.btnPlay:not(.hide), .btnResume:not(.hide)')
-            || page.querySelector('.card[data-id], .emby-button:not(.hide), a.listItem-border'));
+        if (!page) return;
+        const picked = lastPicked && lastPicked.isConnected && page.contains(lastPicked)
+            && lastPicked.offsetParent !== null ? lastPicked : null;
+        const target = page.querySelector('.btnPlay:not(.hide), .btnResume:not(.hide)') || picked
+            || page.querySelector('.card[data-id], .emby-button:not(.hide), a.listItem-border');
         if (target) target.focus();
     }, 120));
 
+    // Channel cards keep blank lines for a channel number and the programme on now; without guide
+    // data they're empty, so mark them and let the CSS fold them away. IPTV lists also tag names with
+    // the stream's resolution ("Kantipur TV (1080p)"), which only crowds the name.
+    const QUALITY_TAG = /\s*\((?:\d{3,4}[pi]|4K|UHD)\)/i;
+    const tidyChannelCards = () => {
+        document.querySelectorAll('.card[data-type="TvChannel"]:not([data-streamix-tidy])').forEach((card) => {
+            card.setAttribute('data-streamix-tidy', '1');
+            card.querySelectorAll('.cardFooter .cardText').forEach((line) => {
+                if (!line.textContent.trim()) line.classList.add('streamixEmpty');
+            });
+            const name = card.querySelector('.cardText-first bdi');
+            if (name && QUALITY_TAG.test(name.textContent)) {
+                name.textContent = name.textContent.replace(QUALITY_TAG, '').trim();
+            }
+        });
+    };
+
     document.addEventListener('focusin', (e) => {
         if (root.classList.contains('streamix-detail')) skipTextLinks();
+        if (root.classList.contains('streamix-livetv')) tidyChannelCards();
+        // Live TV: OK on a channel (a card or a row in the guide) starts watching it, like a TV,
+        // instead of opening its info page
+        const channel = isTv && e.target.closest && e.target.closest('[data-type="TvChannel"][data-action="link"]');
+        if (channel) {
+            channel.setAttribute('data-action', 'play');
+            // Guide rows leave this out, and the player won't take an item without it
+            if (!channel.hasAttribute('data-mediatype')) channel.setAttribute('data-mediatype', 'Video');
+        }
+        const picked = e.target.closest && e.target.closest('.card[data-id], .guide-channelHeaderCell');
+        if (picked) lastPicked = picked;
         const card = e.target.closest && e.target.closest('.card[data-id]');
         if (!card) return;
         // Checked here too: the page-shown event can fire before this script is listening
@@ -303,13 +343,32 @@ if (isTv) {
         setTimeout(relabelSettingsMenu, 300);
     };
 
-    // Libraries open on "Suggestions"; when that's empty, show the full list (Shows / Movies) instead
+    // Libraries open on "Suggestions"; when that's empty, show the full list (Shows / Movies) instead.
+    // Live TV opens on "Programs", which is empty without guide data; show the channels then.
     const skipEmptySuggestions = () => {
         if (!isTv) return;
         const page = document.querySelector('.mainAnimatedPage.withTabs:not(.hide)');
-        const suggestions = page && page.querySelector('#suggestionsTab.is-active');
+        if (!page) return;
+        const tabs = document.querySelectorAll('.skinHeader .headerTabs .emby-tab-button');
+        if (page.classList.contains('liveTvPage')) {
+            const programs = page.querySelector('.pageTabContent.is-active[data-index="0"]');
+            if (!programs || programs.querySelector('.card')) return;
+            const channelsTab = [...tabs].find((tab) => tab.getAttribute('data-index') === '2');
+            if (!channelsTab) return;
+            channelsTab.click();
+            setTimeout(tidyChannelCards, 400);
+            // Land on the first channel once the grid is in
+            let tries = 0;
+            const focusFirstChannel = setInterval(() => {
+                const first = page.querySelector('.pageTabContent.is-active .card[data-id]');
+                if (first || ++tries > 20) clearInterval(focusFirstChannel);
+                if (first) first.focus();
+            }, 150);
+            return;
+        }
+        const suggestions = page.querySelector('#suggestionsTab.is-active');
         if (!suggestions || suggestions.querySelector('.card')) return;
-        const firstTab = document.querySelector('.skinHeader .headerTabs .emby-tab-button');
+        const firstTab = tabs[0];
         if (firstTab && !firstTab.classList.contains('emby-tab-button-active')) firstTab.click();
     };
 

@@ -179,8 +179,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Takes over from the black system splash with the Streamix splash: the animated intro (ring draws
-     * itself, play button zooms in), then the logo glides up and the wordmark fades in. The overlay
+     * Takes over from the black system splash with the Streamix splash: the animated intro (three streams
+     * glide in and merge into the play arrow), then the logo glides up and the wordmark fades in. The overlay
      * stays until [onContentReady] (or a time limit).
      */
     private fun setupSplash(splashScreen: SplashScreen, savedInstanceState: Bundle?) {
@@ -407,7 +407,7 @@ class MainActivity : AppCompatActivity() {
     private companion object {
         const val SYSTEM_SPLASH_FADE_MS = 220L
 
-        /** Length of @drawable/ic_splash_animated */
+        /** When the streams in @drawable/ic_splash_animated have landed (its light sweep ends during the glide) */
         const val SPLASH_INTRO_MS = 1000L
         const val SPLASH_FALLBACK_START_MS = 400L
         const val SPLASH_GLOW_MS = 700L

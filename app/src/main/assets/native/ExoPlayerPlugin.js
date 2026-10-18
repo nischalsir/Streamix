@@ -25,6 +25,23 @@ export class ExoPlayerPlugin {
     async play(options) {
         // Sanitize input
         options.ids = options.items.map(item => item.Id);
+        // A Live TV channel takes a few seconds to tune; pass what the player shows meanwhile.
+        // Channels started from a card only carry their id, so look the rest up (a quick local request).
+        let first = options.items[options.startIndex || 0];
+        if (first && first.Type === 'TvChannel' && !first.Name && window.ApiClient) {
+            try {
+                first = await window.ApiClient.getItem(window.ApiClient.getCurrentUserId(), first.Id);
+            } catch (e) {
+                // The player looks the channel up itself
+            }
+        }
+        if (first && first.Type === 'TvChannel') {
+            options.liveTvChannel = {
+                name: first.Name || '',
+                number: first.ChannelNumber || first.Number || null,
+                imageTag: (first.ImageTags && first.ImageTags.Primary) || null,
+            };
+        }
         delete options.items;
 
         const preferences = {

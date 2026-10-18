@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single-colour Streamix mark for themed launcher icons -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.5"
+        android:scaleY="0.5"
+        android:translateX="35.958"
+        android:translateY="29">
+        <group>
+            <clip-path android:pathData="M-12,29C21.67,39 45.55,42.7 76.6,50L154.48,68.3L400,-400L-400,-400L-400,29Z" />
+            <path
+                    android:fillColor="#FFFFFFFF"
+                    android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z" />
+        </group>
+        <group>
+            <clip-path android:pathData="M-12,71C21.67,61 45.55,57.3 76.6,50L154.48,31.7L400,400L-400,400L-400,71Z" />
+            <path
+                    android:fillColor="#FFFFFFFF"
+                    android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z" />
+        </group>
+        <group>
+            <clip-path android:pathData="M-12,35C21.67,45 45.55,42.7 76.6,50L400,50L76.6,50C45.55,57.3 21.67,55 -12,65Z" />
+            <path
+                    android:fillColor="#FFFFFFFF"
+                    android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z" />
+        </group>
+    </group>
+</vector>

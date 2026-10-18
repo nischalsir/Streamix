@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Streamix intro (1 s). Ends on exactly the same frame as @drawable/ic_splash.
-    - The ring draws itself from the top, round the left, the bottom and up the right side,
-      spinning a quarter turn as it goes.
-    - The play button zooms in with a small overshoot.
-    - The pink dot pops in last, in the ring's gap.
+    Streamix intro (1.2 s): three streams glide in from the left - the outer two converging from
+    above and below - and merge into the play arrow, while the mark settles from 90% to full size.
+    A soft light sweeps across it once they have landed.
 -->
 <animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt">
@@ -15,158 +13,273 @@
             android:viewportWidth="108"
             android:viewportHeight="108">
             <group
-                android:name="ring"
+                android:name="zoom"
                 android:pivotX="54"
                 android:pivotY="54"
-                android:rotation="90">
-                <path
-                    android:name="ring_path"
-                    android:pathData="M75.65,41.5 A25,25 0 1,1 54,29"
-                    android:strokeWidth="6"
-                    android:strokeLineCap="round"
-                    android:trimPathStart="1">
-                    <aapt:attr name="android:strokeColor">
-                        <gradient
-                            android:endX="80"
-                            android:endY="82"
-                            android:startX="30"
-                            android:startY="28"
-                            android:type="linear">
-                            <item
-                                android:color="#FF64D2FF"
-                                android:offset="0" />
-                            <item
-                                android:color="#FF7D5CFF"
-                                android:offset="0.5" />
-                            <item
-                                android:color="#FFFF4FA3"
-                                android:offset="1" />
-                        </gradient>
-                    </aapt:attr>
-                </path>
+                android:scaleX="0.9"
+                android:scaleY="0.9">
                 <group
-                    android:name="dot"
-                    android:pivotX="66.5"
-                    android:pivotY="32.35"
-                    android:scaleX="0"
-                    android:scaleY="0">
-                    <path
-                        android:fillColor="#FFFF4FA3"
-                        android:pathData="M63.1,32.35 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0z" />
+                    android:scaleX="0.52"
+                    android:scaleY="0.52"
+                    android:translateX="35.236"
+                    android:translateY="28">
+                    <group
+                        android:name="stream_top">
+                        <clip-path android:pathData="M-12,29C21.67,39 45.55,42.7 76.6,50L154.48,68.3L400,-400L-400,-400L-400,29Z" />
+                        <path
+                                android:name="stream_top_path"
+                                android:fillAlpha="0"
+                                android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z">
+                                <aapt:attr name="android:fillColor">
+                                    <gradient
+                                        android:endX="86.603"
+                                        android:endY="40"
+                                        android:startX="0"
+                                        android:startY="0"
+                                        android:type="linear">
+                                        <item
+                                            android:color="#FF45D4FF"
+                                            android:offset="0" />
+                                        <item
+                                            android:color="#FF6A7BFF"
+                                            android:offset="1" />
+                                    </gradient>
+                                </aapt:attr>
+                            </path>
+                    </group>
+                    <group
+                        android:name="stream_bot">
+                        <clip-path android:pathData="M-12,71C21.67,61 45.55,57.3 76.6,50L154.48,31.7L400,400L-400,400L-400,71Z" />
+                        <path
+                                android:name="stream_bot_path"
+                                android:fillAlpha="0"
+                                android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z">
+                                <aapt:attr name="android:fillColor">
+                                    <gradient
+                                        android:endX="86.603"
+                                        android:endY="100"
+                                        android:startX="0"
+                                        android:startY="60"
+                                        android:type="linear">
+                                        <item
+                                            android:color="#FFFF4F9A"
+                                            android:offset="0" />
+                                        <item
+                                            android:color="#FFFF8A5C"
+                                            android:offset="1" />
+                                    </gradient>
+                                </aapt:attr>
+                            </path>
+                    </group>
+                    <group
+                        android:name="stream_mid">
+                        <clip-path android:pathData="M-12,35C21.67,45 45.55,42.7 76.6,50L400,50L76.6,50C45.55,57.3 21.67,55 -12,65Z" />
+                        <path
+                                android:name="stream_mid_path"
+                                android:fillAlpha="0"
+                                android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z">
+                                <aapt:attr name="android:fillColor">
+                                    <gradient
+                                        android:endX="86.603"
+                                        android:endY="70"
+                                        android:startX="0"
+                                        android:startY="30"
+                                        android:type="linear">
+                                        <item
+                                            android:color="#FF7C5CFF"
+                                            android:offset="0" />
+                                        <item
+                                            android:color="#FFC25CFF"
+                                            android:offset="1" />
+                                    </gradient>
+                                </aapt:attr>
+                            </path>
+                    </group>
+                    <group>
+                        <clip-path android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z" />
+                        <group
+                            android:name="sweep"
+                            android:translateX="-90">
+                            <path
+                                android:pathData="M0,-20 L26,-20 L6,120 L-20,120 Z">
+                                <aapt:attr name="android:fillColor">
+                                    <gradient
+                                        android:endX="26"
+                                        android:endY="50"
+                                        android:startX="-20"
+                                        android:startY="50"
+                                        android:type="linear">
+                                        <item
+                                            android:color="#00FFFFFF"
+                                            android:offset="0" />
+                                        <item
+                                            android:color="#73FFFFFF"
+                                            android:offset="0.5" />
+                                        <item
+                                            android:color="#00FFFFFF"
+                                            android:offset="1" />
+                                    </gradient>
+                                </aapt:attr>
+                            </path>
+                        </group>
+                    </group>
                 </group>
-            </group>
-            <group
-                android:name="play"
-                android:pivotX="53.4"
-                android:pivotY="54"
-                android:scaleX="0"
-                android:scaleY="0">
-                <path
-                    android:pathData="M48,44.2 L48,63.8 L64.2,54 Z"
-                    android:strokeWidth="4.6"
-                    android:strokeLineJoin="round">
-                    <aapt:attr name="android:fillColor">
-                        <gradient
-                            android:endX="66"
-                            android:endY="66"
-                            android:startX="46"
-                            android:startY="42"
-                            android:type="linear">
-                            <item
-                                android:color="#FFFFFFFF"
-                                android:offset="0" />
-                            <item
-                                android:color="#FFDCD6FF"
-                                android:offset="1" />
-                        </gradient>
-                    </aapt:attr>
-                    <aapt:attr name="android:strokeColor">
-                        <gradient
-                            android:endX="66"
-                            android:endY="66"
-                            android:startX="46"
-                            android:startY="42"
-                            android:type="linear">
-                            <item
-                                android:color="#FFFFFFFF"
-                                android:offset="0" />
-                            <item
-                                android:color="#FFDCD6FF"
-                                android:offset="1" />
-                        </gradient>
-                    </aapt:attr>
-                </path>
             </group>
         </vector>
     </aapt:attr>
-
-    <!-- Ring: draw from the top end, counter-clockwise, while turning a quarter turn -->
-    <target android:name="ring_path">
-        <aapt:attr name="android:animation">
-            <objectAnimator
-                android:duration="760"
-                android:interpolator="@android:interpolator/fast_out_slow_in"
-                android:propertyName="trimPathStart"
-                android:valueFrom="1"
-                android:valueTo="0"
-                android:valueType="floatType" />
-        </aapt:attr>
-    </target>
-    <target android:name="ring">
-        <aapt:attr name="android:animation">
-            <objectAnimator
-                android:duration="860"
-                android:interpolator="@android:interpolator/fast_out_slow_in"
-                android:propertyName="rotation"
-                android:valueFrom="90"
-                android:valueTo="0"
-                android:valueType="floatType" />
-        </aapt:attr>
-    </target>
-
-    <!-- Play button: zoom in with a little bounce -->
-    <target android:name="play">
+    <target android:name="zoom">
         <aapt:attr name="android:animation">
             <set>
                 <objectAnimator
-                    android:duration="520"
-                    android:interpolator="@android:anim/overshoot_interpolator"
+                    android:duration="900"
                     android:propertyName="scaleX"
-                    android:startOffset="220"
-                    android:valueFrom="0"
+                    android:startOffset="0"
+                    android:valueFrom="0.9"
                     android:valueTo="1"
-                    android:valueType="floatType" />
+                    android:valueType="floatType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:pathData="M0,0 C0.16,0.84 0.3,1 1,1" />
+                    </aapt:attr>
+                </objectAnimator>
                 <objectAnimator
-                    android:duration="520"
-                    android:interpolator="@android:anim/overshoot_interpolator"
+                    android:duration="900"
                     android:propertyName="scaleY"
-                    android:startOffset="220"
+                    android:startOffset="0"
+                    android:valueFrom="0.9"
+                    android:valueTo="1"
+                    android:valueType="floatType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:pathData="M0,0 C0.16,0.84 0.3,1 1,1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="stream_top">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="640"
+                    android:propertyName="translateX"
+                    android:startOffset="0"
+                    android:valueFrom="-46"
+                    android:valueTo="0"
+                    android:valueType="floatType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:pathData="M0,0 C0.16,0.84 0.3,1 1,1" />
+                    </aapt:attr>
+                </objectAnimator>
+                <objectAnimator
+                    android:duration="640"
+                    android:propertyName="translateY"
+                    android:startOffset="0"
+                    android:valueFrom="-10"
+                    android:valueTo="0"
+                    android:valueType="floatType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:pathData="M0,0 C0.16,0.84 0.3,1 1,1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="stream_top_path">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="320"
+                    android:interpolator="@android:interpolator/linear"
+                    android:propertyName="fillAlpha"
+                    android:startOffset="0"
                     android:valueFrom="0"
                     android:valueTo="1"
                     android:valueType="floatType" />
             </set>
         </aapt:attr>
     </target>
-
-    <!-- Dot: pops in last -->
-    <target android:name="dot">
+    <target android:name="stream_bot">
         <aapt:attr name="android:animation">
             <set>
                 <objectAnimator
-                    android:duration="240"
-                    android:interpolator="@android:anim/overshoot_interpolator"
-                    android:propertyName="scaleX"
-                    android:startOffset="740"
+                    android:duration="640"
+                    android:propertyName="translateX"
+                    android:startOffset="110"
+                    android:valueFrom="-46"
+                    android:valueTo="0"
+                    android:valueType="floatType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:pathData="M0,0 C0.16,0.84 0.3,1 1,1" />
+                    </aapt:attr>
+                </objectAnimator>
+                <objectAnimator
+                    android:duration="640"
+                    android:propertyName="translateY"
+                    android:startOffset="110"
+                    android:valueFrom="10"
+                    android:valueTo="0"
+                    android:valueType="floatType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:pathData="M0,0 C0.16,0.84 0.3,1 1,1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="stream_bot_path">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="320"
+                    android:interpolator="@android:interpolator/linear"
+                    android:propertyName="fillAlpha"
+                    android:startOffset="110"
                     android:valueFrom="0"
                     android:valueTo="1"
                     android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="stream_mid">
+        <aapt:attr name="android:animation">
+            <set>
                 <objectAnimator
-                    android:duration="240"
-                    android:interpolator="@android:anim/overshoot_interpolator"
-                    android:propertyName="scaleY"
-                    android:startOffset="740"
+                    android:duration="680"
+                    android:propertyName="translateX"
+                    android:startOffset="200"
+                    android:valueFrom="-64"
+                    android:valueTo="0"
+                    android:valueType="floatType">
+                    <aapt:attr name="android:interpolator">
+                        <pathInterpolator android:pathData="M0,0 C0.16,0.84 0.3,1 1,1" />
+                    </aapt:attr>
+                </objectAnimator>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="stream_mid_path">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="320"
+                    android:interpolator="@android:interpolator/linear"
+                    android:propertyName="fillAlpha"
+                    android:startOffset="200"
                     android:valueFrom="0"
                     android:valueTo="1"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="sweep">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="560"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"
+                    android:propertyName="translateX"
+                    android:startOffset="640"
+                    android:valueFrom="-90"
+                    android:valueTo="130"
                     android:valueType="floatType" />
             </set>
         </aapt:attr>

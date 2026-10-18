@@ -88,6 +88,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
     private val toolbar: Toolbar get() = playerControlsBinding.toolbar
     private val fullscreenSwitcher: ImageButton get() = playerControlsBinding.fullscreenSwitcher
     private var playerMenus: PlayerMenus? = null
+    private var liveTv: LiveTvController? = null
 
     private lateinit var playerFullscreenHelper: PlayerFullscreenHelper
     private lateinit var displayModeHelper: DisplayModeHelper
@@ -129,7 +130,9 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
         viewModel.playerState.observe(this) { playerState ->
             val isPlaying = viewModel.playerOrNull?.isPlaying == true
             requireActivity().window.keepScreenOn = isPlaying
-            loadingIndicator.isVisible = playerState == Player.STATE_BUFFERING
+            // While a Live TV channel tunes, its own card shows progress
+            loadingIndicator.isVisible = playerState == Player.STATE_BUFFERING && liveTv?.isTuning != true
+            liveTv?.onPlayerState(playerState)
         }
         viewModel.decoderType.observe(this) { type ->
             playerMenus?.updatedSelectedDecoder(type)
@@ -137,6 +140,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
         viewModel.error.observe(this) { message ->
             val safeMessage = message.ifEmpty { requireContext().getString(R.string.player_error_unspecific_exception) }
             requireContext().toast(safeMessage)
+            liveTv?.onError()
         }
         viewModel.queueManager.currentMediaSource.observe(this) { mediaSource ->
             if (mediaSource.selectedVideoStream?.isLandscape == false) {
@@ -168,12 +172,14 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
                 context.toast(R.string.player_error_invalid_play_options)
                 return@launch
             }
-            when (viewModel.queueManager.initializePlaybackQueue(playOptions, preferences)) {
+            val error = viewModel.queueManager.initializePlaybackQueue(playOptions, preferences)
+            when (error) {
                 is PlayerException.InvalidPlayOptions -> context.toast(R.string.player_error_invalid_play_options)
                 is PlayerException.NetworkFailure -> context.toast(R.string.player_error_network_failure)
                 is PlayerException.UnsupportedContent -> context.toast(R.string.player_error_unsupported_content)
                 null -> Unit // success
             }
+            if (error != null) liveTv?.onError()
         }
     }
 
@@ -249,6 +255,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
         playerView.subtitleView?.let(::applyTheaterSubtitleStyle)
 
         if (isTv) setupForTv()
+        setupLiveTv()
 
         playerLockScreenHelper = PlayerLockScreenHelper(this, playerBinding, orientationListener)
         playerGestureHelper = PlayerGestureHelper(this, playerBinding, playerLockScreenHelper)
@@ -283,6 +290,23 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
     }
 
     /**
+     * A Live TV channel gets its tuning card, channel banner and channel flipping.
+     */
+    private fun setupLiveTv() {
+        val playOptions = requireArguments().getParcelableCompat<PlayOptions>(Constants.EXTRA_MEDIA_PLAY_OPTIONS)
+        val channel = playOptions?.liveTvChannel ?: return
+        val channelId = playOptions.ids.getOrNull(playOptions.startIndex) ?: return
+        liveTv = LiveTvController(playerBinding, playerView, viewModel, viewLifecycleOwner.lifecycleScope).apply {
+            start(channelId, channel)
+        }
+        playerView.setControllerVisibilityListener(
+            PlayerView.ControllerVisibilityListener { visibility ->
+                liveTv?.onControlsVisibilityChanged(visibility == View.VISIBLE)
+            },
+        )
+    }
+
+    /**
      * White text with a soft shadow and no box, like the web theme's subtitles.
      * Skipped when the user has turned on their own caption style in the system settings.
      */
@@ -313,6 +337,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
      */
     fun onRemoteKeyEvent(event: KeyEvent): Boolean {
         if (!isTv || _playerBinding == null || viewModel.playerOrNull == null) return false
+        if (handleChannelKey(event)) return true
         if (!isRemoteNavigationKey(event.keyCode)) return false
         if (!playerView.useController || playerView.isControllerFullyVisible) return false
 
@@ -329,6 +354,24 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
                 else -> showControllerWithFocus(playerControlsBinding.exoPlayPause)
             }
         }
+        return true
+    }
+
+    /**
+     * Live TV: CH+/CH- always change channel, and so do up/down while the controls are hidden.
+     */
+    private fun handleChannelKey(event: KeyEvent): Boolean {
+        val liveTv = liveTv?.takeIf { it.isActive } ?: return false
+        val controlsHidden = !playerView.isControllerFullyVisible
+        val step = when (event.keyCode) {
+            KeyEvent.KEYCODE_CHANNEL_UP -> 1
+            KeyEvent.KEYCODE_CHANNEL_DOWN -> -1
+            KeyEvent.KEYCODE_DPAD_UP -> if (controlsHidden) 1 else 0
+            KeyEvent.KEYCODE_DPAD_DOWN -> if (controlsHidden) -1 else 0
+            else -> 0
+        }
+        if (step == 0) return false
+        if (event.action == KeyEvent.ACTION_DOWN) liveTv.zap(step)
         return true
     }
 
@@ -555,6 +598,8 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        liveTv?.release()
+        liveTv = null
         // Detach player from PlayerView
         playerView.player = null
 

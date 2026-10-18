@@ -1,26 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Monochrome Streamix mark for the status bar -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="60"
-    android:viewportHeight="60">
+    android:viewportWidth="24"
+    android:viewportHeight="24">
     <group
-        android:translateX="-24"
-        android:translateY="-24">
-        <path
-            android:pathData="M75.65,41.5 A25,25 0 1,1 54,29"
-            android:strokeWidth="6"
-            android:strokeColor="#FFFFFFFF"
-            android:strokeLineCap="round" />
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M63.1,32.35 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0z" />
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M48,44.2 L48,63.8 L64.2,54 Z"
-            android:strokeWidth="4.6"
-            android:strokeColor="#FFFFFFFF"
-            android:strokeLineJoin="round" />
+        android:scaleX="0.2"
+        android:scaleY="0.2"
+        android:translateX="4.783"
+        android:translateY="2">
+        <group>
+            <clip-path android:pathData="M-12,29C21.67,39 45.55,42.7 76.6,50L154.48,68.3L400,-400L-400,-400L-400,29Z" />
+            <path
+                    android:fillColor="#FFFFFFFF"
+                    android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z" />
+        </group>
+        <group>
+            <clip-path android:pathData="M-12,71C21.67,61 45.55,57.3 76.6,50L154.48,31.7L400,400L-400,400L-400,71Z" />
+            <path
+                    android:fillColor="#FFFFFFFF"
+                    android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z" />
+        </group>
+        <group>
+            <clip-path android:pathData="M-12,35C21.67,45 45.55,42.7 76.6,50L400,50L76.6,50C45.55,57.3 21.67,55 -12,65Z" />
+            <path
+                    android:fillColor="#FFFFFFFF"
+                    android:pathData="M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z" />
+        </group>
     </group>
 </vector>

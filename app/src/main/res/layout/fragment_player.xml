@@ -106,6 +106,164 @@
                 tools:progress="30" />
         </LinearLayout>
 
+        <!-- Live TV: the channel shown while it tunes -->
+        <LinearLayout
+            android:id="@+id/live_tv_tuning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/live_tv_tuning_logo"
+                android:layout_width="240dp"
+                android:layout_height="135dp"
+                android:background="@drawable/live_tv_logo_background"
+                android:padding="20dp"
+                android:scaleType="fitCenter"
+                tools:ignore="ContentDescription"
+                tools:src="@drawable/ic_live_tv_channel" />
+
+            <TextView
+                android:id="@+id/live_tv_tuning_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxWidth="720dp"
+                android:maxLines="1"
+                android:textColor="@android:color/white"
+                android:textSize="28sp"
+                tools:text="Kantipur TV" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ProgressBar
+                    android:id="@+id/live_tv_tuning_progress"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_marginEnd="10dp"
+                    android:indeterminateTint="@android:color/white" />
+
+                <TextView
+                    android:id="@+id/live_tv_tuning_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:maxWidth="720dp"
+                    android:text="@string/live_tv_tuning"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="17sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Live TV: which channel is on, shown for a few seconds and while flipping channels -->
+        <LinearLayout
+            android:id="@+id/live_tv_banner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="48dp"
+            android:layout_marginBottom="40dp"
+            android:background="@drawable/live_tv_banner_background"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="32dp"
+            android:paddingBottom="16dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/live_tv_banner_logo"
+                android:layout_width="128dp"
+                android:layout_height="72dp"
+                android:background="@drawable/live_tv_logo_background"
+                android:padding="10dp"
+                android:scaleType="fitCenter"
+                tools:ignore="ContentDescription"
+                tools:src="@drawable/ic_live_tv_channel" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/live_tv_badge_background"
+                        android:fontFamily="sans-serif-medium"
+                        android:letterSpacing="0.08"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:text="@string/live_tv_badge"
+                        android:textColor="@android:color/white"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/live_tv_banner_number"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:textColor="#B3FFFFFF"
+                        android:textSize="15sp"
+                        tools:text="Channel 8 of 24" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/live_tv_banner_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:ellipsize="end"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxWidth="640dp"
+                    android:maxLines="1"
+                    android:textColor="@android:color/white"
+                    android:textSize="24sp"
+                    tools:text="Kantipur TV" />
+
+                <TextView
+                    android:id="@+id/live_tv_banner_program"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxWidth="640dp"
+                    android:maxLines="1"
+                    android:textColor="#E6FFFFFF"
+                    android:textSize="16sp"
+                    android:visibility="gone"
+                    tools:text="Evening News" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/live_tv_hint"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+
         <ProgressBar
             android:id="@+id/loading_indicator"
             android:layout_width="64dp"
