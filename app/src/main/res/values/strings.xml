@@ -149,8 +149,11 @@
     <string name="update_permission_message">On the next screen, turn on Streamix (\"Allow from this source\"), then press Back to continue the update. You only need to do this once.</string>
     <string name="update_permission_open">Open settings</string>
     <string name="update_permission_manual">Open Settings &gt; Apps &gt; Security &amp; restrictions &gt; Unknown sources and turn on Streamix, then try again.</string>
-    <string name="pref_about_developer_title">Developed by Nischal Pandey</string>
-    <string name="pref_about_developer_summary">Instagram @nischal_sir · GitHub @nischalsir · nischalpandey.dev@gmail.com</string>
+    <string name="pref_about_developer">Developer</string>
+    <string name="pref_about_instagram">Instagram</string>
+    <string name="pref_about_github">GitHub</string>
+    <string name="pref_about_email">Email</string>
+    <string name="pref_about_version">Version</string>
     <string name="pref_exoplayer_network_buffer">Playback buffer size</string>
     <string name="network_buffer_auto">Auto</string>
     <string name="network_buffer_auto_description">Default buffer, suitable for most playback scenarios</string>

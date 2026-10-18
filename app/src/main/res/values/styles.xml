@@ -25,14 +25,4 @@
     <style name="ThemeOverlay.App.BackButton" parent="">
         <item name="colorControlNormal">?android:textColorPrimary</item>
     </style>
-
-    <!-- In-app splash credits -->
-    <style name="SplashCredit">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_gravity">center_horizontal</item>
-        <item name="android:textColor">#FFFFFFFF</item>
-        <item name="android:fontFamily">sans-serif</item>
-        <item name="android:includeFontPadding">false</item>
-    </style>
 </resources>

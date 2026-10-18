@@ -3,8 +3,9 @@
     <string name="app_name" translatable="false">Streamix</string>
     <string name="app_name_short" translatable="false">Streamix</string>
 
-    <!-- Splash credits -->
-    <string name="splash_developed_by" translatable="false">DEVELOPED BY</string>
-    <string name="splash_developer_name" translatable="false">NISCHAL PANDEY</string>
-    <string name="splash_developer_links" translatable="false">Instagram @nischal_sir   ·   GitHub @nischalsir   ·   nischalpandey.dev@gmail.com</string>
+    <!-- About Streamix -->
+    <string name="about_developer_name" translatable="false">Nischal Pandey</string>
+    <string name="about_instagram" translatable="false">@nischal_sir</string>
+    <string name="about_github" translatable="false">github.com/nischalsir</string>
+    <string name="about_email" translatable="false">nischalpandey.dev@gmail.com</string>
 </resources>

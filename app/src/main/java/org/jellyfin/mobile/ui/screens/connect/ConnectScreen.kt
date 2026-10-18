@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,7 @@ import org.jellyfin.mobile.events.ActivityEventHandler
 import org.jellyfin.mobile.ui.utils.CenterRow
 import org.jellyfin.mobile.ui.utils.isFocused
 import org.jellyfin.mobile.ui.utils.tvFocusScale
+import org.jellyfin.mobile.utils.isTvDevice
 import org.koin.compose.koinInject
 
 @Composable
@@ -61,10 +63,13 @@ fun ConnectScreen(
                         mainViewModel.switchServer(hostname)
                     },
                 )
-                StyledTextButton(
-                    onClick = { activityEventHandler.emit(ActivityEvent.OpenDownloads) },
-                    text = stringResource(R.string.view_downloads),
-                )
+                // Nothing is downloaded to a TV, so there's nothing to view there
+                if (!LocalContext.current.isTvDevice()) {
+                    StyledTextButton(
+                        onClick = { activityEventHandler.emit(ActivityEvent.OpenDownloads) },
+                        text = stringResource(R.string.view_downloads),
+                    )
+                }
             }
         }
     }

@@ -269,6 +269,9 @@ class AppUpdater(private val activity: AppCompatActivity) {
             }
             .setNegativeButton(android.R.string.cancel) { _, _ -> pendingInstall = null }
             .show()
+            // Start on "Open settings" so a single OK from the remote does the right thing
+            .getButton(AlertDialog.BUTTON_POSITIVE)
+            ?.requestFocus()
     }
 
     /** Release notes are Markdown; the dialog gets the first few plain lines. */

@@ -27,5 +27,4 @@
     <dimen name="splash_progress_width">96dp</dimen>
     <dimen name="splash_progress_bar_width">36dp</dimen>
     <dimen name="splash_progress_offset">112dp</dimen>
-    <dimen name="splash_credits_offset">14dp</dimen>
 </resources>

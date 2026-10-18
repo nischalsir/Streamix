@@ -15,7 +15,7 @@
 
     <!--
         Branded splash. Takes over from the black system splash with the animated intro, then shows the
-        wordmark and credits while the web UI loads underneath, and fades out once the first page is drawn.
+        wordmark while the web UI loads underneath, and fades out once the first page is drawn.
     -->
     <FrameLayout
         android:id="@+id/splash_overlay"
@@ -70,38 +70,5 @@
                 android:layout_height="match_parent"
                 android:background="@drawable/splash_progress" />
         </FrameLayout>
-
-        <LinearLayout
-            android:id="@+id/splash_credits"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="40dp"
-            android:alpha="0"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <TextView
-                style="@style/SplashCredit"
-                android:alpha="0.5"
-                android:letterSpacing="0.3"
-                android:text="@string/splash_developed_by"
-                android:textSize="11sp" />
-
-            <TextView
-                style="@style/SplashCredit"
-                android:layout_marginTop="8dp"
-                android:fontFamily="sans-serif-medium"
-                android:letterSpacing="0.16"
-                android:text="@string/splash_developer_name"
-                android:textSize="20sp" />
-
-            <TextView
-                style="@style/SplashCredit"
-                android:layout_marginTop="10dp"
-                android:alpha="0.6"
-                android:text="@string/splash_developer_links"
-                android:textSize="12sp" />
-        </LinearLayout>
     </FrameLayout>
 </FrameLayout>

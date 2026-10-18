@@ -50,6 +50,30 @@ html.streamix-tv .paper-icon-button-light.show-focus:focus {
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9), 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
+/* Checkboxes, switches and sliders: the whole row lights up with a white rim when the remote is on it
+   (the checkbox input itself is invisible, so Jellyfin shows nothing by default) */
+html.streamix-tv .checkboxContainer,
+html.streamix-tv .mdl-switch,
+html.streamix-tv .sliderContainer,
+html.streamix-tv .mdl-slider-container {
+    border-radius: 12px;
+    transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+html.streamix-tv .checkboxContainer:focus-within,
+html.streamix-tv label.emby-checkbox-label:focus-within,
+html.streamix-tv .mdl-switch:focus-within,
+html.streamix-tv .sliderContainer:focus-within,
+html.streamix-tv .mdl-slider-container:focus-within {
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92) !important;
+}
+
+html.streamix-tv .emby-checkbox:focus + span + .checkboxOutline,
+html.streamix-tv .emby-checkbox:focus ~ .checkboxOutline {
+    box-shadow: 0 0 0 3px #fff !important;
+}
+
 html.streamix-tv .layout-tv,
 html.streamix-tv body {
     -webkit-tap-highlight-color: transparent;

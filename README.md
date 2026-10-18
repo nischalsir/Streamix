@@ -48,7 +48,7 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 | **Every subtitle type** | SRT, WebVTT, TTML, styled ASS/SSA (libass), PGS (Blu-ray), VobSub (DVD), DVB and MP4 text, with a theater style: white text, soft shadow, no box. |
 | **Profile-picture login** | Login shows your users' profile pictures over your server's poster-collage background. |
 | **Remote-first player** | ◀ ▶ seek 10 s instantly, holding them scrubs with thumbnails, OK plays/pauses, Back hides the controls and then exits. |
-| **Animated splash** | The ring draws itself around the logo, the play button zooms in, then the developer credits appear. It fades into your home screen once that has loaded (press OK to skip). |
+| **Animated splash** | The ring draws itself around the logo and the play button zooms in, then it fades into your home screen once that has loaded (press OK to skip). |
 | **Updates itself** | Streamix checks GitHub for new releases, downloads the update and installs it, all from the TV. No USB drive needed after the first install. |
 | **Simple settings** | The TV shows only settings a viewer needs, in plain words. Technical options keep sensible defaults and stay reachable from a computer. |
 | **Everything else from Jellyfin** | Live TV, music, books, Quick Connect, multiple servers, playback speed, chapter skip, intro/outro skip, trickplay thumbnails, downloads. |

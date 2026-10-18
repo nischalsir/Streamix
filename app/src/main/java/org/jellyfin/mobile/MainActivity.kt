@@ -180,8 +180,8 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Takes over from the black system splash with the Streamix splash: the animated intro (ring draws
-     * itself, play button zooms in), then the logo glides up and the wordmark and developer credits
-     * fade in. The overlay stays until [onContentReady] (or a time limit).
+     * itself, play button zooms in), then the logo glides up and the wordmark fades in. The overlay
+     * stays until [onContentReady] (or a time limit).
      */
     private fun setupSplash(splashScreen: SplashScreen, savedInstanceState: Bundle?) {
         val overlay = findViewById<View>(R.id.splash_overlay)
@@ -239,17 +239,6 @@ class MainActivity : AppCompatActivity() {
             .setInterpolator(easeOut)
             .withLayer()
             .start()
-        overlay.findViewById<View>(R.id.splash_credits).apply {
-            translationY = resources.getDimension(R.dimen.splash_credits_offset)
-            animate()
-                .alpha(1f)
-                .translationY(0f)
-                .setStartDelay(SPLASH_INTRO_MS + SPLASH_CREDITS_DELAY_MS)
-                .setDuration(SPLASH_TEXT_MS)
-                .setInterpolator(easeOut)
-                .withLayer()
-                .start()
-        }
 
         overlay.postDelayed({ showSplashProgress() }, SPLASH_INTRO_MS + SPLASH_PROGRESS_DELAY_MS)
         overlay.postDelayed({ maybeDismissSplash() }, SPLASH_INTRO_MS + SPLASH_MIN_MS)
@@ -425,14 +414,13 @@ class MainActivity : AppCompatActivity() {
         const val SPLASH_LOGO_DELAY_MS = 80L
         const val SPLASH_LOGO_MS = 650L
         const val SPLASH_WORDMARK_DELAY_MS = 260L
-        const val SPLASH_CREDITS_DELAY_MS = 460L
         const val SPLASH_TEXT_MS = 560L
         const val SPLASH_PROGRESS_DELAY_MS = 1400L
         const val SPLASH_PROGRESS_FADE_MS = 300L
         const val SPLASH_PROGRESS_CYCLE_MS = 1100L
 
-        /** Credits on screen after the intro: long enough to read, short enough not to feel slow. */
-        const val SPLASH_MIN_MS = 2000L
+        /** Wordmark on screen after the intro, so the hand-over to the app doesn't feel abrupt. */
+        const val SPLASH_MIN_MS = 1300L
 
         /** Safety net: never hold the user on the splash longer than this. */
         const val SPLASH_MAX_MS = 12_000L

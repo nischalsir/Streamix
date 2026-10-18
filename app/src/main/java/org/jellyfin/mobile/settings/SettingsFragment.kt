@@ -398,8 +398,24 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
             titleRes = R.string.pref_category_about
         }
         pref(PREF_ABOUT_DEVELOPER) {
-            titleRes = R.string.pref_about_developer_title
-            summaryRes = R.string.pref_about_developer_summary
+            titleRes = R.string.pref_about_developer
+            summaryRes = R.string.about_developer_name
+        }
+        pref(PREF_ABOUT_INSTAGRAM) {
+            titleRes = R.string.pref_about_instagram
+            summaryRes = R.string.about_instagram
+        }
+        pref(PREF_ABOUT_GITHUB) {
+            titleRes = R.string.pref_about_github
+            summaryRes = R.string.about_github
+        }
+        pref(PREF_ABOUT_EMAIL) {
+            titleRes = R.string.pref_about_email
+            summaryRes = R.string.about_email
+        }
+        pref(PREF_ABOUT_VERSION) {
+            titleRes = R.string.pref_about_version
+            summary = "${getString(R.string.app_name)} ${BuildConfig.VERSION_NAME}"
         }
     }
 
@@ -409,6 +425,10 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         const val PREF_CATEGORY_DOWNLOADS = "pref_category_downloads"
         const val PREF_CATEGORY_ABOUT = "pref_category_about"
         const val PREF_ABOUT_DEVELOPER = "pref_about_developer"
+        const val PREF_ABOUT_INSTAGRAM = "pref_about_instagram"
+        const val PREF_ABOUT_GITHUB = "pref_about_github"
+        const val PREF_ABOUT_EMAIL = "pref_about_email"
+        const val PREF_ABOUT_VERSION = "pref_about_version"
         const val PREF_CATEGORY_UPDATES = "pref_category_updates"
         const val PREF_CHECK_UPDATES = "pref_check_updates"
     }
