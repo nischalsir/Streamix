@@ -212,12 +212,6 @@ html.streamix-tv .skinHeader .headerTabs .emby-tab-button {
     margin-bottom: 0 !important;
 }
 
-/* Search and the settings menu start just under the one-row header */
-html.streamix-tv #searchPage.mainAnimatedPage,
-html.streamix-tv .userPreferencesPage.mainAnimatedPage {
-    padding-top: 3.6em !important;
-}
-
 /* Settings menu on TV keeps what viewers use (profile, display & language, home screen, audio,
    subtitles, Streamix settings, server, sign out). Hidden: Quick Connect (approves logins on other
    devices), keyboard/mouse controls and the admin pages - all still reachable from a computer. */
@@ -225,12 +219,6 @@ html.streamix-tv .userPreferencesPage .lnkQuickConnectPreferences,
 html.streamix-tv .userPreferencesPage .lnkControlsPreferences,
 html.streamix-tv .userPreferencesPage .adminSection {
     display: none !important;
-}
-
-/* Pages with tabs no longer need room for a second header row */
-html.streamix-tv .page.withTabs,
-html.streamix-tv .page.pageWithAbsoluteTabs {
-    padding-top: 3em !important;
 }
 
 /* Header lines up with the content: same 3.3% side margins as the rows below */
@@ -375,12 +363,6 @@ html.streamix-tv .skinHeader:not(.osdHeader):has(.headerTabs .emby-tab-button:nt
     grid-column: 1 / -1;
     grid-row: 2;
     justify-content: flex-start;
-    padding-bottom: 10px;
-}
-
-html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .page.withTabs,
-html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .page.pageWithAbsoluteTabs {
-    padding-top: 6.2em !important;
 }
 
 /* Icons and clock: same size and rhythm */
@@ -459,10 +441,9 @@ html.streamix-tv .libraryPage .itemsContainer ~ .flex:has(.paging):not(:has(butt
     display: none !important;
 }
 
-/* Plain list pages (a collection library, a folder) put the same row inside the page's padding */
+/* Plain list pages (a collection library, a folder): the same row, on the left */
 html.streamix-tv .libraryPage .flex.focuscontainer-x:has(> .paging) {
     justify-content: flex-start !important;
-    padding-left: 12px !important;
 }
 
 /* Every row on a detail page (including those moved out of the narrow text column, see nativeshell.js)
@@ -677,6 +658,96 @@ html.streamix-tv.streamix-login #loginPage {
 }
 
 /* ---------------------------------------------------------------------------------------------
+ * Page layout on TV: one grid for every page
+ *  - the top bar's first row always sits 12px from the top edge; pages with many tabs (libraries,
+ *    Live TV) get a second row for the tabs, 8px under it
+ *  - content starts 20px under the bar's last row on every page, with no extra margins stacked on
+ *  - text, boxes and rows start on the logo's left edge (3.3% + 12px) and end on the clock's right edge
+ * ------------------------------------------------------------------------------------------- */
+html.streamix-tv .skinHeader:not(.osdHeader) {
+    min-height: 0 !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    row-gap: 8px;
+    align-content: start;
+}
+
+/* The back button's circle starts on the content edge */
+html.streamix-tv .skinHeader:not(.osdHeader) .headerLeft > .headerButton:first-child {
+    margin-left: 0 !important;
+}
+
+/* One-row bar (12 + 40 + 12 = 64px): content from 72px */
+html.streamix-tv .mainAnimatedPage.libraryPage:not(.withTabs):not(.pageWithAbsoluteTabs):not(.itemDetailPage),
+html.streamix-tv #searchPage.mainAnimatedPage {
+    padding-top: 72px !important;
+}
+
+/* Home: the tabs sit in the bar, and each row title brings its own space above it */
+html.streamix-tv .mainAnimatedPage.withTabs,
+html.streamix-tv .mainAnimatedPage.pageWithAbsoluteTabs {
+    padding-top: 60px !important;
+}
+
+/* Two-row bar (12 + 40 + 8 + 39 = 99px to the bottom of the tabs): content from 119px */
+html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .mainAnimatedPage.withTabs,
+html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .mainAnimatedPage.pageWithAbsoluteTabs {
+    padding-top: 119px !important;
+}
+
+/* ...so whatever comes first in a tab or page brings no extra space of its own */
+html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .pageTabContent > :first-child,
+html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .pageTabContent > .verticalSection:first-child > .sectionTitle-cards:first-child,
+html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .pageTabContent > .verticalSection:first-child > .sectionTitleContainer:first-child,
+html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .pageTabContent > .verticalSection:first-child > .sectionTitleContainer:first-child .sectionTitle-cards,
+html.streamix-tv .libraryPage:not(.itemDetailPage) > .padded-bottom-page,
+html.streamix-tv .libraryPage .flex.focuscontainer-x:has(> .paging),
+html.streamix-tv .userPreferencesPage .readOnlyContent > .verticalSection:first-child > h2:first-child,
+html.streamix-tv .userPreferencesPage form > h2:first-child,
+html.streamix-tv .userPreferencesPage form > .verticalSection:first-child > h2:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Settings, search and plain list pages: same side edges as the bar */
+html.streamix-tv .userPreferencesPage .padded-left,
+html.streamix-tv .userPreferencesPage.padded-left,
+html.streamix-tv #searchPage .searchFields.padded-left,
+html.streamix-tv .libraryPage.noSecondaryNavPage > .padded-left {
+    padding-left: calc(3.3% + 12px) !important;
+}
+
+html.streamix-tv .userPreferencesPage .padded-right,
+html.streamix-tv .userPreferencesPage.padded-right,
+html.streamix-tv #searchPage .searchFields.padded-right,
+html.streamix-tv .libraryPage.noSecondaryNavPage > .padded-right {
+    padding-right: calc(3.3% + 12px) !important;
+}
+
+html.streamix-tv .userPreferencesPage .headerUsername {
+    padding-left: 0 !important;
+}
+
+/* The "help translate Jellyfin" link under the language picker leads to a website: no use on a TV */
+html.streamix-tv .userPreferencesPage .languageSection .fieldDescription {
+    display: none !important;
+}
+
+/* Plain list pages put their count row inside the page padding already */
+html.streamix-tv .libraryPage.noSecondaryNavPage .flex.focuscontainer-x:has(> .paging) {
+    padding-left: 0 !important;
+}
+
+/* Wide boxes and rows don't grow when focused (they spilled past the page edges); the white outline
+   or soft highlight shows focus */
+html.streamix-tv .emby-select-focusscale:focus,
+html.streamix-tv .emby-input-focusscale:focus,
+html.streamix-tv .emby-textarea-focusscale:focus,
+html.streamix-tv .listItem-focusscale:focus {
+    transform: none !important;
+}
+
+/* ---------------------------------------------------------------------------------------------
  * Live TV
  * ------------------------------------------------------------------------------------------- */
 
@@ -761,7 +832,6 @@ html.streamix-tv .card .cardText.streamixEmpty {
 /* The count and filter above the grid: quieter and out of the way */
 html.streamix-tv .liveTvPage .pageTabContent > .flex.justify-content-center {
     justify-content: flex-start !important;
-    margin-top: -1.4em !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     font-size: 0.85em;
