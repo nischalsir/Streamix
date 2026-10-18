@@ -33,6 +33,255 @@ for (const plugin of plugins) {
 
 const { deviceId, deviceName, appName, appVersion } = JSON.parse(window.NativeInterface.getDeviceInformation());
 const codecCaps = JSON.parse(window.NativeInterface.getCodecCapabilities());
+const isTv = !!(window.NativeInterface.isTv && window.NativeInterface.isTv());
+
+// Streamix: TV performance layer + login backdrop, applied on top of the server's custom CSS
+(() => {
+    const root = document.documentElement;
+    root.classList.add('streamix');
+    if (isTv) root.classList.add('streamix-tv');
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    // Relative, so it also works when the server lives under a base path (e.g. /jellyfin/web/)
+    link.href = 'native/streamix.css';
+    document.head.appendChild(link);
+
+    // Login, server selection and password pages get the server's splash-screen artwork behind them
+    const STANDALONE_PAGES = '#loginPage:not(.hide), #selectServerPage:not(.hide), #forgotPasswordPage:not(.hide), '
+        + '#forgotPasswordPinPage:not(.hide), .standalonePage:not(.hide)';
+    const updateLoginState = () => {
+        const route = (window.location.hash || window.location.pathname).toLowerCase();
+        const onLoginRoute = /login|selectserver|forgotpassword|addserver/.test(route);
+        root.classList.toggle('streamix-login', onLoginRoute || !!document.querySelector(STANDALONE_PAGES));
+    };
+
+    // Clean artwork for libraries. Jellyfin generates library images with the library's name drawn
+    // on them; Streamix uses a backdrop picked from inside the library instead, kept for the session.
+    const LIBRARY_TYPES = /^(CollectionFolder|UserView)$/;
+    const libraryPicks = new Map();
+    const pickFromLibrary = (libraryId) => {
+        if (!libraryPicks.has(libraryId)) {
+            const api = window.ApiClient;
+            const request = api.getItems(api.getCurrentUserId(), {
+                ParentId: libraryId,
+                Recursive: true,
+                IncludeItemTypes: 'Movie,Series,MusicArtist,MusicAlbum,BoxSet,Video',
+                ImageTypes: 'Backdrop',
+                SortBy: 'Random',
+                Limit: 1,
+                EnableTotalRecordCount: false,
+                Fields: 'BackdropImageTags'
+            }).then((result) => {
+                const item = result && result.Items && result.Items[0];
+                return item && item.BackdropImageTags && item.BackdropImageTags.length
+                    ? { id: item.Id, tag: item.BackdropImageTags[0] }
+                    : null;
+            }).catch(() => null);
+            libraryPicks.set(libraryId, request);
+        }
+        return libraryPicks.get(libraryId);
+    };
+    const libraryArtUrl = (pick, maxWidth) => window.ApiClient.getImageUrl(pick.id, {
+        type: 'Backdrop', index: 0, tag: pick.tag, maxWidth, quality: 80
+    });
+
+    const retileLibraries = () => {
+        if (!window.ApiClient || !window.ApiClient.getItems) return;
+        const cards = document.querySelectorAll(
+            '.card[data-type="CollectionFolder"]:not([data-streamix-art]), .card[data-type="UserView"]:not([data-streamix-art])'
+        );
+        cards.forEach((card) => {
+            card.setAttribute('data-streamix-art', '1');
+            pickFromLibrary(card.getAttribute('data-id')).then((pick) => {
+                if (!pick) return;
+                const url = libraryArtUrl(pick, 720);
+                const img = new Image();
+                img.decoding = 'async';
+                img.src = url;
+                return img.decode().then(() => {
+                    const tile = card.querySelector('.cardImageContainer');
+                    if (!tile) return;
+                    // data-src too, so the lazy loader can't put the old image back
+                    tile.setAttribute('data-src', url);
+                    tile.style.backgroundImage = `url("${url}")`;
+                });
+            }).catch(() => {});
+        });
+    };
+
+    // Apple TV style backdrops: while browsing, the focused title's artwork fills the background.
+    // Waits for focus to settle, decodes off the main thread, then cross-fades two layers on the GPU.
+    const backdrop = (() => {
+        const SETTLE_MS = 350;
+        const cache = new Map();
+        let root = null;
+        let layers = [];
+        let front = 0;
+        let shownUrl = null;
+        let timer = null;
+        let requested = null;
+
+        const ensureRoot = () => {
+            const container = document.querySelector('.backgroundContainer');
+            if (!container) return null;
+            if (root && root.parentElement === container) return root;
+            root = document.createElement('div');
+            root.id = 'streamixBackdrop';
+            layers = [document.createElement('div'), document.createElement('div')];
+            layers.forEach((layer) => {
+                layer.className = 'sbLayer';
+                root.appendChild(layer);
+            });
+            const scrim = document.createElement('div');
+            scrim.className = 'sbScrim';
+            root.appendChild(scrim);
+            container.appendChild(root);
+            shownUrl = null;
+            return root;
+        };
+
+        const urlFor = async (id, type) => {
+            if (!id) return null;
+            if (cache.has(id)) return cache.get(id);
+            const api = window.ApiClient;
+            if (!api || !api.getItem) return null;
+            let url = null;
+            try {
+                if (LIBRARY_TYPES.test(type || '')) {
+                    // Libraries: the server's generated art has the library name drawn on it
+                    const pick = await pickFromLibrary(id);
+                    url = pick && libraryArtUrl(pick, 1280);
+                    cache.set(id, url);
+                    return url;
+                }
+                const item = await api.getItem(api.getCurrentUserId(), id);
+                const opts = { type: 'Backdrop', maxWidth: 1280, quality: 72 };
+                if (item.BackdropImageTags && item.BackdropImageTags.length) {
+                    url = api.getImageUrl(item.Id, { ...opts, index: 0, tag: item.BackdropImageTags[0] });
+                } else if (item.ParentBackdropItemId && item.ParentBackdropImageTags && item.ParentBackdropImageTags.length) {
+                    url = api.getImageUrl(item.ParentBackdropItemId, { ...opts, index: 0, tag: item.ParentBackdropImageTags[0] });
+                } else if (item.IsFolder) {
+                    const pick = await pickFromLibrary(item.Id);
+                    url = pick && libraryArtUrl(pick, 1280);
+                }
+            } catch (e) {
+                url = null;
+            }
+            cache.set(id, url);
+            return url;
+        };
+
+        const show = async (url) => {
+            if (!url || url === shownUrl || !ensureRoot()) return;
+            requested = url;
+            const img = new Image();
+            img.decoding = 'async';
+            img.alt = '';
+            img.src = url;
+            try {
+                await img.decode();
+            } catch (e) {
+                return;
+            }
+            if (requested !== url) return; // focus moved on while this was loading
+            const back = 1 - front;
+            layers[back].replaceChildren(img);
+            layers[back].classList.add('active');
+            layers[front].classList.remove('active');
+            const old = layers[front];
+            setTimeout(() => {
+                if (!old.classList.contains('active')) old.replaceChildren();
+            }, 900);
+            front = back;
+            shownUrl = url;
+        };
+
+        return {
+            focus(card) {
+                clearTimeout(timer);
+                timer = setTimeout(async () => show(await urlFor(card.getAttribute('data-id'), card.getAttribute('data-type'))), SETTLE_MS);
+            },
+            async item(id) {
+                clearTimeout(timer);
+                show(await urlFor(id, null));
+            },
+            refresh() {
+                ensureRoot();
+            }
+        };
+    })();
+
+    // Backdrops belong to pages with posters (home, libraries, search results), not settings or details
+    const updateBrowseState = () => {
+        const page = document.querySelector('.mainAnimatedPage:not(.hide)');
+        const detail = !!page && page.classList.contains('itemDetailPage');
+        const browsing = !!page && !detail && !!page.querySelector('.card[data-id]');
+        root.classList.toggle('streamix-browse', browsing);
+        root.classList.toggle('streamix-detail', detail);
+        if (browsing || detail) backdrop.refresh();
+        if (detail) {
+            // Detail pages: that title's artwork, full-bleed, like Apple TV
+            const id = new URLSearchParams((window.location.hash.split('?')[1]) || '').get('id');
+            if (id) backdrop.item(id);
+        }
+    };
+
+    // Coming back from the player, settings or downloads: put remote focus on Play/Resume or the
+    // first item, so the next key press does something visible
+    window.addEventListener('focus', () => setTimeout(() => {
+        const active = document.activeElement;
+        if (active && active !== document.body && active !== document.documentElement) return;
+        const page = document.querySelector('.mainAnimatedPage:not(.hide)');
+        const target = page && (page.querySelector('.btnPlay:not(.hide), .btnResume:not(.hide)')
+            || page.querySelector('.card[data-id], .emby-button:not(.hide), a.listItem-border'));
+        if (target) target.focus();
+    }, 120));
+
+    document.addEventListener('focusin', (e) => {
+        const card = e.target.closest && e.target.closest('.card[data-id]');
+        if (!card) return;
+        // Checked here too: the page-shown event can fire before this script is listening
+        updateBrowseState();
+        retileLibraries();
+        if (root.classList.contains('streamix-browse')) backdrop.focus(card);
+    });
+
+    // Tell the app when the first page is on screen, so the splash can fade into it
+    let readyReported = false;
+    const reportReady = () => {
+        if (readyReported) return;
+        readyReported = true;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            setTimeout(() => window.NativeInterface.onWebAppReady && window.NativeInterface.onWebAppReady(), 150);
+        }));
+    };
+
+    const updatePageState = () => {
+        updateLoginState();
+        updateBrowseState();
+        retileLibraries();
+    };
+
+    document.addEventListener('viewshow', () => {
+        updatePageState();
+        reportReady();
+        // Home sections render after the page is shown
+        setTimeout(retileLibraries, 800);
+        setTimeout(retileLibraries, 2500);
+    });
+    window.addEventListener('hashchange', () => setTimeout(updatePageState, 50));
+    window.addEventListener('popstate', () => setTimeout(updatePageState, 50));
+
+    // Fallback for pages that don't fire viewshow
+    let checks = 0;
+    const poll = setInterval(() => {
+        checks++;
+        updatePageState();
+        if (document.querySelector('.mainAnimatedPage:not(.hide), .page:not(.hide), #reactRoot .MuiAppBar-root')) reportReady();
+        if (readyReported || checks > 60) clearInterval(poll);
+    }, 200);
+})();
 
 window.NativeShell = {
     enableFullscreen() {
@@ -106,7 +355,7 @@ function getDeviceProfile(profileBuilder, item) {
 window.NativeShell.AppHost = {
     init() {},
     getDefaultLayout() {
-        return "mobile";
+        return isTv ? "tv" : "mobile";
     },
     supports(command) {
         command = command.toLowerCase();

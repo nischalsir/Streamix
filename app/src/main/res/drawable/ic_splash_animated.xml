@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Streamix intro (1 s). Ends on exactly the same frame as @drawable/ic_splash.
+    - The ring draws itself from the top, round the left, the bottom and up the right side,
+      spinning a quarter turn as it goes.
+    - The play button zooms in with a small overshoot.
+    - The pink dot pops in last, in the ring's gap.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="108dp"
+            android:height="108dp"
+            android:viewportWidth="108"
+            android:viewportHeight="108">
+            <group
+                android:name="ring"
+                android:pivotX="54"
+                android:pivotY="54"
+                android:rotation="90">
+                <path
+                    android:name="ring_path"
+                    android:pathData="M75.65,41.5 A25,25 0 1,1 54,29"
+                    android:strokeWidth="6"
+                    android:strokeLineCap="round"
+                    android:trimPathStart="1">
+                    <aapt:attr name="android:strokeColor">
+                        <gradient
+                            android:endX="80"
+                            android:endY="82"
+                            android:startX="30"
+                            android:startY="28"
+                            android:type="linear">
+                            <item
+                                android:color="#FF64D2FF"
+                                android:offset="0" />
+                            <item
+                                android:color="#FF7D5CFF"
+                                android:offset="0.5" />
+                            <item
+                                android:color="#FFFF4FA3"
+                                android:offset="1" />
+                        </gradient>
+                    </aapt:attr>
+                </path>
+                <group
+                    android:name="dot"
+                    android:pivotX="66.5"
+                    android:pivotY="32.35"
+                    android:scaleX="0"
+                    android:scaleY="0">
+                    <path
+                        android:fillColor="#FFFF4FA3"
+                        android:pathData="M63.1,32.35 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0z" />
+                </group>
+            </group>
+            <group
+                android:name="play"
+                android:pivotX="53.4"
+                android:pivotY="54"
+                android:scaleX="0"
+                android:scaleY="0">
+                <path
+                    android:pathData="M48,44.2 L48,63.8 L64.2,54 Z"
+                    android:strokeWidth="4.6"
+                    android:strokeLineJoin="round">
+                    <aapt:attr name="android:fillColor">
+                        <gradient
+                            android:endX="66"
+                            android:endY="66"
+                            android:startX="46"
+                            android:startY="42"
+                            android:type="linear">
+                            <item
+                                android:color="#FFFFFFFF"
+                                android:offset="0" />
+                            <item
+                                android:color="#FFDCD6FF"
+                                android:offset="1" />
+                        </gradient>
+                    </aapt:attr>
+                    <aapt:attr name="android:strokeColor">
+                        <gradient
+                            android:endX="66"
+                            android:endY="66"
+                            android:startX="46"
+                            android:startY="42"
+                            android:type="linear">
+                            <item
+                                android:color="#FFFFFFFF"
+                                android:offset="0" />
+                            <item
+                                android:color="#FFDCD6FF"
+                                android:offset="1" />
+                        </gradient>
+                    </aapt:attr>
+                </path>
+            </group>
+        </vector>
+    </aapt:attr>
+
+    <!-- Ring: draw from the top end, counter-clockwise, while turning a quarter turn -->
+    <target android:name="ring_path">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="760"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="trimPathStart"
+                android:valueFrom="1"
+                android:valueTo="0"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+    <target android:name="ring">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="860"
+                android:interpolator="@android:interpolator/fast_out_slow_in"
+                android:propertyName="rotation"
+                android:valueFrom="90"
+                android:valueTo="0"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+
+    <!-- Play button: zoom in with a little bounce -->
+    <target android:name="play">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="520"
+                    android:interpolator="@android:anim/overshoot_interpolator"
+                    android:propertyName="scaleX"
+                    android:startOffset="220"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="520"
+                    android:interpolator="@android:anim/overshoot_interpolator"
+                    android:propertyName="scaleY"
+                    android:startOffset="220"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <!-- Dot: pops in last -->
+    <target android:name="dot">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="240"
+                    android:interpolator="@android:anim/overshoot_interpolator"
+                    android:propertyName="scaleX"
+                    android:startOffset="740"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType" />
+                <objectAnimator
+                    android:duration="240"
+                    android:interpolator="@android:anim/overshoot_interpolator"
+                    android:propertyName="scaleY"
+                    android:startOffset="740"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType" />
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>

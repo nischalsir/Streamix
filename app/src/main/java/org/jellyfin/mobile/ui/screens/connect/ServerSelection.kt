@@ -6,6 +6,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,7 +44,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -56,6 +65,9 @@ import org.jellyfin.mobile.setup.ConnectionHelper
 import org.jellyfin.mobile.ui.state.CheckUrlState
 import org.jellyfin.mobile.ui.state.ServerSelectionMode
 import org.jellyfin.mobile.ui.utils.CenterRow
+import org.jellyfin.mobile.ui.utils.isFocused
+import org.jellyfin.mobile.ui.utils.tvFocusScale
+import org.jellyfin.mobile.utils.isTvDevice
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -181,6 +193,13 @@ private fun AddressSelection(
     onDiscoveryClick: () -> Unit,
     onSubmit: () -> Unit,
 ) {
+    // On a TV, start on "Choose server": it finds servers on the network, so no typing is needed
+    val isTv = LocalContext.current.isTvDevice()
+    val chooseServerFocus = remember { FocusRequester() }
+    LaunchedEffect(loading) {
+        if (isTv && !loading) chooseServerFocus.requestFocus()
+    }
+
     Column {
         ServerUrlField(
             text = text,
@@ -198,6 +217,7 @@ private fun AddressSelection(
             )
             StyledTextButton(
                 text = stringResource(R.string.choose_server_button_text),
+                modifier = Modifier.focusRequester(chooseServerFocus),
                 onClick = onDiscoveryClick,
             )
         } else {
@@ -216,12 +236,30 @@ private fun ServerUrlField(
     onTextChange: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val isTv = LocalContext.current.isTvDevice()
+    // On a TV the field stays read-only (no keyboard) while the remote merely passes over it, and
+    // becomes editable when OK is released on it. Opening the keyboard on press would hand the
+    // release to the keyboard, which types its focused key into the field.
+    var editing by remember { mutableStateOf(!isTv) }
     OutlinedTextField(
         value = text,
         onValueChange = onTextChange,
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp)
+            .onFocusChanged { state ->
+                if (isTv && !state.isFocused) editing = false
+            }
+            .onPreviewKeyEvent { keyEvent ->
+                if (!isTv || editing) return@onPreviewKeyEvent false
+                if (keyEvent.nativeKeyEvent.keyCode != KeyEvent.KEYCODE_DPAD_CENTER) return@onPreviewKeyEvent false
+                if (keyEvent.type == KeyEventType.KeyUp) {
+                    editing = true
+                    keyboardController?.show()
+                }
+                true
+            }
             .onKeyEvent { keyEvent ->
                 when (keyEvent.nativeKeyEvent.keyCode) {
                     KeyEvent.KEYCODE_ENTER -> {
@@ -234,6 +272,7 @@ private fun ServerUrlField(
         label = {
             Text(text = stringResource(R.string.host_input_hint))
         },
+        readOnly = !editing,
         isError = errorText != null,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Uri,
@@ -323,10 +362,14 @@ private fun ServerDiscoveryItem(
     serverSuggestion: ServerSuggestion,
     onClickServer: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val focused by interactionSource.isFocused()
     ListItem(
         modifier = Modifier
+            .tvFocusScale(interactionSource, focusedScale = 1.02f)
             .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onClickServer),
+            .background(if (focused) Color.White.copy(alpha = 0.16f) else Color.Transparent)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClickServer),
         text = {
             Text(text = serverSuggestion.name)
         },

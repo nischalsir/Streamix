@@ -108,6 +108,9 @@ class ActivityEventHandler(
             ActivityEvent.SelectServer -> {
                 mainViewModel.resetServer()
             }
+            ActivityEvent.WebAppReady -> {
+                onContentReady()
+            }
             ActivityEvent.ExitApp -> {
                 if (serviceBinder?.isPlaying == true) {
                     moveTaskToBack(false)

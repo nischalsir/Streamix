@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Jellyfin</string>
-    <string name="app_name_short" translatable="false">Jellyfin</string>
+    <string name="app_name" translatable="false">Streamix</string>
+    <string name="app_name_short" translatable="false">Streamix</string>
+
+    <!-- Splash credits -->
+    <string name="splash_developed_by" translatable="false">DEVELOPED BY</string>
+    <string name="splash_developer_name" translatable="false">NISCHAL PANDEY</string>
+    <string name="splash_developer_links" translatable="false">Instagram @nischal_sir   ·   GitHub @nischalsir   ·   nischalpandey.dev@gmail.com</string>
 </resources>

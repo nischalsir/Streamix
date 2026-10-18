@@ -122,8 +122,25 @@ class AppPreferences(context: Context) {
     val exoPlayerAllowHorizontalGesture: Boolean
         get() = sharedPreferences.getBoolean(Constants.PREF_EXOPLAYER_ALLOW_HORIZONTAL_GESTURE, true)
 
+    /**
+     * Styled SSA/ASS subtitles rendered on the device with libass. On by default in Streamix,
+     * so anime and fansub styling is kept instead of being flattened to plain text by the server.
+     */
     val exoPlayerDirectPlayAss: Boolean
-        get() = sharedPreferences.getBoolean(Constants.PREF_EXOPLAYER_DIRECT_PLAY_ASS, false)
+        get() = sharedPreferences.getBoolean(Constants.PREF_EXOPLAYER_DIRECT_PLAY_ASS, true)
+
+    /**
+     * Switch the TV's refresh rate to match the video's frame rate (24p, 25p, 50p...).
+     */
+    val exoPlayerMatchFrameRate: Boolean
+        get() = sharedPreferences.getBoolean(Constants.PREF_EXOPLAYER_MATCH_FRAME_RATE, true)
+
+    /**
+     * Send Dolby Digital (Plus/Atmos), DTS and TrueHD untouched to the TV, soundbar or AV receiver
+     * when it reports support. When off, everything is decoded on the device to PCM.
+     */
+    val exoPlayerAudioPassthrough: Boolean
+        get() = sharedPreferences.getBoolean(Constants.PREF_EXOPLAYER_AUDIO_PASSTHROUGH, true)
 
     val exoPlayerNetworkBuffer: String
         get() = sharedPreferences.getString(Constants.PREF_EXOPLAYER_NETWORK_BUFFER, Constants.NETWORK_BUFFER_AUTO)!!

@@ -86,5 +86,8 @@ fun WebSettings.applyDefault() {
 fun WebViewAssetLoader.AssetsPathHandler.inject(path: String): WebResourceResponse? = handle(path)?.apply {
     if (path.endsWith(".js", ignoreCase = true)) {
         mimeType = "application/javascript"
+    } else if (path.endsWith(".css", ignoreCase = true)) {
+        // Stylesheets served with any other type are ignored by the browser
+        mimeType = "text/css"
     }
 }

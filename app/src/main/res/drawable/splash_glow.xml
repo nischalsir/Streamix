@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soft colour glows behind the in-app splash -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape
+            android:dither="true"
+            android:shape="rectangle">
+            <gradient
+                android:centerX="0.26"
+                android:centerY="0.22"
+                android:endColor="#002B2350"
+                android:gradientRadius="96%p"
+                android:startColor="#D92B2350"
+                android:type="radial" />
+        </shape>
+    </item>
+    <item>
+        <shape
+            android:dither="true"
+            android:shape="rectangle">
+            <gradient
+                android:centerX="0.81"
+                android:centerY="0.87"
+                android:endColor="#004A1B3F"
+                android:gradientRadius="78%p"
+                android:startColor="#8C4A1B3F"
+                android:type="radial" />
+        </shape>
+    </item>
+</layer-list>

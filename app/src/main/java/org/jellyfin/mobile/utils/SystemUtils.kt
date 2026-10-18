@@ -33,6 +33,9 @@ import java.util.UUID
 import kotlin.coroutines.resume
 
 fun WebViewFragment.requestNoBatteryOptimizations(rootView: CoordinatorLayout) {
+    // TVs run on mains power, and the prompt would cover the bottom of the screen
+    if (requireContext().isTvDevice()) return
+
     val powerManager = requireContext().getSystemService(Activity.POWER_SERVICE) as PowerManager
     if (
         !appPreferences.ignoreBatteryOptimizations &&

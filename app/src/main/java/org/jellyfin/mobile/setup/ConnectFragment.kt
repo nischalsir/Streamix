@@ -13,6 +13,7 @@ import org.jellyfin.mobile.ui.screens.connect.ConnectScreen
 import org.jellyfin.mobile.ui.utils.AppTheme
 import org.jellyfin.mobile.utils.Constants
 import org.jellyfin.mobile.utils.applyWindowInsetsAsMargins
+import org.jellyfin.mobile.utils.extensions.requireMainActivity
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 class ConnectFragment : Fragment() {
@@ -33,6 +34,9 @@ class ConnectFragment : Fragment() {
         ViewCompat.requestApplyInsets(composeView)
 
         val encounteredConnectionError = arguments?.getBoolean(Constants.FRAGMENT_CONNECT_EXTRA_ERROR) == true
+
+        // The connect screen is the first screen when no server is set up yet
+        requireMainActivity().onContentReady()
 
         composeView.setContent {
             AppTheme {

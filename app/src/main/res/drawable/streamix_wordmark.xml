@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "STREAMIX" drawn with round strokes (cap height 40), so it needs no font -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="246dp"
+    android:height="48dp"
+    android:viewportWidth="246"
+    android:viewportHeight="48">
+    <group
+        android:translateX="4"
+        android:translateY="4">
+        <path
+            android:pathData="M22,6.5 C19.5,2.2 15.8,0 11.6,0 C6,0 1.8,3.4 1.8,9.6 C1.8,22.4 23.4,17.4 23.4,30.2 C23.4,36.4 18.8,40 12,40 C7.2,40 2.9,37.4 0.6,33
+                M32,0 H56 M44,0 V40
+                M66,40 V0 H77 A11,11 0 0,1 77,22 H66 M76,22 L88,40
+                M118,0 H98 V40 H118 M98,20 H115
+                M126,40 L139,0 L152,40
+                M162,40 V0 L177,27 L192,0 V40
+                M202,0 V40
+                M212,0 L236,40 M236,0 L212,40"
+            android:strokeWidth="6.5"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>

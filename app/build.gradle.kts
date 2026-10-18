@@ -31,6 +31,8 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
+        // Own package name, so Streamix installs next to the official Jellyfin app
+        applicationId = "dev.nischalpandey.streamix"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionName = project.getVersionName()
@@ -122,7 +124,7 @@ android {
     }
 }
 
-base.archivesName.set("jellyfin-android-v${project.getVersionName()}")
+base.archivesName.set("Streamix-v${project.getVersionName()}")
 
 dependencies {
     val proprietaryImplementation by configurations

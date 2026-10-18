@@ -242,7 +242,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application),
             else -> DefaultLoadControl()
         }
         val appPreferences: AppPreferences = get()
-        val renderersFactory = DefaultRenderersFactory(getApplication()).apply {
+        val renderersFactory = StreamixRenderersFactory(getApplication(), appPreferences.exoPlayerAudioPassthrough).apply {
             setEnableDecoderFallback(true) // Fallback only works if initialization fails, not decoding at playback time
             val rendererMode = when {
                 fallbackPreferExtensionRenderers -> DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER

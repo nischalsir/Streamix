@@ -12,7 +12,9 @@
 
     <style name="AppTheme.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/theme_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <!-- Plain black while the app starts; MainActivity then plays the animated Streamix intro.
+             (TVs differ in whether they animate a system splash icon, so the app owns the whole intro.) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
 
@@ -22,5 +24,15 @@
     <!-- Theme Overlays -->
     <style name="ThemeOverlay.App.BackButton" parent="">
         <item name="colorControlNormal">?android:textColorPrimary</item>
+    </style>
+
+    <!-- In-app splash credits -->
+    <style name="SplashCredit">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:includeFontPadding">false</item>
     </style>
 </resources>

@@ -3,30 +3,41 @@ package org.jellyfin.mobile.player.ui
 import android.app.Activity
 import android.app.PictureInPictureParams
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
 import android.graphics.Rect
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.OrientationEventListener
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+import android.view.accessibility.CaptioningManager
 import android.widget.ImageButton
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.Toolbar
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.Player
+import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.SubtitleView
 import io.github.peerless2012.ass.media.AssHandler
 import io.github.peerless2012.ass.media.widget.AssSubtitleView
 import kotlinx.coroutines.Job
@@ -52,6 +63,8 @@ import org.jellyfin.mobile.utils.extensions.aspectRational
 import org.jellyfin.mobile.utils.extensions.getParcelableCompat
 import org.jellyfin.mobile.utils.extensions.isLandscape
 import org.jellyfin.mobile.utils.extensions.keepScreenOn
+import org.jellyfin.mobile.utils.isRemoteNavigationKey
+import org.jellyfin.mobile.utils.isTvDevice
 import org.jellyfin.mobile.utils.toast
 import org.jellyfin.sdk.model.api.MediaSegmentDto
 import org.jellyfin.sdk.model.api.MediaStream
@@ -77,6 +90,8 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
     private var playerMenus: PlayerMenus? = null
 
     private lateinit var playerFullscreenHelper: PlayerFullscreenHelper
+    private lateinit var displayModeHelper: DisplayModeHelper
+    private var isTv = false
     lateinit var playerLockScreenHelper: PlayerLockScreenHelper
     lateinit var playerGestureHelper: PlayerGestureHelper
 
@@ -98,10 +113,14 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
 
         val window = requireActivity().window
         playerFullscreenHelper = PlayerFullscreenHelper(window)
+        displayModeHelper = DisplayModeHelper(window)
+        isTv = requireContext().isTvDevice()
 
         // Observe ViewModel
         viewModel.player.observe(this) { player ->
             playerView.player = player
+            // The remote only reaches the player while it holds focus
+            if (player != null && isTv) playerView.requestFocus()
             // Automatically close fragment, unless we're in PiP mode
             if (player == null && !(AndroidVersion.isAtLeastN && requireActivity().isInPictureInPictureMode)) {
                 parentFragmentManager.popBackStack()
@@ -126,6 +145,13 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
             } else if (appPreferences.exoPlayerStartLandscapeVideoInLandscape) {
                 // Auto-switch to landscape for landscape videos if enabled
                 requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            }
+
+            // Show 24p/25p/50p video at a matching refresh rate instead of the panel's fixed 60 Hz
+            if (isTv && appPreferences.exoPlayerMatchFrameRate) {
+                val videoStream = mediaSource.selectedVideoStream
+                val frameRate = videoStream?.realFrameRate ?: videoStream?.averageFrameRate
+                if (frameRate != null) displayModeHelper.matchFrameRate(frameRate)
             }
 
             // Update title and player menus
@@ -220,6 +246,10 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
             }
         }
 
+        playerView.subtitleView?.let(::applyTheaterSubtitleStyle)
+
+        if (isTv) setupForTv()
+
         playerLockScreenHelper = PlayerLockScreenHelper(this, playerBinding, orientationListener)
         playerGestureHelper = PlayerGestureHelper(this, playerBinding, playerLockScreenHelper)
 
@@ -227,6 +257,96 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
         fullscreenSwitcher.setOnClickListener {
             toggleFullscreen()
         }
+    }
+
+    /**
+     * Remote-control layout: no touch-only buttons, and the time bar seeks in 10 second steps.
+     */
+    private fun setupForTv() {
+        fullscreenSwitcher.isVisible = false
+        playerControlsBinding.lockScreenButton.isVisible = false
+        playerControlsBinding.audioStreamsButton.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            goneStartMargin = resources.getDimensionPixelSize(R.dimen.exo_bottom_controls_margin)
+        }
+        playerControlsBinding.exoProgress.setKeyTimeIncrement(Constants.DEFAULT_SEEK_TIME_MS)
+        playerView.isFocusable = true
+
+        // The phone ripple is too faint to follow from across the room
+        with(playerControlsBinding) {
+            listOf(
+                previousButton, previousChapterButton, exoPlayPause, nextChapterButton, nextButton,
+                audioStreamsButton, subtitlesButton, speedButton, qualityButton, decoderButton, infoButton,
+            ).forEach { button ->
+                button.background = ContextCompat.getDrawable(requireContext(), R.drawable.tv_player_button)
+            }
+        }
+    }
+
+    /**
+     * White text with a soft shadow and no box, like the web theme's subtitles.
+     * Skipped when the user has turned on their own caption style in the system settings.
+     */
+    private fun applyTheaterSubtitleStyle(subtitleView: SubtitleView) {
+        val captioningManager = requireContext().getSystemService<CaptioningManager>()
+        if (captioningManager?.isEnabled == true) return
+
+        subtitleView.setStyle(
+            CaptionStyleCompat(
+                Color.WHITE,
+                Color.TRANSPARENT,
+                Color.TRANSPARENT,
+                CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW,
+                Color.BLACK,
+                Typeface.create("sans-serif-medium", Typeface.NORMAL),
+            ),
+        )
+        subtitleView.setBottomPaddingFraction(SUBTITLE_BOTTOM_PADDING_FRACTION)
+    }
+
+    /**
+     * Remote handling while the controls are hidden, called by [org.jellyfin.mobile.MainActivity]
+     * before the key reaches the view hierarchy:
+     * - left/right seek straight away, then leave focus on the time bar so further presses keep seeking
+     * - any other D-pad key brings up the controls with focus on play/pause
+     *
+     * @return true if the event was consumed
+     */
+    fun onRemoteKeyEvent(event: KeyEvent): Boolean {
+        if (!isTv || _playerBinding == null || viewModel.playerOrNull == null) return false
+        if (!isRemoteNavigationKey(event.keyCode)) return false
+        if (!playerView.useController || playerView.isControllerFullyVisible) return false
+
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    viewModel.rewind()
+                    showControllerWithFocus(playerControlsBinding.exoProgress)
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    viewModel.fastForward()
+                    showControllerWithFocus(playerControlsBinding.exoProgress)
+                }
+                else -> showControllerWithFocus(playerControlsBinding.exoPlayPause)
+            }
+        }
+        return true
+    }
+
+    private fun showControllerWithFocus(target: View) {
+        playerView.showController()
+        target.requestFocus()
+    }
+
+    /**
+     * On TV the first Back hides the controls, the second one leaves the player.
+     */
+    override fun onInterceptBackPressed(): Boolean {
+        if (isTv && _playerBinding != null && playerView.isControllerFullyVisible) {
+            playerView.hideController()
+            playerView.requestFocus()
+            return true
+        }
+        return false
     }
 
     override fun onStart() {
@@ -376,7 +496,9 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
     }
 
     fun onUserLeaveHint() {
-        if (AndroidVersion.isAtLeastN && viewModel.playerOrNull != null) {
+        // Many TVs have no picture-in-picture, and asking for it there throws
+        val supportsPip = requireContext().packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+        if (AndroidVersion.isAtLeastN && supportsPip && viewModel.playerOrNull != null) {
             requireActivity().enterPictureInPicture()
         }
     }
@@ -444,6 +566,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
 
     override fun onDestroy() {
         super.onDestroy()
+        displayModeHelper.restore()
         with(requireActivity()) {
             // Reset screen orientation
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -455,5 +578,9 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
 
     fun setPlayerMenuHelper(menuHelper: PlayerMenuHelper) {
         viewModel.setPlayerMenuHelper(menuHelper)
+    }
+
+    private companion object {
+        const val SUBTITLE_BOTTOM_PADDING_FRACTION = 0.08f
     }
 }

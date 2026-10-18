@@ -284,9 +284,12 @@ class DeviceProfileBuilder(
          */
         private val PCM_CODECS = arrayOf(
             "pcm_s8",
+            "pcm_u8",
             "pcm_s16be",
             "pcm_s16le",
+            "pcm_s24be",
             "pcm_s24le",
+            "pcm_s32be",
             "pcm_s32le",
             "pcm_f32le",
             "pcm_alaw",
@@ -298,8 +301,8 @@ class DeviceProfileBuilder(
          * as it maps the codecs to the containers with the same index!
          */
         private val AVAILABLE_AUDIO_CODECS = arrayOf(
-            // mp4
-            arrayOf("mp1", "mp2", "mp3", "aac", "alac", "ac3", "opus"),
+            // mp4 (eac3 covers Dolby Atmos in DD+, dts covers DTS/DTS-HD)
+            arrayOf("mp1", "mp2", "mp3", "aac", "alac", "ac3", "eac3", "dts", "flac", "opus"),
             // fmp4
             arrayOf("mp3", "aac", "ac3", "eac3"),
             // webm
@@ -330,7 +333,10 @@ class DeviceProfileBuilder(
          */
         private val FORCED_AUDIO_CODECS = arrayOf(*PCM_CODECS, "alac", "aac", "ac3", "eac3", "dts", "mlp", "truehd")
 
-        private val EXO_EMBEDDED_SUBTITLES = arrayOf("dvbsub", "pgssub", "srt", "subrip", "ttml")
+        // Image subtitles (PGS from Blu-ray, VobSub from DVD, DVB) and text subtitles, all rendered on the device
+        private val EXO_EMBEDDED_SUBTITLES = arrayOf(
+            "dvbsub", "dvdsub", "pgssub", "srt", "subrip", "ttml", "vtt", "webvtt", "mov_text",
+        )
         private val EXO_EXTERNAL_SUBTITLES = arrayOf("srt", "subrip", "ttml", "vtt", "webvtt")
         private val SUBTITLES_SSA = arrayOf("ssa", "ass")
         private val EXTERNAL_PLAYER_SUBTITLES = arrayOf(

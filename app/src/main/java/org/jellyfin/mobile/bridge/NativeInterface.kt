@@ -31,6 +31,7 @@ import org.jellyfin.mobile.utils.Constants.EXTRA_ITEM_ID
 import org.jellyfin.mobile.utils.Constants.EXTRA_PLAYER_ACTION
 import org.jellyfin.mobile.utils.Constants.EXTRA_POSITION
 import org.jellyfin.mobile.utils.Constants.EXTRA_TITLE
+import org.jellyfin.mobile.utils.isTvDevice
 import org.jellyfin.mobile.webapp.RemotePlayerService
 import org.jellyfin.mobile.webapp.RemoteVolumeProvider
 import org.jellyfin.sdk.api.client.ApiClient
@@ -75,6 +76,20 @@ class NativeInterface(private val context: Context) : KoinComponent {
 
     @JavascriptInterface
     fun hasChromecast(): Boolean = BuildConfig.IS_PROPRIETARY
+
+    /**
+     * Lets the web UI open in its TV layout (remote-friendly focus navigation) on TVs.
+     */
+    @JavascriptInterface
+    fun isTv(): Boolean = context.isTvDevice()
+
+    /**
+     * Called by nativeshell.js once the web UI has drawn its first page, so the splash can fade out.
+     */
+    @JavascriptInterface
+    fun onWebAppReady() {
+        emitEvent(ActivityEvent.WebAppReady)
+    }
 
     @JavascriptInterface
     fun enableFullscreen(): Boolean {

@@ -1,0 +1,522 @@
+/*
+ * Streamix layer, loaded by nativeshell.js on top of the server's custom CSS (the Liquid Glass theme).
+ * Selectors start with html.streamix / html.streamix-tv so they outrank the theme's :root rules.
+ */
+
+/* ---------------------------------------------------------------------------------------------
+ * TV performance: keep every frame cheap so focus moves and scrolling hold 60 fps on a 2 GB TV
+ * ------------------------------------------------------------------------------------------- */
+
+/* backdrop-filter re-blurs everything behind a panel on every frame. Swap it for a denser tint. */
+html.streamix-tv {
+    --lg-blur: none !important;
+    --lg-blur-small: none !important;
+    --lg-tint: rgba(22, 22, 27, 0.9) !important;
+    --lg-tint-strong: rgba(26, 26, 31, 0.94) !important;
+}
+
+html.streamix-tv *,
+html.streamix-tv *::before,
+html.streamix-tv *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+/* jellyfin-web gives every card its own GPU layer (will-change). With hundreds of posters that
+   exhausts a TV's graphics memory; the browser still promotes a card while it animates. */
+html.streamix-tv .card.show-animation .cardBox {
+    will-change: auto !important;
+    transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+/* Apple TV style lift on the focused poster */
+html.streamix-tv .card.show-animation:focus > .cardBox {
+    transform: scale(1.08) !important;
+}
+
+/* Smaller resting shadows are cheaper to paint while rows scroll in */
+html.streamix-tv .cardScalable {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Remote navigation has no hover; drop the hover-only sheen sweep on every focus change */
+html.streamix-tv .card .cardImageContainer::after {
+    display: none;
+}
+
+/* Clear focus ring for buttons and inputs reached with the remote */
+html.streamix-tv .emby-button.show-focus:focus,
+html.streamix-tv .paper-icon-button-light.show-focus:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9), 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+html.streamix-tv .layout-tv,
+html.streamix-tv body {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Apple TV style focus for posters: a quick lift plus a crisp white rim, readable from the sofa.
+   Only transform and opacity animate, so the GPU does the work. */
+html.streamix-tv .card.show-focus .cardScalable {
+    transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+html.streamix-tv .card.show-focus:focus .cardScalable {
+    transform: scale(1.1) !important;
+}
+
+html.streamix-tv .card.show-focus .cardScalable::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: var(--atv-radius, 12px);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+}
+
+html.streamix-tv .card.show-focus:focus .cardScalable::after {
+    opacity: 1;
+}
+
+/* Round person / avatar cards keep a round rim */
+html.streamix-tv .personCard .cardScalable::after,
+html.streamix-login #divUsers .cardScalable::after {
+    border-radius: 50%;
+}
+
+/* The focused title reads a step brighter than its neighbours */
+html.streamix-tv .card.show-focus:focus .cardText {
+    font-weight: 600;
+}
+
+/* The theme's deep drop shadow under a focused poster is invisible on the black page except where it
+   spills over the title and greys it out. Drop it on TV (also saves painting a 40px blur per focus). */
+html.streamix-tv .cardScalable::before {
+    display: none !important;
+}
+
+/* One-row header on TV, like Apple TV: logo | tabs | search, profile, clock.
+   .headerTop dissolves (display: contents) so its two halves and the tabs share one grid row. */
+html.streamix-tv .skinHeader:not(.osdHeader) {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+}
+
+html.streamix-tv .skinHeader:not(.osdHeader) > .headerTop {
+    display: contents !important;
+}
+
+html.streamix-tv .skinHeader:not(.osdHeader) .headerLeft {
+    grid-column: 1;
+    grid-row: 1;
+    flex-grow: 0 !important;
+}
+
+html.streamix-tv .skinHeader:not(.osdHeader) .headerRight {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+html.streamix-tv .skinHeader:not(.osdHeader) > .headerTabs {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+}
+
+html.streamix-tv .skinHeader .headerTabs .emby-tab-button {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Search and the settings menu start just under the one-row header */
+html.streamix-tv #searchPage.mainAnimatedPage,
+html.streamix-tv .userPreferencesPage.mainAnimatedPage {
+    padding-top: 3.6em !important;
+}
+
+/* Pages with tabs no longer need room for a second header row */
+html.streamix-tv .page.withTabs,
+html.streamix-tv .page.pageWithAbsoluteTabs {
+    padding-top: 3em !important;
+}
+
+/* Header lines up with the content: same 3.3% side margins as the rows below */
+html.streamix-tv .skinHeader:not(.osdHeader) {
+    padding-left: 3.3% !important;
+    padding-right: 3.3% !important;
+    box-sizing: border-box;
+}
+
+html.streamix-tv .skinHeader:not(.osdHeader) .headerLeft,
+html.streamix-tv .skinHeader:not(.osdHeader) .pageTitle {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+html.streamix-tv .skinHeader:not(.osdHeader) .currentTimeText {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* No paint containment on the header, so focused buttons can grow without being clipped */
+html.streamix-tv .skinHeader:not(.osdHeader) {
+    contain: layout style !important;
+}
+
+/* Header icons sit inside the bar, and focus looks like Apple TV: the icon inverts in a white circle */
+html.streamix-tv .skinHeader:not(.osdHeader) button.headerButton {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 4px !important;
+    border-radius: 50% !important;
+    transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 160ms ease, color 160ms ease !important;
+}
+
+html.streamix-tv .skinHeader:not(.osdHeader) button.headerButton.show-focus:focus,
+html.streamix-tv .skinHeader:not(.osdHeader) button.headerButton:focus-visible {
+    transform: scale(1.08) !important;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* The profile picture keeps its photo; focus draws a white ring around it */
+html.streamix-tv .skinHeader:not(.osdHeader) button.headerUserButtonRound.show-focus:focus,
+html.streamix-tv .skinHeader:not(.osdHeader) button.headerUserButtonRound:focus-visible {
+    background: transparent !important;
+    box-shadow: 0 0 0 3px #fff, 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Translucent top bar: the artwork shows through, the icons stay readable */
+html.streamix-tv .skinHeader-withBackground:not(.osdHeader):not(.semiTransparent) {
+    background: linear-gradient(180deg, rgba(8, 8, 12, 0.72) 0%, rgba(8, 8, 12, 0.42) 100%) !important;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Tighter, even rhythm on TV home and library rows */
+
+/* The 10px transparent border was room for Jellyfin's focus outline; the white rim replaces it */
+html.streamix-tv .card.show-focus:not(.show-animation) .cardBox:not(.visualCardBox) .cardScalable,
+html.streamix-tv .show-focus:not(.show-animation) .cardBox.visualCardBox {
+    border-width: 0 !important;
+}
+
+html.streamix-tv .show-focus:not(.show-animation) .cardBox {
+    margin: 0.6em !important;
+}
+
+/* Row titles: smaller, closer to their row, and level with the first poster */
+html.streamix-tv .mainAnimatedPage .sectionTitle-cards {
+    font-size: 1.3em !important;
+    padding-top: 0.5em !important;
+    padding-bottom: 0.45em !important;
+    margin-bottom: 0 !important;
+    padding-left: calc(3.3% + 0.6em) !important;
+}
+
+html.streamix-tv .mainAnimatedPage .verticalSection {
+    margin-bottom: 0.2em !important;
+}
+
+/* Logo, row titles and first posters share one left edge; the clock matches on the right */
+html.streamix-tv .skinHeader:not(.osdHeader) {
+    padding-left: calc(3.3% + 12px) !important;
+    padding-right: calc(3.3% + 12px) !important;
+}
+
+/* Top bar, Apple TV style: no hard edge, the artwork fades in behind it */
+html.streamix-tv .skinHeader-withBackground:not(.osdHeader):not(.semiTransparent),
+html.streamix-tv .skinHeader:not(.osdHeader) {
+    min-height: 64px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.38) 62%, rgba(0, 0, 0, 0) 100%) !important;
+    box-shadow: none !important;
+}
+
+/* Smaller, lighter logo, centred in the bar */
+html.streamix-tv .skinHeader .pageTitleWithLogo {
+    width: 150px !important;
+    height: 28px !important;
+    margin: 0 !important;
+    background-size: contain !important;
+    background-position: left center !important;
+}
+
+/* Tabs sit in a frosted capsule */
+html.streamix-tv .skinHeader:not(.osdHeader) > .headerTabs .emby-tabs-slider {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+html.streamix-tv .skinHeader .headerTabs .emby-tab-button {
+    margin: 0 !important;
+    padding: 0.38em 1.15em !important;
+    font-size: 0.92em !important;
+    font-weight: 600 !important;
+    border-radius: 999px !important;
+    color: rgba(255, 255, 255, 0.72) !important;
+}
+
+html.streamix-tv .skinHeader .headerTabs .emby-tab-button.emby-tab-button-active {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+}
+
+html.streamix-tv .skinHeader .headerTabs .emby-tab-button.show-focus:focus,
+html.streamix-tv .skinHeader .headerTabs .emby-tab-button:focus-visible {
+    color: #000 !important;
+    background: #fff !important;
+    transform: scale(1.06) !important;
+}
+
+/* Icons and clock: same size and rhythm */
+html.streamix-tv .skinHeader:not(.osdHeader) button.headerButton {
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 3px !important;
+    font-size: 0.92em;
+}
+
+html.streamix-tv .skinHeader:not(.osdHeader) .currentTimeText {
+    font-size: 0.95em !important;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-left: 10px !important;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Backdrops: the focused title's artwork behind the rows (layer built by nativeshell.js)
+ * ------------------------------------------------------------------------------------------- */
+
+#streamixBackdrop {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 500ms ease;
+}
+
+html.streamix-browse #streamixBackdrop,
+html.streamix-detail #streamixBackdrop {
+    opacity: 1;
+}
+
+/* Detail pages: text sits on the left half, so darken from the left */
+html.streamix-detail #streamixBackdrop .sbScrim {
+    background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.72) 50%, rgba(0, 0, 0, 0.55) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+html.streamix-detail .itemDetailPage .itemName,
+html.streamix-detail .itemDetailPage .overview,
+html.streamix-detail .itemDetailPage .itemMiscInfo {
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+}
+
+#streamixBackdrop .sbLayer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 700ms ease;
+    will-change: opacity;
+}
+
+#streamixBackdrop .sbLayer.active {
+    opacity: 1;
+}
+
+#streamixBackdrop .sbLayer img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+}
+
+/* Bright at the top right like Apple TV, darkening to black behind the lower rows and the left edge */
+#streamixBackdrop .sbScrim {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.62) 38%, rgba(0, 0, 0, 0.9) 70%, #000 100%),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0) 60%);
+}
+
+/* Section titles stay readable over bright artwork */
+html.streamix-browse .sectionTitle {
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Login: profile pictures in front of the server's splash-screen artwork
+ * ------------------------------------------------------------------------------------------- */
+
+/* nativeshell.js adds .streamix-login while a login / server / password page is showing.
+   ../../Branding/Splashscreen (from /web/native/ up to the server root) is the server's poster collage (Dashboard > General > Branding).
+   If it's turned off the request fails and the colour glow below shows on its own. */
+html.streamix-login .backgroundContainer {
+    background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.62) 55%, rgba(0, 0, 0, 0.9) 100%),
+        url('../../Branding/Splashscreen') center / cover no-repeat,
+        radial-gradient(110% 90% at 22% 12%, rgba(64, 52, 140, 0.55), transparent 60%),
+        radial-gradient(90% 80% at 85% 90%, rgba(120, 32, 90, 0.4), transparent 60%),
+        #000 !important;
+    opacity: 1 !important;
+}
+
+html.streamix-login .page.standalonePage,
+html.streamix-login #loginPage,
+html.streamix-login #selectServerPage {
+    background: transparent !important;
+}
+
+/* User avatars: large round profile pictures with a glass rim */
+html.streamix-login #divUsers .cardScalable {
+    border-radius: 50% !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 12px 32px rgba(0, 0, 0, 0.55) !important;
+}
+
+html.streamix-login #divUsers .cardText {
+    font-weight: 600;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+}
+
+html.streamix-login #divUsers .card:focus .cardScalable,
+html.streamix-login #divUsers .card.show-animation:focus > .cardBox .cardScalable {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.95), 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* The sign-in form floats on a dark glass card so it stays readable over any artwork */
+html.streamix-login .manualLoginForm,
+html.streamix-login #selectServerPage .padded-left.padded-right {
+    background: rgba(18, 18, 22, 0.72);
+    border-radius: 24px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 60px rgba(0, 0, 0, 0.5);
+    padding: 1.5em 1.75em !important;
+}
+
+html.streamix-login .loginDisclaimer,
+html.streamix-login .disclaimerContainer {
+    color: rgba(235, 235, 245, 0.7) !important;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+}
+
+html.streamix-login h1,
+html.streamix-login .sectionTitle {
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7);
+}
+
+/* TV: a centred sign-in card that fits on one screen */
+html.streamix-login .manualLoginForm,
+html.streamix-login .readOnlyContent {
+    max-width: 540px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+html.streamix-tv.streamix-login .manualLoginForm {
+    padding: 1em 1.6em 1.2em !important;
+}
+
+html.streamix-tv.streamix-login .manualLoginForm > .padded-left:first-child {
+    padding-top: 0 !important;
+    padding-bottom: 0.2em !important;
+}
+
+html.streamix-tv.streamix-login .manualLoginForm .inputContainer {
+    margin-bottom: 1em !important;
+}
+
+/* Quick Connect / Forgot password / Change server side by side under the card */
+html.streamix-tv.streamix-login .readOnlyContent {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6em;
+    margin-top: 1em !important;
+}
+
+html.streamix-tv.streamix-login .readOnlyContent > .raised.block {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    margin: 0 !important;
+    padding-left: 0.6em !important;
+    padding-right: 0.6em !important;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+html.streamix-tv.streamix-login .loginDisclaimerContainer {
+    flex-basis: 100%;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Profile pictures get the full width when the server shows them */
+html.streamix-login .visualLoginForm {
+    max-width: 900px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* The TV layout's text is sized for menus across the room; the login page needs to fit one screen */
+html.streamix-tv.streamix-login .manualLoginForm,
+html.streamix-tv.streamix-login .readOnlyContent {
+    font-size: 78%;
+}
+
+html.streamix-tv.streamix-login .manualLoginForm h1.sectionTitle {
+    margin: 0.2em 0 0.4em !important;
+}
+
+html.streamix-tv.streamix-login .manualLoginForm .checkboxContainer {
+    margin-bottom: 1em !important;
+}
+
+html.streamix-tv.streamix-login .manualLoginForm h1.sectionTitle {
+    font-size: 1.75em;
+}
+
+html.streamix-tv.streamix-login .readOnlyContent {
+    margin-top: 0.7em !important;
+}
+
+html.streamix-tv.streamix-login .loginDisclaimerContainer,
+html.streamix-tv.streamix-login .loginDisclaimer {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+html.streamix-tv.streamix-login .loginDisclaimer p {
+    margin: 0.35em 0 !important;
+}
+
+html.streamix-tv.streamix-login #loginPage {
+    padding-top: 76px !important;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Branding
+ * ------------------------------------------------------------------------------------------- */
+
+/* Streamix lock-up in place of the default Jellyfin logo in the header */
+html.streamix .pageTitleWithDefaultLogo {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 326 64'%3E%3Cdefs%3E%3ClinearGradient id='r' x1='30' y1='28' x2='80' y2='82' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%2364D2FF'/%3E%3Cstop offset='.5' stop-color='%237D5CFF'/%3E%3Cstop offset='1' stop-color='%23FF4FA3'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate%28-20 -22%29'%3E%3Cpath d='M75.65 41.5A25 25 0 1 1 54 29' fill='none' stroke='url%28%23r%29' stroke-width='6' stroke-linecap='round'/%3E%3Ccircle cx='66.5' cy='32.35' r='3.4' fill='%23FF4FA3'/%3E%3Cpath d='M48 44.2V63.8L64.2 54Z' fill='%23fff' stroke='%23fff' stroke-width='4.6' stroke-linejoin='round'/%3E%3C/g%3E%3Cpath transform='translate%2882 12%29' fill='none' stroke='%23fff' stroke-width='6.5' stroke-linecap='round' stroke-linejoin='round' d='M22 6.5C19.5 2.2 15.8 0 11.6 0C6 0 1.8 3.4 1.8 9.6C1.8 22.4 23.4 17.4 23.4 30.2C23.4 36.4 18.8 40 12 40C7.2 40 2.9 37.4 0.6 33M32 0H56M44 0V40M66 40V0H77A11 11 0 0 1 77 22H66M76 22L88 40M118 0H98V40H118M98 20H115M126 40L139 0L152 40M162 40V0L177 27L192 0V40M202 0V40M212 0L236 40M236 0L212 40'/%3E%3C/svg%3E") !important;
+}

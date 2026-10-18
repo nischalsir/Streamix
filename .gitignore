@@ -8,3 +8,8 @@ build
 /captures
 .externalNativeBuild
 .cxx
+
+# Release signing keys never go in the repo
+*.jks
+*.keystore
+keystore.properties

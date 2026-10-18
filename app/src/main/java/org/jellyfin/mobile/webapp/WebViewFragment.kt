@@ -1,6 +1,7 @@
 package org.jellyfin.mobile.webapp
 
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
@@ -43,7 +44,9 @@ import org.jellyfin.mobile.utils.dip
 import org.jellyfin.mobile.utils.extensions.getParcelableCompat
 import org.jellyfin.mobile.utils.extensions.replaceFragment
 import org.jellyfin.mobile.utils.fadeIn
+import org.jellyfin.mobile.utils.extensions.requireMainActivity
 import org.jellyfin.mobile.utils.isOutdated
+import org.jellyfin.mobile.utils.isTvDevice
 import org.jellyfin.mobile.utils.requestNoBatteryOptimizations
 import org.jellyfin.mobile.utils.runOnUiThread
 import org.koin.android.ext.android.inject
@@ -67,6 +70,13 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
     }
     private val showLoadingContainerRunnable = Runnable {
         webViewBinding?.loadingContainer?.isVisible = true
+    }
+
+    /**
+     * Normally nativeshell.js reports the first drawn page. This is the fallback if it never does.
+     */
+    private val contentReadyFallbackRunnable = Runnable {
+        if (isAdded) requireMainActivity().onContentReady()
     }
 
     // UI
@@ -102,6 +112,9 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
                 runOnUiThread {
                     webViewBinding.loadingContainer.isVisible = false
                     webView.fadeIn()
+                    // The TV remote drives the web UI through the focused WebView
+                    webView.requestFocus()
+                    webView.postDelayed(contentReadyFallbackRunnable, Constants.WEB_READY_FALLBACK_DELAY)
                 }
                 requestNoBatteryOptimizations(webViewBinding.root)
             }
@@ -174,7 +187,23 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
 
     override fun onDestroyView() {
         super.onDestroyView()
+        webViewBinding?.webView?.removeCallbacks(contentReadyFallbackRunnable)
         webViewBinding = null
+    }
+
+    /**
+     * Blocks remote focus while another screen (player, settings, downloads) covers the web UI,
+     * and hands focus back to it when it's on top again.
+     */
+    fun setRemoteFocusEnabled(enabled: Boolean) {
+        val binding = webViewBinding ?: return
+        if (enabled) {
+            binding.root.descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
+            if (connected) binding.webView.requestFocus()
+        } else {
+            binding.webView.clearFocus()
+            binding.root.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+        }
     }
 
     private fun WebView.initialize() {
@@ -185,6 +214,18 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
         webViewClient = jellyfinWebViewClient
         webChromeClient = JellyfinWebChromeClient(this@WebViewFragment)
         settings.applyDefault()
+
+        // Black before the first paint (no white flash), no edge glow, no native scrollbars on TV
+        setBackgroundColor(Color.BLACK)
+        overScrollMode = View.OVER_SCROLL_NEVER
+        if (requireContext().isTvDevice()) {
+            isVerticalScrollBarEnabled = false
+            isHorizontalScrollBarEnabled = false
+        }
+        // Keep the web renderer from being killed under memory pressure while it's on screen
+        if (AndroidVersion.isAtLeastO) {
+            setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true)
+        }
         addJavascriptInterface(NativeInterface(requireContext()), "NativeInterface")
         addJavascriptInterface(nativePlayer, "NativePlayer")
         addJavascriptInterface(externalPlayer, "ExternalPlayer")
@@ -257,6 +298,7 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
     private fun handleError() {
         connected = false
         onSelectServer(error = true)
+        runOnUiThread { if (isAdded) requireMainActivity().onContentReady() }
     }
 
     override fun onShowFileChooser(intent: Intent, filePathCallback: ValueCallback<Array<Uri>>) {

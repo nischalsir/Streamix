@@ -1,24 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Brand and base colors -->
-    <color name="jellyfin_primary">#202020</color>
-    <color name="jellyfin_primary_dark">#101010</color>
-    <!-- Secondary -->
-    <color name="jellyfin_accent">#00a4dc</color>
+    <color name="jellyfin_primary">#1C1C1E</color>
+    <color name="jellyfin_primary_dark">#000000</color>
+    <!-- Secondary: Streamix violet, the middle stop of the logo gradient -->
+    <color name="jellyfin_accent">#8B6CFF</color>
 
-    <!-- Launcher icon background -->
-    <color name="ic_launcher_background">#000b25</color>
+    <!-- Launcher icon background (legacy reference; adaptive icons use @drawable/ic_launcher_background) -->
+    <color name="ic_launcher_background">#110F1C</color>
 
-    <!-- Splash logo color for API < 24. API >= 24 will have the default gradient. -->
-    <color name="splash_fill">#fafafa</color>
-
-    <!-- App colors -->
-    <color name="theme_background">#101010</color>
-    <color name="playback_controls_background">#60000000</color>
+    <!-- App colors. Pure black so the system splash, in-app splash and web UI join without a seam. -->
+    <color name="theme_background">#000000</color>
+    <color name="playback_controls_background">#73000000</color>
     <color name="playback_info_background">#cc000000</color>
-    <color name="playback_timebar_unplayed">#333333</color>
+    <color name="playback_timebar_unplayed">#4DFFFFFF</color>
 
     <!-- Skip Media Segment Button -->
-    <color name="skip_media_segment_background">#202124</color>
-    <color name="skip_media_segment_text">#DDDDDD</color>
+    <color name="skip_media_segment_background">#E61C1C1E</color>
+    <color name="skip_media_segment_text">#FFFFFF</color>
 </resources>

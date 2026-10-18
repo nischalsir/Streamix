@@ -1,8 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.fragment.app.FragmentContainerView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/fragment_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:layout="@layout/fragment_connect"
-    tools:viewBindingIgnore="true" />
+    android:background="@color/theme_background"
+    tools:viewBindingIgnore="true">
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:layout="@layout/fragment_compose" />
+
+    <!--
+        Branded splash. Takes over from the black system splash with the animated intro, then shows the
+        wordmark and credits while the web UI loads underneath, and fades out once the first page is drawn.
+    -->
+    <FrameLayout
+        android:id="@+id/splash_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/theme_background"
+        android:clickable="true"
+        android:focusable="false"
+        android:importantForAccessibility="noHideDescendants"
+        tools:ignore="KeyboardInaccessibleWidget">
+
+        <View
+            android:id="@+id/splash_glow"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0"
+            android:background="@drawable/splash_glow" />
+
+        <ImageView
+            android:id="@+id/splash_logo"
+            android:layout_width="@dimen/splash_logo_size"
+            android:layout_height="@dimen/splash_logo_size"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/ic_splash_animated"
+            tools:ignore="ContentDescription" />
+
+        <ImageView
+            android:id="@+id/splash_wordmark"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/splash_wordmark_height"
+            android:layout_gravity="center"
+            android:adjustViewBounds="true"
+            android:alpha="0"
+            android:scaleType="fitCenter"
+            android:translationY="@dimen/splash_wordmark_offset"
+            app:srcCompat="@drawable/streamix_wordmark"
+            tools:ignore="ContentDescription" />
+
+        <FrameLayout
+            android:id="@+id/splash_progress_track"
+            android:layout_width="@dimen/splash_progress_width"
+            android:layout_height="3dp"
+            android:layout_gravity="center"
+            android:alpha="0"
+            android:background="@drawable/splash_progress_track"
+            android:translationY="@dimen/splash_progress_offset">
+
+            <View
+                android:id="@+id/splash_progress_bar"
+                android:layout_width="@dimen/splash_progress_bar_width"
+                android:layout_height="match_parent"
+                android:background="@drawable/splash_progress" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/splash_credits"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="40dp"
+            android:alpha="0"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/SplashCredit"
+                android:alpha="0.5"
+                android:letterSpacing="0.3"
+                android:text="@string/splash_developed_by"
+                android:textSize="11sp" />
+
+            <TextView
+                style="@style/SplashCredit"
+                android:layout_marginTop="8dp"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.16"
+                android:text="@string/splash_developer_name"
+                android:textSize="20sp" />
+
+            <TextView
+                style="@style/SplashCredit"
+                android:layout_marginTop="10dp"
+                android:alpha="0.6"
+                android:text="@string/splash_developer_links"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>
