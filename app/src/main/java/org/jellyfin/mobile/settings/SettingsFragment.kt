@@ -378,10 +378,16 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         categoryHeader(PREF_CATEGORY_VIDEO_PLAYER) {
             titleRes = R.string.pref_category_tv_playback
         }
-        checkBox(Constants.PREF_EXOPLAYER_AUDIO_PASSTHROUGH) {
-            titleRes = R.string.pref_tv_audio_passthrough
-            summaryRes = R.string.pref_tv_audio_passthrough_summary
-            defaultValue = true
+        singleChoice(
+            Constants.PREF_AUDIO_OUTPUT,
+            listOf(
+                SelectionItem(Constants.AUDIO_OUTPUT_DIRECT, R.string.pref_audio_output_direct, R.string.pref_audio_output_direct_summary),
+                SelectionItem(Constants.AUDIO_OUTPUT_DECODE, R.string.pref_audio_output_decode, R.string.pref_audio_output_decode_summary),
+                SelectionItem(Constants.AUDIO_OUTPUT_STEREO, R.string.pref_audio_output_stereo, R.string.pref_audio_output_stereo_summary),
+            ),
+        ) {
+            titleRes = R.string.pref_audio_output
+            initialSelection = appPreferences.audioOutput
         }
         checkBox(Constants.PREF_EXOPLAYER_MATCH_FRAME_RATE) {
             titleRes = R.string.pref_tv_match_frame_rate

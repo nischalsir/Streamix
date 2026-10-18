@@ -44,7 +44,8 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 | **Smooth on budget TVs** | GPU-heavy effects (live blur, hundreds of GPU layers) are switched off on TVs. Release build, R8-optimised. |
 | **Native 4K HDR player** | Media3 / ExoPlayer with hardware decoding. HDR10 and HEVC 10-bit play directly. |
 | **Judder-free motion** | Switches the TV to the video's frame rate (24p, 25p, 50p) when the panel supports it. |
-| **Dolby Atmos, DTS, TrueHD** | Dolby Digital, Dolby Digital Plus (Atmos), DTS / DTS-HD and TrueHD are sent untouched to your TV, soundbar or AV receiver, or decoded on the TV (FFmpeg) if nothing downstream can. |
+| **Dolby Atmos, DTS, TrueHD** | Dolby Digital, Dolby Digital Plus (Atmos), DTS / DTS-HD and TrueHD are sent untouched to your TV, soundbar or AV receiver, or decoded on the TV (FFmpeg) if nothing downstream can. **Audio output** offers *Direct*, *Decode on the TV* and *Downmix to stereo*. |
+| **Stays signed in** | Updates keep your server and login. If you uninstall and reinstall, Android's backup brings them back (see [Install](#2-install-it-on-your-tv-from-a-usb-drive)). |
 | **Every subtitle type** | SRT, WebVTT, TTML, styled ASS/SSA (libass), PGS (Blu-ray), VobSub (DVD), DVB and MP4 text, with a theater style: white text, soft shadow, no box. |
 | **Profile-picture login** | Login shows your users' profile pictures over your server's poster-collage background. |
 | **Remote-first player** | ◀ ▶ seek 10 s instantly, holding them scrubs with thumbnails, OK plays/pauses, Back hides the controls and then exits. |
@@ -79,6 +80,13 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 > **Update now**. You can also check yourself in **Settings → Streamix Settings → Check for updates**.
 > The first time, Android asks you to allow Streamix to install apps: turn it on, press **Back**, and the
 > update continues. Your server, login and settings are kept. (From 1.0.0, install 1.1 once by USB.)
+>
+> **Installing a new APK by USB?** Just install it over the old one, no need to uninstall first: everything is kept.
+
+> **Uninstalled and installed again?** Streamix saves your server, sign-in and settings with Android's backup
+> to the Google account on the TV, and Android puts them back when Streamix is installed again, so it opens
+> signed in. This needs the TV signed in to Google with backup on, and Android makes the backup about once a
+> day, so a fresh install that's removed within a few hours may still ask you to sign in once.
 
 ## 3. Connect to your Jellyfin server
 
@@ -111,7 +119,7 @@ The first time Jellyfin runs, Windows asks whether to allow it on networks. If y
    With **Quick Connect** turned on (Dashboard → General), you can also approve the sign-in from your phone.
 
 Streamix remembers the server and your login. To switch servers later: **your avatar → Select Server**.
-Streamix's own options (surround sound, smoother motion, buffering, subtitle size, updates) are under
+Streamix's own options (audio output, smoother motion, buffering, subtitle size, updates) are under
 **Settings → Streamix Settings**.
 
 ## 4. Server setup for the best experience
@@ -173,8 +181,13 @@ Streamix never converts surround audio on the server. The TV decides what to do 
 TV settings to check (TCL Google TV): **Settings → Display & Sound → Audio output**: choose your soundbar
 (**HDMI ARC/eARC**). Under **Digital output**, choose **Auto** or **Passthrough**.
 
-**No sound on some videos?** In Streamix go to **Settings → Streamix Settings** and turn off
-**Surround sound to soundbar**. Everything is then decoded on the TV, which always works.
+### Audio output (Settings → Streamix Settings)
+
+| Option | What it does |
+|---|---|
+| **Direct** (default) | Dolby Atmos, Dolby Digital and DTS go as they are to your TV, soundbar or receiver. |
+| **Decode on the TV** | Streamix decodes surround sound itself. **Pick this if a movie plays without sound.** |
+| **Downmix to stereo** | Everything is mixed down to two-channel stereo on the TV, with the centre (dialogue) channel kept clear. Best for TV speakers or a stereo soundbar. |
 
 ## 6. Subtitles
 
@@ -273,7 +286,9 @@ Streamix already does the heavy lifting, and a few TV and server settings help f
 | **Phone layout instead of TV layout** | In Streamix: **Settings → Display → Display mode → TV**. |
 | **No profile pictures on login** | Users are hidden from the login screen. See [Show profile pictures](#show-profile-pictures-on-the-login-screen). |
 | **No login background** | Enable the server's splash screen. See [Login background](#login-background). |
-| **No sound with Atmos / DTS** | Turn off **Surround sound to soundbar** (Settings → Streamix Settings), or set the TV's digital output to **Auto**. |
+| **No sound with Atmos / DTS** | Set **Audio output** to **Decode on the TV** (Settings → Streamix Settings), or set the TV's digital output to **Auto**. |
+| **Dialogue too quiet on TV speakers** | Set **Audio output** to **Downmix to stereo**. |
+| **Asks to sign in after reinstalling** | Android hadn't made a backup yet (it does so about once a day), or the TV isn't signed in to Google. Sign in once; next time it comes back by itself. To update, install over the old version instead of uninstalling. |
 | **Video stutters** | Usually a server transcode: open **ⓘ (info)** in the player to see. Enable hardware acceleration on the server, or pick a lower quality in **⚙**. |
 | **Subtitles look wrong** | Pick another subtitle track in the player, or turn off the TV's own caption style. |
 | **Video pauses to load** | **Settings → Streamix Settings → Buffering → More** (or **Most** for big 4K files on weak Wi-Fi). |

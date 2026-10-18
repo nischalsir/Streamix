@@ -142,6 +142,14 @@ class AppPreferences(context: Context) {
     val exoPlayerAudioPassthrough: Boolean
         get() = sharedPreferences.getBoolean(Constants.PREF_EXOPLAYER_AUDIO_PASSTHROUGH, true)
 
+    /**
+     * Direct, decode on the TV, or downmix to stereo. Until it's chosen it follows the older
+     * "Surround sound to soundbar" switch, so an upgrade keeps what was set.
+     */
+    val audioOutput: String
+        get() = sharedPreferences.getString(Constants.PREF_AUDIO_OUTPUT, null)
+            ?: if (exoPlayerAudioPassthrough) Constants.AUDIO_OUTPUT_DIRECT else Constants.AUDIO_OUTPUT_DECODE
+
     val exoPlayerNetworkBuffer: String
         get() = sharedPreferences.getString(Constants.PREF_EXOPLAYER_NETWORK_BUFFER, Constants.NETWORK_BUFFER_AUTO)!!
 

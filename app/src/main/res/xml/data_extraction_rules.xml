@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: what Auto Backup saves to the Google account (and copies to a new device), so
+     reinstalling Streamix brings back the server and sign-in. Same content as backup_content.xml. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- The signed-in server and user live in three places, and a restore needs all of them:
+             the database (servers, users, access tokens), the app's preferences (which server and user
+             are current) and the web interface's own storage. Caches are left out. -->
+        <include
+            domain="root"
+            path="app_webview" />
+        <exclude
+            domain="root"
+            path="app_webview/blob_storage" />
+        <exclude
+            domain="root"
+            path="app_webview/GPUCache" />
+        <exclude
+            domain="root"
+            path="app_webview/VideoDecodeStats" />
+        <include
+            domain="database"
+            path="." />
+        <include
+            domain="sharedpref"
+            path="dev.nischalpandey.streamix_preferences.xml" />
+        <include
+            domain="sharedpref"
+            path="dev.nischalpandey.streamix.debug_preferences.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <!-- The signed-in server and user live in three places, and a restore needs all of them:
+             the database (servers, users, access tokens), the app's preferences (which server and user
+             are current) and the web interface's own storage. Caches are left out. -->
+        <include
+            domain="root"
+            path="app_webview" />
+        <exclude
+            domain="root"
+            path="app_webview/blob_storage" />
+        <exclude
+            domain="root"
+            path="app_webview/GPUCache" />
+        <exclude
+            domain="root"
+            path="app_webview/VideoDecodeStats" />
+        <include
+            domain="database"
+            path="." />
+        <include
+            domain="sharedpref"
+            path="dev.nischalpandey.streamix_preferences.xml" />
+        <include
+            domain="sharedpref"
+            path="dev.nischalpandey.streamix.debug_preferences.xml" />
+    </device-transfer>
+</data-extraction-rules>

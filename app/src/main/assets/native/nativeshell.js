@@ -93,6 +93,7 @@ if (isTv) {
         type: 'Backdrop', index: 0, tag: pick.tag, maxWidth, quality: 80
     });
 
+    let artPending = 0;
     const retileLibraries = () => {
         if (!window.ApiClient || !window.ApiClient.getItems) return;
         const cards = document.querySelectorAll(
@@ -105,6 +106,7 @@ if (isTv) {
                 card.classList.add('streamixLiveTvTile');
                 return;
             }
+            artPending++;
             pickFromLibrary(card.getAttribute('data-id')).then((pick) => {
                 if (!pick) return;
                 const url = libraryArtUrl(pick, 720);
@@ -114,11 +116,19 @@ if (isTv) {
                 return img.decode().then(() => {
                     const tile = card.querySelector('.cardImageContainer');
                     if (!tile) return;
-                    // data-src too, so the lazy loader can't put the old image back
-                    tile.setAttribute('data-src', url);
-                    tile.style.backgroundImage = `url("${url}")`;
+                    // On a layer of its own: Jellyfin's image loader may still be fetching the old picture
+                    // for the tile itself, and would put it back when it finishes
+                    let art = tile.querySelector(':scope > .streamixLibraryArt');
+                    if (!art) {
+                        art = document.createElement('div');
+                        art.className = 'streamixLibraryArt';
+                        tile.prepend(art);
+                    }
+                    art.style.backgroundImage = `url("${url}")`;
                 });
-            }).catch(() => {});
+            }).catch(() => {}).finally(() => {
+                artPending--;
+            });
         });
     };
 
@@ -133,6 +143,7 @@ if (isTv) {
         let shownUrl = null;
         let timer = null;
         let requested = null;
+        let settled = false;
 
         const ensureRoot = () => {
             const container = document.querySelector('.backgroundContainer');
@@ -185,7 +196,10 @@ if (isTv) {
         };
 
         const show = async (url) => {
-            if (!url || url === shownUrl || !ensureRoot()) return;
+            if (!url || url === shownUrl || !ensureRoot()) {
+                settled = true;
+                return;
+            }
             requested = url;
             const img = new Image();
             img.decoding = 'async';
@@ -207,6 +221,7 @@ if (isTv) {
             }, 900);
             front = back;
             shownUrl = url;
+            settled = true;
         };
 
         return {
@@ -220,6 +235,9 @@ if (isTv) {
             },
             refresh() {
                 ensureRoot();
+            },
+            settled() {
+                return settled;
             }
         };
     })();
@@ -364,14 +382,52 @@ if (isTv) {
         }, true);
     }
 
-    // Tell the app when the first page is on screen, so the splash can fade into it
+    // Tell the app when the first page is on screen, so the splash can fade into it. On the home screen
+    // that waits until the screen is complete - rows filled, pictures on screen loaded, library art swapped
+    // and the backdrop in - so it doesn't visibly put itself together after the splash has gone.
+    const SETTLE_MAX_MS = 5000;
+    // Returns what the first screen is still waiting for, or '' once it's complete
+    const firstScreenPending = () => {
+        const page = document.querySelector('.mainAnimatedPage:not(.hide)');
+        if (!page) return 'page';
+        const onScreen = (el) => {
+            const r = el.getBoundingClientRect();
+            return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight
+                && r.right > 0 && r.left < window.innerWidth;
+        };
+        const sections = page.querySelector('.homeSectionsContainer');
+        if (sections) {
+            const rows = [...sections.querySelectorAll(':scope > .verticalSection:not(.hide)')].filter(onScreen);
+            if (!rows.length || rows.some((row) => !row.querySelector('.card'))) return 'rows';
+        }
+        const images = [...page.querySelectorAll('.cardImageContainer')].filter(onScreen);
+        if (images.some((el) => el.classList.contains('lazy') && !el.style.backgroundImage)) return 'images';
+        if (artPending > 0) return 'library art';
+        if (root.classList.contains('streamix-browse') && !backdrop.settled()) return 'backdrop';
+        return '';
+    };
+
     let readyReported = false;
     const reportReady = () => {
         if (readyReported) return;
         readyReported = true;
-        requestAnimationFrame(() => requestAnimationFrame(() => {
+        const started = Date.now();
+        const finish = () => requestAnimationFrame(() => requestAnimationFrame(() => {
             setTimeout(() => window.NativeInterface.onWebAppReady && window.NativeInterface.onWebAppReady(), 150);
         }));
+        const check = () => {
+            const pending = firstScreenPending();
+            const waited = Date.now() - started;
+            if (!pending || waited > SETTLE_MAX_MS) {
+                // Kept for troubleshooting from DevTools
+                window.streamixSplash = { waitedMs: waited, stillPending: pending };
+                finish();
+            } else {
+                setTimeout(check, 100);
+            }
+        };
+        // Rows render a moment after the page is shown
+        setTimeout(check, 300);
     };
 
     // Settings menu on TV: plain names for the entries that stay (the technical ones are hidden in CSS)

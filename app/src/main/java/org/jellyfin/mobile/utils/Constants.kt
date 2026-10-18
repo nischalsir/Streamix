@@ -44,6 +44,10 @@ object Constants {
     const val WEB_READY_FALLBACK_DELAY = 6000L
     const val PREF_EXOPLAYER_MATCH_FRAME_RATE = "pref_exoplayer_match_frame_rate"
     const val PREF_EXOPLAYER_AUDIO_PASSTHROUGH = "pref_exoplayer_audio_passthrough"
+    const val PREF_AUDIO_OUTPUT = "pref_audio_output"
+    const val AUDIO_OUTPUT_DIRECT = "direct"
+    const val AUDIO_OUTPUT_DECODE = "decode"
+    const val AUDIO_OUTPUT_STEREO = "stereo"
     const val NETWORK_BUFFER_AUTO = "auto"
     const val NETWORK_BUFFER_LARGE = "large"
     const val NETWORK_BUFFER_EXTRA_LARGE = "extra_large"

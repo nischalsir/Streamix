@@ -118,8 +118,13 @@
     <string name="pref_exoplayer_audio_passthrough_summary">Sends surround audio untouched to your TV, soundbar or AV receiver when it can decode it. Turn this off if a video plays without sound.</string>
     <string name="pref_category_about">About Streamix</string>
     <string name="pref_category_tv_playback">Playback</string>
-    <string name="pref_tv_audio_passthrough">Surround sound to soundbar</string>
-    <string name="pref_tv_audio_passthrough_summary">Dolby Atmos, Dolby Digital and DTS go straight to your TV, soundbar or receiver. Turn this off if a movie plays without sound.</string>
+    <string name="pref_audio_output">Audio output</string>
+    <string name="pref_audio_output_direct">Direct</string>
+    <string name="pref_audio_output_direct_summary">Dolby Atmos, Dolby Digital and DTS go as they are to your TV, soundbar or receiver</string>
+    <string name="pref_audio_output_decode">Decode on the TV</string>
+    <string name="pref_audio_output_decode_summary">Streamix decodes surround sound itself. Pick this if a movie plays without sound</string>
+    <string name="pref_audio_output_stereo">Downmix to stereo</string>
+    <string name="pref_audio_output_stereo_summary">Everything in two-channel stereo, with clearer dialogue on TV speakers</string>
     <string name="pref_tv_match_frame_rate">Smoother motion for films</string>
     <string name="pref_tv_match_frame_rate_summary">Lets the TV switch to the film\'s own frame rate. The screen may go dark for a moment when a video starts.</string>
     <string name="pref_tv_buffer">Buffering</string>

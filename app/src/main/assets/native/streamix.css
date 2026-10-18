@@ -751,6 +751,17 @@ html.streamix-tv .listItem-focusscale:focus {
  * Live TV
  * ------------------------------------------------------------------------------------------- */
 
+/* Library tiles: Streamix's clean artwork (see retileLibraries in nativeshell.js) covers Jellyfin's
+   picture with the library name drawn on it */
+html.streamix .cardImageContainer > .streamixLibraryArt {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 /* Home screen: Live TV has no artwork, so it gets a tile in the logo's colours with a LIVE tag */
 html.streamix .card.streamixLiveTvTile .cardImageContainer {
     background:
