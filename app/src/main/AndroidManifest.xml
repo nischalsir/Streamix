@@ -21,6 +21,9 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- In-app updates from GitHub releases (Android asks the user once to allow it) -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Streamix runs on Google TV / Android TV: no touchscreen needed, appears in the TV launcher -->
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -120,6 +123,10 @@
             android:readPermission="android.permission.MEDIA_CONTENT_CONTROL" />
 
         <receiver android:name="org.jellyfin.mobile.downloads.DownloadBroadcastReceiver" />
+
+        <receiver
+            android:name=".update.UpdateInstallReceiver"
+            android:exported="false" />
 
         <meta-data
             android:name="com.google.android.gms.version"

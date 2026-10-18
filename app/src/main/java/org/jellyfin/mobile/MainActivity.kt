@@ -39,6 +39,7 @@ import org.jellyfin.mobile.player.cast.Chromecast
 import org.jellyfin.mobile.player.cast.IChromecast
 import org.jellyfin.mobile.player.ui.PlayerFragment
 import org.jellyfin.mobile.setup.ConnectFragment
+import org.jellyfin.mobile.update.AppUpdater
 import org.jellyfin.mobile.utils.AndroidVersion
 import org.jellyfin.mobile.utils.BackPressInterceptor
 import org.jellyfin.mobile.utils.BluetoothPermissionHelper
@@ -75,6 +76,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val orientationListener: OrientationEventListener by lazy { SmartOrientationListener(this) }
+
+    val appUpdater: AppUpdater by lazy { AppUpdater(this) }
 
     // Branded splash state, see setupSplash()
     private var splashOverlay: View? = null
@@ -309,6 +312,8 @@ class MainActivity : AppCompatActivity() {
                 (overlay.parent as? ViewGroup)?.removeView(overlay)
                 splashOverlay = null
                 updateWebViewFocus()
+                // Look for a new Streamix release once the user is in the app
+                window.decorView.postDelayed({ if (!isFinishing) appUpdater.checkInBackground() }, UPDATE_CHECK_DELAY_MS)
             }
             .start()
     }
@@ -341,6 +346,12 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         orientationListener.enable()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Continues an update after the user allowed Streamix to install apps
+        appUpdater.onResume()
     }
 
     private fun handleServerState(state: ServerState) {
@@ -426,6 +437,7 @@ class MainActivity : AppCompatActivity() {
         /** Safety net: never hold the user on the splash longer than this. */
         const val SPLASH_MAX_MS = 12_000L
         const val SPLASH_EXIT_MS = 420L
+        const val UPDATE_CHECK_DELAY_MS = 4000L
         const val SPLASH_EXIT_SCALE = 1.04f
     }
 }

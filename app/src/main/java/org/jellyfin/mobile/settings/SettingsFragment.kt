@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import de.Maxr1998.modernpreferences.Preference
+import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.PreferencesAdapter
 import de.Maxr1998.modernpreferences.helpers.categoryHeader
 import de.Maxr1998.modernpreferences.helpers.checkBox
@@ -56,7 +57,9 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         }
     }
 
-    private val settingsAdapter: PreferencesAdapter by lazy { PreferencesAdapter(buildSettingsScreen()) }
+    private val settingsAdapter: PreferencesAdapter by lazy {
+        PreferencesAdapter(if (isTv) buildTvSettingsScreen() else buildSettingsScreen())
+    }
     private val isTv: Boolean by lazy { requireContext().isTvDevice() }
     private lateinit var startLandscapeVideoInLandscapePreference: CheckBoxPreference
     private lateinit var swipeGesturesPreference: CheckBoxPreference
@@ -117,13 +120,10 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
     @Suppress("LongMethod")
     private fun buildSettingsScreen() = screen(requireContext()) {
         collapseIcon = true
-        // A TV has no notification shade to dismiss from, no touch gestures and no orientation
         categoryHeader(PREF_CATEGORY_MUSIC_PLAYER) {
             titleRes = R.string.pref_category_music_player
-            visible = !isTv
         }
         checkBox(Constants.PREF_MUSIC_NOTIFICATION_ALWAYS_DISMISSIBLE) {
-            visible = !isTv
             titleRes = R.string.pref_music_notification_always_dismissible_title
             summaryRes = R.string.pref_music_notification_always_dismissible_summary_off
             summaryOnRes = R.string.pref_music_notification_always_dismissible_summary_on
@@ -163,12 +163,10 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         }
         startLandscapeVideoInLandscapePreference = checkBox(Constants.PREF_EXOPLAYER_START_LANDSCAPE_VIDEO_IN_LANDSCAPE) {
             titleRes = R.string.pref_exoplayer_start_landscape_video_in_landscape
-            visible = !isTv
             enabled = appPreferences.videoPlayerType == VideoPlayerType.EXO_PLAYER
         }
         swipeGesturesPreference = checkBox(Constants.PREF_EXOPLAYER_ALLOW_SWIPE_GESTURES) {
             titleRes = R.string.pref_exoplayer_allow_brightness_volume_gesture
-            visible = !isTv
             enabled = appPreferences.videoPlayerType == VideoPlayerType.EXO_PLAYER
             defaultValue = true
             defaultOnCheckedChange { checked ->
@@ -177,7 +175,6 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         }
         rememberBrightnessPreference = checkBox(Constants.PREF_EXOPLAYER_REMEMBER_BRIGHTNESS) {
             titleRes = R.string.pref_exoplayer_remember_brightness
-            visible = !isTv
             enabled = appPreferences.videoPlayerType == VideoPlayerType.EXO_PLAYER && appPreferences.exoPlayerAllowSwipeGestures
             defaultOnCheckedChange { checked ->
                 if (!checked) appPreferences.exoPlayerBrightness = BRIGHTNESS_OVERRIDE_NONE
@@ -185,7 +182,6 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         }
         pressSpeedUpPreference = checkBox(Constants.PREF_EXOPLAYER_ALLOW_PRESS_SPEED_UP) {
             titleRes = R.string.pref_exoplayer_allow_press_speed_up
-            visible = !isTv
             summaryRes = R.string.pref_exoplayer_allow_press_speed_up_summary
             enabled = appPreferences.videoPlayerType == VideoPlayerType.EXO_PLAYER
             defaultValue = true
@@ -197,7 +193,6 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         }
         horizontalGesturePreference = checkBox(Constants.PREF_EXOPLAYER_ALLOW_HORIZONTAL_GESTURE) {
             titleRes = R.string.pref_exoplayer_allow_horizontal_gesture
-            visible = !isTv
             summaryRes = R.string.pref_exoplayer_allow_horizontal_gesture_summary
             enabled = appPreferences.videoPlayerType == VideoPlayerType.EXO_PLAYER
             defaultValue = true
@@ -337,16 +332,74 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
             }
         }
 
+        updatesAndAbout()
+    }
+
+    /**
+     * Settings on a TV: only what a viewer needs, in plain words. Everything technical keeps its
+     * sensible default (integrated player, styled subtitles, automatic buffer, no downloads).
+     */
+    private fun buildTvSettingsScreen() = screen(requireContext()) {
+        collapseIcon = true
+        categoryHeader(PREF_CATEGORY_VIDEO_PLAYER) {
+            titleRes = R.string.pref_category_tv_playback
+        }
+        checkBox(Constants.PREF_EXOPLAYER_AUDIO_PASSTHROUGH) {
+            titleRes = R.string.pref_tv_audio_passthrough
+            summaryRes = R.string.pref_tv_audio_passthrough_summary
+            defaultValue = true
+        }
+        checkBox(Constants.PREF_EXOPLAYER_MATCH_FRAME_RATE) {
+            titleRes = R.string.pref_tv_match_frame_rate
+            summaryRes = R.string.pref_tv_match_frame_rate_summary
+            defaultValue = true
+        }
+        singleChoice(
+            Constants.PREF_EXOPLAYER_NETWORK_BUFFER,
+            listOf(
+                SelectionItem(Constants.NETWORK_BUFFER_AUTO, R.string.pref_tv_buffer_auto, R.string.pref_tv_buffer_auto_summary),
+                SelectionItem(Constants.NETWORK_BUFFER_LARGE, R.string.pref_tv_buffer_large, R.string.pref_tv_buffer_large_summary),
+                SelectionItem(
+                    Constants.NETWORK_BUFFER_EXTRA_LARGE,
+                    R.string.pref_tv_buffer_extra_large,
+                    R.string.pref_tv_buffer_extra_large_summary,
+                ),
+            ),
+        ) {
+            titleRes = R.string.pref_tv_buffer
+            initialSelection = Constants.NETWORK_BUFFER_AUTO
+        }
+        val captionSettings = Intent(Settings.ACTION_CAPTIONING_SETTINGS)
+        if (captionSettings.resolveActivity(requireContext().packageManager) != null) {
+            pref(Constants.PREF_SUBTITLE_STYLE) {
+                titleRes = R.string.pref_tv_subtitle_style
+                summaryRes = R.string.pref_tv_subtitle_style_summary
+                defaultOnClick {
+                    startActivity(captionSettings)
+                }
+            }
+        }
+        updatesAndAbout()
+    }
+
+    private fun PreferenceScreen.Builder.updatesAndAbout() {
+        categoryHeader(PREF_CATEGORY_UPDATES) {
+            titleRes = R.string.pref_category_updates
+        }
+        pref(PREF_CHECK_UPDATES) {
+            titleRes = R.string.pref_check_updates
+            summary = getString(R.string.pref_check_updates_summary, BuildConfig.VERSION_NAME)
+            onClick {
+                requireMainActivity().appUpdater.checkNow()
+                false
+            }
+        }
         categoryHeader(PREF_CATEGORY_ABOUT) {
             titleRes = R.string.pref_category_about
         }
         pref(PREF_ABOUT_DEVELOPER) {
             titleRes = R.string.pref_about_developer_title
             summaryRes = R.string.pref_about_developer_summary
-        }
-        pref(PREF_ABOUT_VERSION) {
-            titleRes = R.string.pref_about_version_title
-            summary = "${getString(R.string.app_name)} ${BuildConfig.VERSION_NAME}"
         }
     }
 
@@ -356,6 +409,7 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         const val PREF_CATEGORY_DOWNLOADS = "pref_category_downloads"
         const val PREF_CATEGORY_ABOUT = "pref_category_about"
         const val PREF_ABOUT_DEVELOPER = "pref_about_developer"
-        const val PREF_ABOUT_VERSION = "pref_about_version"
+        const val PREF_CATEGORY_UPDATES = "pref_category_updates"
+        const val PREF_CHECK_UPDATES = "pref_check_updates"
     }
 }

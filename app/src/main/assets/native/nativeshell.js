@@ -35,6 +35,13 @@ const { deviceId, deviceName, appName, appVersion } = JSON.parse(window.NativeIn
 const codecCaps = JSON.parse(window.NativeInterface.getCodecCapabilities());
 const isTv = !!(window.NativeInterface.isTv && window.NativeInterface.isTv());
 
+// A TV has no use for downloading media to itself; dropping these hides every download button and menu
+if (isTv) {
+    for (const feature of ['downloadmanagement', 'filedownload']) {
+        features.splice(features.indexOf(feature), 1);
+    }
+}
+
 // Streamix: TV performance layer + login backdrop, applied on top of the server's custom CSS
 (() => {
     const root = document.documentElement;
@@ -212,6 +219,16 @@ const isTv = !!(window.NativeInterface.isTv && window.NativeInterface.isTv());
         };
     })();
 
+    // Movie / show pages: the remote should move between things you can act on (Play, the other buttons,
+    // track pickers, cast, "More like this"), not stop on every keyword, genre, studio and name link.
+    // Jellyfin's focus navigation skips tabindex="-1".
+    const skipTextLinks = () => {
+        if (!isTv) return;
+        const page = document.querySelector('.mainAnimatedPage.itemDetailPage:not(.hide)');
+        if (!page) return;
+        page.querySelectorAll('a.button-link:not([tabindex])').forEach((link) => link.setAttribute('tabindex', '-1'));
+    };
+
     // Backdrops belong to pages with posters (home, libraries, search results), not settings or details
     const updateBrowseState = () => {
         const page = document.querySelector('.mainAnimatedPage:not(.hide)');
@@ -221,6 +238,10 @@ const isTv = !!(window.NativeInterface.isTv && window.NativeInterface.isTv());
         root.classList.toggle('streamix-detail', detail);
         if (browsing || detail) backdrop.refresh();
         if (detail) {
+            skipTextLinks();
+            // The page fills in after it's shown
+            setTimeout(skipTextLinks, 400);
+            setTimeout(skipTextLinks, 1500);
             // Detail pages: that title's artwork, full-bleed, like Apple TV
             const id = new URLSearchParams((window.location.hash.split('?')[1]) || '').get('id');
             if (id) backdrop.item(id);
@@ -239,6 +260,7 @@ const isTv = !!(window.NativeInterface.isTv && window.NativeInterface.isTv());
     }, 120));
 
     document.addEventListener('focusin', (e) => {
+        if (root.classList.contains('streamix-detail')) skipTextLinks();
         const card = e.target.closest && e.target.closest('.card[data-id]');
         if (!card) return;
         // Checked here too: the page-shown event can fire before this script is listening
@@ -257,15 +279,59 @@ const isTv = !!(window.NativeInterface.isTv && window.NativeInterface.isTv());
         }));
     };
 
+    // Settings menu on TV: plain names for the entries that stay (the technical ones are hidden in CSS)
+    const relabelSettingsMenu = () => {
+        if (!isTv) return;
+        const page = document.querySelector('.mainAnimatedPage.userPreferencesPage:not(.hide)');
+        if (!page) return;
+        const relabel = (selector, text) => {
+            const label = page.querySelector(selector + ' .listItemBodyText');
+            if (label && label.textContent !== text) label.textContent = text;
+        };
+        relabel('.lnkDisplayPreferences', 'Display & language');
+        relabel('.lnkHomePreferences', 'Home screen');
+        relabel('.lnkPlaybackPreferences', 'Audio & playback');
+        relabel('.clientSettings', 'Streamix Settings');
+        relabel('.selectServer', 'Switch Server');
+    };
+
     const updatePageState = () => {
         updateLoginState();
         updateBrowseState();
         retileLibraries();
+        relabelSettingsMenu();
+        setTimeout(relabelSettingsMenu, 300);
+    };
+
+    // Libraries open on "Suggestions"; when that's empty, show the full list (Shows / Movies) instead
+    const skipEmptySuggestions = () => {
+        if (!isTv) return;
+        const page = document.querySelector('.mainAnimatedPage.withTabs:not(.hide)');
+        const suggestions = page && page.querySelector('#suggestionsTab.is-active');
+        if (!suggestions || suggestions.querySelector('.card')) return;
+        const firstTab = document.querySelector('.skinHeader .headerTabs .emby-tab-button');
+        if (firstTab && !firstTab.classList.contains('emby-tab-button-active')) firstTab.click();
+    };
+
+    // A newly shown page starts with focus on its content, not left behind in the top bar
+    const focusContent = () => {
+        if (!isTv) return;
+        const active = document.activeElement;
+        const inTopBar = active && active.closest && active.closest('.skinHeader');
+        if (!inTopBar && active && active !== document.body) return;
+        const page = document.querySelector('.mainAnimatedPage:not(.hide)');
+        const target = page && (page.querySelector('.btnPlay:not(.hide), .btnResume:not(.hide)')
+            || page.querySelector('.card[data-id], a.listItem-border:not(.hide)'));
+        if (target && target.offsetParent !== null) target.focus();
     };
 
     document.addEventListener('viewshow', () => {
         updatePageState();
         reportReady();
+        setTimeout(focusContent, 350);
+        setTimeout(focusContent, 1200);
+        setTimeout(skipEmptySuggestions, 1800);
+        setTimeout(focusContent, 2300);
         // Home sections render after the page is shown
         setTimeout(retileLibraries, 800);
         setTimeout(retileLibraries, 2500);

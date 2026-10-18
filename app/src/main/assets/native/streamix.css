@@ -82,9 +82,15 @@ html.streamix-tv .card.show-focus:focus .cardScalable::after {
 }
 
 /* Round person / avatar cards keep a round rim */
-html.streamix-tv .personCard .cardScalable::after,
-html.streamix-login #divUsers .cardScalable::after {
-    border-radius: 50%;
+html.streamix-tv .card.personCard.show-focus .cardScalable::after,
+html.streamix-tv .card.personCard .cardScalable::after,
+html.streamix-login #divUsers .card .cardScalable::after {
+    border-radius: 50% !important;
+}
+
+/* Movie / show pages glide between rows instead of jumping */
+html.streamix-tv.streamix-detail {
+    scroll-behavior: smooth;
 }
 
 /* The focused title reads a step brighter than its neighbours */
@@ -138,6 +144,15 @@ html.streamix-tv .skinHeader .headerTabs .emby-tab-button {
 html.streamix-tv #searchPage.mainAnimatedPage,
 html.streamix-tv .userPreferencesPage.mainAnimatedPage {
     padding-top: 3.6em !important;
+}
+
+/* Settings menu on TV keeps what viewers use (profile, display & language, home screen, audio,
+   subtitles, Streamix settings, server, sign out). Hidden: Quick Connect (approves logins on other
+   devices), keyboard/mouse controls and the admin pages - all still reachable from a computer. */
+html.streamix-tv .userPreferencesPage .lnkQuickConnectPreferences,
+html.streamix-tv .userPreferencesPage .lnkControlsPreferences,
+html.streamix-tv .userPreferencesPage .adminSection {
+    display: none !important;
 }
 
 /* Pages with tabs no longer need room for a second header row */
@@ -280,6 +295,20 @@ html.streamix-tv .skinHeader .headerTabs .emby-tab-button:focus-visible {
     color: #000 !important;
     background: #fff !important;
     transform: scale(1.06) !important;
+}
+
+/* Library pages have many tabs (Shows, Suggestions, Upcoming, Genres...): they get their own row
+   under the logo instead of being squeezed into the bar */
+html.streamix-tv .skinHeader:not(.osdHeader):has(.headerTabs .emby-tab-button:nth-child(4)) > .headerTabs {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    padding-bottom: 10px;
+}
+
+html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .page.withTabs,
+html.streamix-tv:has(.skinHeader .headerTabs .emby-tab-button:nth-child(4)) .page.pageWithAbsoluteTabs {
+    padding-top: 6.2em !important;
 }
 
 /* Icons and clock: same size and rhythm */

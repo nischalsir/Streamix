@@ -221,6 +221,9 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
         if (requireContext().isTvDevice()) {
             isVerticalScrollBarEnabled = false
             isHorizontalScrollBarEnabled = false
+            // Keep the page's own focus when the WebView gets focus back (after the splash, player or
+            // settings); by default Android jumps to the first element on the page, the top bar
+            settings.setNeedInitialFocus(false)
         }
         // Keep the web renderer from being killed under memory pressure while it's on screen
         if (AndroidVersion.isAtLeastO) {

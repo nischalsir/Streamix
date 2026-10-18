@@ -49,6 +49,8 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 | **Profile-picture login** | Login shows your users' profile pictures over your server's poster-collage background. |
 | **Remote-first player** | ◀ ▶ seek 10 s instantly, holding them scrubs with thumbnails, OK plays/pauses, Back hides the controls and then exits. |
 | **Animated splash** | The ring draws itself around the logo, the play button zooms in, then the developer credits appear. It fades into your home screen once that has loaded (press OK to skip). |
+| **Updates itself** | Streamix checks GitHub for new releases, downloads the update and installs it, all from the TV. No USB drive needed after the first install. |
+| **Simple settings** | The TV shows only settings a viewer needs, in plain words. Technical options keep sensible defaults and stay reachable from a computer. |
 | **Everything else from Jellyfin** | Live TV, music, books, Quick Connect, multiple servers, playback speed, chapter skip, intro/outro skip, trickplay thumbnails, downloads. |
 
 ---
@@ -72,7 +74,10 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 4. Plug in the USB drive, open the file manager, select the APK, then **Install**.
 5. **Streamix** appears in **Apps**. To pin it to the home row, long-press it and choose **Add to favourites**.
 
-> **Updating:** install the new APK the same way. Your server, login and settings are kept.
+> **Updating:** from version 1.1, Streamix updates itself. When a new version is out it offers
+> **Update now**. You can also check yourself in **Settings → Streamix Settings → Check for updates**.
+> The first time, Android asks you to allow Streamix to install apps: turn it on, press **Back**, and the
+> update continues. Your server, login and settings are kept. (From 1.0.0, install 1.1 once by USB.)
 
 ## 3. Connect to your Jellyfin server
 
@@ -105,7 +110,8 @@ The first time Jellyfin runs, Windows asks whether to allow it on networks. If y
    With **Quick Connect** turned on (Dashboard → General), you can also approve the sign-in from your phone.
 
 Streamix remembers the server and your login. To switch servers later: **your avatar → Select Server**.
-Streamix's own options (player, audio, subtitles, about) are under **Settings → Client Settings**.
+Streamix's own options (surround sound, smoother motion, buffering, subtitle size, updates) are under
+**Settings → Streamix Settings**.
 
 ## 4. Server setup for the best experience
 
@@ -166,17 +172,15 @@ Streamix never converts surround audio on the server. The TV decides what to do 
 TV settings to check (TCL Google TV): **Settings → Display & Sound → Audio output**: choose your soundbar
 (**HDMI ARC/eARC**). Under **Digital output**, choose **Auto** or **Passthrough**.
 
-**No sound on some videos?** In Streamix go to **Settings → Client Settings → Video player** and turn off
-**Audio passthrough**. Everything is then decoded on the TV, which always works.
+**No sound on some videos?** In Streamix go to **Settings → Streamix Settings** and turn off
+**Surround sound to soundbar**. Everything is then decoded on the TV, which always works.
 
 ## 6. Subtitles
 
 - Choose subtitles from the **subtitles button** in the player, or set a default language in **Settings → Subtitles**.
-- **Styled ASS/SSA** (anime and fansubs) keep their fonts, colours and positions. On by default. If a file's
-  subtitles misbehave, turn off **Settings → Client Settings → Allow SSA/ASS subtitles in direct play**, and the server
-  converts them to plain text.
+- **Styled ASS/SSA** (anime and fansubs) keep their fonts, colours and positions.
 - **PGS (Blu-ray) and VobSub (DVD)** image subtitles are drawn by the player, so the video doesn't need transcoding.
-- **Change the look** (size, colour, background): **Settings → Client Settings → Subtitle style** opens the TV's caption
+- **Change the look** (size, colour, background): **Settings → Streamix Settings → Subtitle size and colour** opens the TV's caption
   settings. Once you turn those on, they replace Streamix's theater style.
 
 ## 7. Using the remote
@@ -200,7 +204,7 @@ Streamix already does the heavy lifting, and a few TV and server settings help f
 - **Motion smoothing:** TCL's **MEMC** ("Motion clarity" / "Action smoothing") in **Picture settings** gives that
   high-frame-rate look to films. Use it if you like the effect; **Game mode** turns it off.
 - **Match content frame rate:** **Settings → Display & Sound → Advanced display settings → Match content frame
-  rate → Seamless only / Always**, together with Streamix's **Match TV refresh rate to video** (on by default).
+  rate → Seamless only / Always**, together with Streamix's **Smoother motion for films** (on by default).
   The 43" V6C has a 60 Hz panel, so 24p films are shown with 3:2 pulldown unless the panel offers a matching mode.
 - **Jellyfin display settings** (per user, **Settings → Display**): turning off **Backdrops** and
   **Theme songs/videos** saves memory on 2 GB TVs.
@@ -216,9 +220,11 @@ Streamix already does the heavy lifting, and a few TV and server settings help f
 | **Phone layout instead of TV layout** | In Streamix: **Settings → Display → Display mode → TV**. |
 | **No profile pictures on login** | Users are hidden from the login screen. See [Show profile pictures](#show-profile-pictures-on-the-login-screen). |
 | **No login background** | Enable the server's splash screen. See [Login background](#login-background). |
-| **No sound with Atmos / DTS** | Turn off **Audio passthrough** (Settings → Client Settings), or set the TV's digital output to **Auto**. |
+| **No sound with Atmos / DTS** | Turn off **Surround sound to soundbar** (Settings → Streamix Settings), or set the TV's digital output to **Auto**. |
 | **Video stutters** | Usually a server transcode: open **ⓘ (info)** in the player to see. Enable hardware acceleration on the server, or pick a lower quality in **⚙**. |
-| **Subtitles look wrong** | Turn off **Allow SSA/ASS subtitles in direct play**, or turn off the TV's own caption style. |
+| **Subtitles look wrong** | Pick another subtitle track in the player, or turn off the TV's own caption style. |
+| **Video pauses to load** | **Settings → Streamix Settings → Buffering → More** (or **Most** for big 4K files on weak Wi-Fi). |
+| **"Update now" does nothing** | Allow Streamix to install apps: Settings → Apps → Security & restrictions → Unknown sources → Streamix. |
 | **"Playback error" / video won't start** | The server couldn't read the file. Check Dashboard → Logs: `EBML header parsing failed` or `ffprobe failed` means the file is damaged or still downloading. Re-copy it and rescan the library. |
 | **Can't install the update** | The new APK must be signed with the same key as the installed one. If you built your own copy, uninstall the old one first. |
 
