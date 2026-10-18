@@ -93,6 +93,31 @@ if (isTv) {
         type: 'Backdrop', index: 0, tag: pick.tag, maxWidth, quality: 80
     });
 
+    // Live TV opens on Programs, which is empty without a TV guide. Without one, the home screen's Live TV
+    // tile goes straight to the channels instead (asked once in a while, not on every visit).
+    let liveTvHasGuide = null;
+    let liveTvGuideCheckedAt = 0;
+    const checkLiveTvGuide = () => {
+        const api = window.ApiClient;
+        if (!api || !api.getLiveTvRecommendedPrograms || Date.now() - liveTvGuideCheckedAt < 10 * 60 * 1000) return;
+        liveTvGuideCheckedAt = Date.now();
+        api.getLiveTvRecommendedPrograms({ userId: api.getCurrentUserId(), IsAiring: true, Limit: 1 })
+            .then((result) => {
+                liveTvHasGuide = !!(result && result.Items && result.Items.length);
+            })
+            .catch(() => {});
+    };
+    if (isTv) {
+        document.addEventListener('click', (e) => {
+            const tile = e.target.closest && e.target.closest('.card[data-collectiontype="livetv"]');
+            if (!tile || liveTvHasGuide) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const serverId = tile.getAttribute('data-serverid');
+            window.location.hash = '#/livetv?collectionType=livetv&tab=2' + (serverId ? '&serverId=' + serverId : '');
+        }, true);
+    }
+
     let artPending = 0;
     const retileLibraries = () => {
         if (!window.ApiClient || !window.ApiClient.getItems) return;
@@ -104,6 +129,7 @@ if (isTv) {
             // Live TV has no artwork of its own; it gets a designed tile instead (see streamix.css)
             if (card.getAttribute('data-collectiontype') === 'livetv') {
                 card.classList.add('streamixLiveTvTile');
+                checkLiveTvGuide();
                 return;
             }
             artPending++;

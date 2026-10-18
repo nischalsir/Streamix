@@ -149,6 +149,25 @@
         app:layout_constraintTop_toTopOf="@id/seek_bar_container"
         tools:text="0:49:04" />
 
+    <!-- Live TV: shown instead of the time bar -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/live_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/exo_player_controls_display_padding"
+        android:background="@drawable/live_tv_badge_background"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.08"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="3dp"
+        android:text="@string/live_tv_badge"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/seek_bar_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/seek_bar_container" />
+
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/controls_barrier"
         android:layout_width="wrap_content"

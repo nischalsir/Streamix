@@ -57,6 +57,9 @@ class QueueManager(
     private var playbackRetries = 0
     private var lastPlaybackError = 0L
 
+    /** A Live TV channel whose direct stream failed: play it through the server instead */
+    private var liveDirectFailedFor: UUID? = null
+
     private val _currentMediaSource: MutableLiveData<JellyfinMediaSource> = MutableLiveData()
     val currentMediaSource: LiveData<JellyfinMediaSource>
         get() = _currentMediaSource
@@ -163,17 +166,31 @@ class QueueManager(
         enableDirectPlay: Boolean? = null,
         enableDirectStream: Boolean? = null,
     ): PlayerException? {
-        mediaSourceResolver.resolveMediaSource(
-            itemId = itemId,
-            mediaSourceId = mediaSourceId,
-            deviceProfile = deviceProfile,
-            maxStreamingBitrate = maxStreamingBitrate,
-            startTime = startTime,
-            audioStreamIndex = audioStreamIndex,
-            subtitleStreamIndex = subtitleStreamIndex,
-            enableDirectPlay = enableDirectPlay,
-            enableDirectStream = enableDirectStream,
-        ).onSuccess { jellyfinMediaSource ->
+        val resolve: suspend (Boolean) -> Result<RemoteJellyfinMediaSource> = { autoOpenLiveStream ->
+            mediaSourceResolver.resolveMediaSource(
+                itemId = itemId,
+                mediaSourceId = mediaSourceId,
+                deviceProfile = deviceProfile,
+                maxStreamingBitrate = maxStreamingBitrate,
+                startTime = startTime,
+                audioStreamIndex = audioStreamIndex,
+                subtitleStreamIndex = subtitleStreamIndex,
+                autoOpenLiveStream = autoOpenLiveStream,
+                enableDirectPlay = enableDirectPlay,
+                enableDirectStream = enableDirectStream,
+            )
+        }
+        // Live TV: opening a channel makes the server probe the stream first, which takes seconds. A channel
+        // the player streams itself (see directLiveStreamUrl) doesn't need that, so the server is only asked
+        // to open the ones it has to stream.
+        var resolved = resolve(false)
+        val unopened = resolved.getOrNull()
+        if (unopened != null && unopened.sourceInfo.requiresOpening &&
+            (unopened.directLiveStreamUrl == null || itemId == liveDirectFailedFor)
+        ) {
+            resolved = resolve(true)
+        }
+        resolved.onSuccess { jellyfinMediaSource ->
             // Ensure transcoding of the current element is stopped
             getCurrentMediaSourceOrNull()?.let { oldMediaSource ->
                 viewModel.stopTranscoding(oldMediaSource as RemoteJellyfinMediaSource)
@@ -208,6 +225,7 @@ class QueueManager(
     private fun resetPlaybackFallback() {
         playbackRetries = 0
         lastPlaybackError = 0L
+        liveDirectFailedFor = null
         viewModel.cancelFallbackRetry()
     }
 
@@ -234,6 +252,12 @@ class QueueManager(
         lastPlaybackError = now
 
         if (playbackRetries > MAX_PLAYBACK_RETRIES) return false
+
+        // A Live TV channel that failed on its direct stream gets the server's stream on the next try
+        if (currentMediaSource.directLiveStreamUrl != null && currentMediaSource.playMethod == PlayMethod.DIRECT_PLAY) {
+            Timber.i("Direct live stream failed, playing it through the server")
+            liveDirectFailedFor = currentMediaSource.itemId
+        }
 
         Timber.i("Retrying playback (attempt %d of %d)", playbackRetries, MAX_PLAYBACK_RETRIES)
 
@@ -361,7 +385,11 @@ class QueueManager(
         externalSubtitleConfigurations: List<MediaItem.SubtitleConfiguration>
     ): MediaSource {
         val sourceInfo = source.sourceInfo
-        val (url, forcedMimeType) = when (source.playMethod) {
+        val directLiveUrl = (source as? RemoteJellyfinMediaSource)
+            ?.takeIf { remote -> remote.itemId != liveDirectFailedFor }
+            ?.directLiveStreamUrl
+        if (directLiveUrl != null) (source as RemoteJellyfinMediaSource).playMethod = PlayMethod.DIRECT_PLAY
+        val (url, forcedMimeType) = if (directLiveUrl != null) directLiveUrl to MimeTypes.APPLICATION_M3U8 else when (source.playMethod) {
             PlayMethod.DIRECT_PLAY -> {
                 when (sourceInfo.protocol) {
                     MediaProtocol.FILE -> {

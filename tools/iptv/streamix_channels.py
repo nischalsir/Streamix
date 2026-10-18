@@ -1,12 +1,13 @@
-"""Build the Streamix Hindi + English Live TV channel list for a Jellyfin server.
+"""Build the Streamix Hindi, English and Sports Live TV channel list for a Jellyfin server.
 
 Downloads the public iptv-org playlists, checks each candidate stream from this network the way the
 Streamix player fetches it (HLS only, no http<->https redirects, 8 s timeouts), and writes a numbered M3U
-of the ones that play: Hindi 201+, English 301+.
+of the ones that play: Hindi 201+, English 301+, Sports 501+.
 
 Only channels that are free to watch are listed: public broadcasters, official free news streams,
 free-to-air movie and music channels, and ad-supported streaming channels (Pluto TV, Stingray, FIFA+...).
-Pay-TV channels that turn up in public lists are left out on purpose.
+Pay-TV channels that turn up in public lists (Star Sports, Sony Ten, ESPN, beIN 1-8, Willow, unofficial
+"sports apps" and their restreams) are left out on purpose.
 
     python streamix_channels.py --out "C:/ProgramData/Jellyfin/Server/iptv/streamix-hindi-english.m3u"
 
@@ -25,6 +26,7 @@ import urllib.request
 PLAYLISTS = {
     'Hindi': 'https://iptv-org.github.io/iptv/languages/hin.m3u',
     'English': 'https://iptv-org.github.io/iptv/languages/eng.m3u',
+    'Sports': 'https://iptv-org.github.io/iptv/categories/sports.m3u',
 }
 UA = 'Streamix (Linux;Android 11) AndroidXMedia3/1.11.1'
 TIMEOUT = 8
@@ -43,7 +45,7 @@ HINDI = {
              'Times Now Navbharat', 'TV9 Bharatvarsh', 'News Nation', 'DD News HD', 'DD News', 'Good News Today',
              'India Daily Live', 'Bharat24', 'News 1 India', 'Zee Bharat', 'Bharat Samachar', 'India TV Speed News',
              'Zee Business', 'CNBC Awaaz'],
-    'Sports & more': ['DD Sports', 'DD Bharati', 'DD Kisan', 'Food Food'],
+    'More': ['DD Bharati', 'DD Kisan', 'Food Food'],
 }
 
 ENGLISH = {
@@ -67,12 +69,24 @@ ENGLISH = {
                'Gravitas Movies', 'Paramount Movie Channel', 'Made In Hollywood', 'Classic Movies Channel'],
     'Series': ['Star Trek: The Next Generation', 'Pluto TV Classic TV', 'The Graham Norton Show',
                'Pluto TV Investigation', 'Pluto TV Crime Drama'],
-    'Sports': ['FIFA+', 'Strongman Champions League', 'Rally TV', 'PGA Tour', 'World Poker Tour', 'Unbeaten', 'Stadium',
-               'FITE 24/7', 'PFL MMA', 'Swerve Sports'],
     'Music': ['Stingray Hit List', "Stingray Nothin' But 90s", "Stingray Everything '80s", 'Stingray Classic Rock',
               'Stingray Smooth Jazz', "Stingray Today's K-Pop", 'Stingray Naturescape', 'Stingray Hot Country',
               'Qello Concerts by Stingray', 'NOW Rock', 'Now 90s00s', "That's 80s"],
     'Lifestyle': ['Gusto TV', 'Pluto TV Food GB', 'Love Pets', 'Horse & Country TV'],
+}
+
+
+# Free, official sports channels (broadcasters' own free streams and ad-supported channels)
+SPORTS = {
+    'India & cricket': ['DD Sports', 'Cricket Gold'],
+    'Football': ['FIFA+', 'Golazo Network', 'beIN SPORTS XTRA', 'Real Madrid TV English'],
+    'Sports news': ['CBS Sports HQ', 'NBC Sports NOW', 'SportsGrid', 'Stadium'],
+    'US sports': ['NFL Channel', 'MLB', 'ACC Digital Network', 'Pac-12 Insider'],
+    'Tennis & golf': ['Tennis Channel 2', 'PGA Tour'],
+    'Action & motorsport': ['Red Bull TV', 'Rally TV', 'Monster Jam', 'Strongman Champions League'],
+    'Fighting': ['Bellator MMA', 'PFL MMA', 'FITE 24/7', 'DAZN Combat', 'TVS Boxing', 'Swerve Combat'],
+    'More': ['World Poker Tour', 'Unbeaten', 'Swerve Sports', 'Pluto TV Competition', 'TVS Classic Sports',
+             'Trace Sport Stars', 'talkSPORT'],
 }
 
 
@@ -168,11 +182,11 @@ def base(name):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Build the Streamix Hindi + English channel list.')
+    parser = argparse.ArgumentParser(description='Build the Streamix Hindi, English and Sports channel list.')
     parser.add_argument('--out', default='streamix-hindi-english.m3u', help='where to write the M3U')
     args = parser.parse_args()
 
-    lists = {'Hindi': HINDI, 'English': ENGLISH}
+    lists = {'Hindi': HINDI, 'English': ENGLISH, 'Sports': SPORTS}
     candidates = []
     for lang, url in PLAYLISTS.items():
         wanted = {n for names in lists[lang].values() for n in names}
@@ -192,7 +206,7 @@ def main():
             working[key] = (e, height)
 
     lines = ['#EXTM3U']
-    for lang, start in (('Hindi', 201), ('English', 301)):
+    for lang, start in (('Hindi', 201), ('English', 301), ('Sports', 501)):
         number, taken = start, set()
         for group, names in lists[lang].items():
             for name in names:

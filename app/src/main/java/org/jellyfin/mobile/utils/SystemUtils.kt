@@ -115,11 +115,15 @@ fun Context.createMediaNotificationChannel(notificationManager: NotificationMana
 val Context.isLowRamDevice: Boolean
     get() = getSystemService<ActivityManager>()!!.isLowRamDevice
 
+/**
+ * Cache key for a Jellyfin media URL: the item id (plus the subtitle index for subtitles), so downloads
+ * are found whatever the rest of the URL says. Addresses without an item id (a Live TV channel's own
+ * stream, for example) keep the URL itself as the key.
+ */
 fun Uri.extractId(): String {
     val uri = toString()
     val idRegex = Regex("""/([a-f0-9]{32}|[a-f0-9-]{36})/""")
-    val idResult = idRegex.find(uri)
-    val itemId = idResult?.groups?.get(1)?.value.toString()
+    val itemId = idRegex.find(uri)?.groups?.get(1)?.value ?: return uri
     var item = itemId.toUUID().toString()
 
     val subtitleRegex = Regex("""Subtitles/(\d+)/\d+/Stream.subrip|/(\d+).subrip""")

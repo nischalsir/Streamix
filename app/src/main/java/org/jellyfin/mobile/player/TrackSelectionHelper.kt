@@ -25,7 +25,10 @@ class TrackSelectionHelper(
         mediaSource.selectedAudioStream?.let { stream ->
             selectPlayerAudioTrack(mediaSource, stream, initial = true)
         }
-        selectSubtitleTrack(mediaSource, mediaSource.selectedSubtitleStream, initial = true)
+        // Live TV starts without captions: news channels mark theirs as the default track, which isn't what
+        // someone switching channels expects. They're still in the subtitles menu.
+        val subtitleStream = if (mediaSource.sourceInfo.isInfiniteStream) null else mediaSource.selectedSubtitleStream
+        selectSubtitleTrack(mediaSource, subtitleStream, initial = true)
     }
 
     /**

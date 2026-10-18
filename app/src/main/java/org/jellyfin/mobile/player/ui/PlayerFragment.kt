@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
@@ -161,6 +162,8 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
             // Update title and player menus
             toolbar.title = mediaSource.getName(requireContext())
             playerMenus?.onQueueItemChanged(mediaSource, viewModel.queueManager.hasNext())
+            // On Live TV, next flips to the next channel
+            if (liveTv?.isActive == true) playerControlsBinding.nextButton.isEnabled = true
         }
 
         // Handle fragment arguments, extract playback options and start playback
@@ -304,6 +307,23 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
                 liveTv?.onControlsVisibilityChanged(visibility == View.VISIBLE)
             },
         )
+        with(playerControlsBinding) {
+            // A live stream has no timeline worth showing: a LIVE tag takes its place
+            liveBadge.isVisible = true
+            exoPosition.isInvisible = true
+            exoDuration.isInvisible = true
+            seekBarContainer.isInvisible = true
+            exoProgress.isFocusable = false
+            // Previous / next change channel, like CH- / CH+
+            previousButton.setOnClickListener {
+                playerView.hideController()
+                liveTv?.zap(-1)
+            }
+            nextButton.setOnClickListener {
+                playerView.hideController()
+                liveTv?.zap(1)
+            }
+        }
     }
 
     /**
@@ -339,9 +359,20 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
         if (!isTv || _playerBinding == null || viewModel.playerOrNull == null) return false
         if (handleChannelKey(event)) return true
         if (!isRemoteNavigationKey(event.keyCode)) return false
+        // While a channel tunes, its card is the whole screen: the controls would only cover it
+        if (liveTv?.isTuning == true) return true
         if (!playerView.useController || playerView.isControllerFullyVisible) return false
 
         if (event.action == KeyEvent.ACTION_DOWN) {
+            when (event.keyCode) {
+                // Nothing to seek through on Live TV
+                KeyEvent.KEYCODE_DPAD_LEFT,
+                KeyEvent.KEYCODE_DPAD_RIGHT,
+                -> if (liveTv?.isActive == true) {
+                    showControllerWithFocus(playerControlsBinding.exoPlayPause)
+                    return true
+                }
+            }
             when (event.keyCode) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> {
                     viewModel.rewind()
