@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="pref_category_music_player">Luajtësi i Muzikës</string>
-    <string name="activity_name_settings">Cilësimet e Jellyfin</string>
     <string name="external_player_unknown_error">Një gabim i panjohur në player-in e jashtëm. Gjurmimi i luajtjes është çaktivizuar.</string>
     <string name="external_player_invalid_player">Nuk është zgjedhur asnjë player i jashtëm. Gjurmimi i luajtjes është çaktivizuar.</string>
     <string name="external_player_not_supported_yet">Gjurmimi i luajtjes nuk suportohet ende për player-in e jashtëm të zgjedhur. Kontaktoni zhvilluesit që të përpiqen ta suportojnë atë.</string>
@@ -64,7 +63,7 @@
     <string name="player_error_network_failure">Nuk mund të ngarkohen informacionet e medias nga serveri</string>
     <string name="player_error_invalid_play_options">Nuk mund të zgjidhen informacionet e luajtjes</string>
     <string name="music_notification_channel_description">Përdoret për kontollimin e luajtjes së muzikës</string>
-    <string name="music_notification_channel">Jellyfin Music Player</string>
+    <string name="music_notification_channel">Streamix Music Player</string>
     <string name="media_service_car_item_no_title">Pa titull</string>
     <string name="media_service_car_section_genres">Zhanret</string>
     <string name="media_service_car_section_songs">Këngët</string>

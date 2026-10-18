@@ -80,7 +80,6 @@
     <string name="external_player_invalid_play_method">चलाने का अमान्य तरीका।</string>
     <string name="external_player_invalid_player">कोई वैध बाहरी प्लेयर चयनित नहीं। प्लेबैक ट्रैकिंग अक्षम।</string>
     <string name="external_player_unknown_error">बाहरी प्लेयर में अज्ञात त्रुटि। प्लेबैक ट्रैकिंग अक्षम।</string>
-    <string name="activity_name_settings">जेलिफ़िन की सेटिंग</string>
     <string name="pref_category_music_player">संगीत प्लेयर</string>
     <string name="pref_music_notification_always_dismissible_summary_on">नोटिफिकेशन को हमेशा खारिज किया जा सकता है, यहां तक कि मीडिया चलाते समय भी</string>
     <string name="pref_category_video_player">वीडियो प्लेयर</string>

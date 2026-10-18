@@ -13,7 +13,6 @@
     <string name="pref_category_video_player">Videospeler</string>
     <string name="pref_music_notification_always_dismissible_title">Wegveegbare melding speler</string>
     <string name="pref_category_music_player">Muziekspeler</string>
-    <string name="activity_name_settings">Jellyfin-instellingen</string>
     <string name="menu_item_none">Geen</string>
     <string name="external_player_unknown_error">Onbekende fout in externe speler. Volgen van afspelen uitgeschakeld.</string>
     <string name="external_player_invalid_player">Geen geldige externe speler geselecteerd. Volgen van afspelen uitgeschakeld.</string>

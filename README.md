@@ -48,7 +48,7 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 | **Every subtitle type** | SRT, WebVTT, TTML, styled ASS/SSA (libass), PGS (Blu-ray), VobSub (DVD), DVB and MP4 text, with a theater style: white text, soft shadow, no box. |
 | **Profile-picture login** | Login shows your users' profile pictures over your server's poster-collage background. |
 | **Remote-first player** | ◀ ▶ seek 10 s instantly, holding them scrubs with thumbnails, OK plays/pauses, Back hides the controls and then exits. |
-| **Live TV** | Your server's TV channels (a tuner or an IPTV / M3U playlist) in a clean grid of channel logos. OK starts a channel straight away, its logo shows while it tunes, and ▲ ▼ or CH+ / CH− flip channels like a TV box. |
+| **Live TV** | Your server's TV channels (a tuner or an IPTV / M3U playlist) in a clean grid of channel logos. OK starts a channel straight away, its logo shows while it tunes, ▲ ▼ or CH+ / CH− flip channels like a TV box, and number keys jump to a channel number. Comes with a ready-made list of about 170 free Hindi and English channels. |
 | **Animated splash** | Three colour streams glide in and merge into the Streamix play arrow, then it fades into your home screen once that has loaded (press OK to skip). |
 | **Updates itself** | Streamix checks GitHub for new releases, downloads the update and installs it, all from the TV. No USB drive needed after the first install. |
 | **Simple settings** | The TV shows only settings a viewer needs, in plain words. Technical options keep sensible defaults and stay reachable from a computer. |
@@ -202,6 +202,23 @@ Streamix plays whatever Live TV your Jellyfin server has: a TV tuner (HDHomeRun 
 3. *(Optional)* For programme names and the guide: **Dashboard → Live TV → TV guide data providers → +** →
    **XMLTV**, and give it an XMLTV file or address that matches your channels.
 
+### The Streamix Hindi & English channel list
+
+[`tools/iptv/streamix_channels.py`](tools/iptv/streamix_channels.py) builds a numbered list of about 170 free
+channels: **Hindi 201–255** (DD National, Dangal, Shemaroo, Goldmines, B4U, Aaj Tak, ABP News, NDTV India...)
+and **English 301+** (Al Jazeera, DW, France 24, NDTV 24x7, WION, PBS Kids, FIFA+, Pluto TV movies,
+Stingray music...). It checks every stream from your own network first and keeps only the ones that play.
+Pay-TV channels that turn up in public lists are left out on purpose.
+
+On the computer running Jellyfin (needs [Python](https://www.python.org/downloads/)):
+
+```bash
+python tools/iptv/streamix_channels.py --out "C:/ProgramData/Jellyfin/Server/iptv/streamix-hindi-english.m3u"
+```
+
+Then **Dashboard → Live TV → Tuner devices → + → M3U Tuner**, enter that file path, and **Save**. Free streams
+come and go, so run it again every month or so, then **Dashboard → Scheduled tasks → Refresh Guide**.
+
 ### Watch on the TV
 
 - **Home → My Media → Live TV**. Without guide data it opens on **Channels**; with a guide, **Programs** shows what's on now.
@@ -209,9 +226,11 @@ Streamix plays whatever Live TV your Jellyfin server has: a TV tuner (HDHomeRun 
   then a banner shows the channel for a few seconds.
 - **▲ / ▼** (or **CH+ / CH−**) flip to the next or previous channel. Press several times quickly to jump further;
   Streamix tunes once you stop.
+- **Number keys** (on remotes that have them) jump straight to a channel: type **2 0 1** for DD National.
 - **OK** shows the player controls, **Back** returns to the channel grid.
 
-> Tuning takes a few seconds: the server opens the stream and the IPTV provider sends the first video. Channels
+> Tuning takes a few seconds, and up to half a minute for some providers: the server opens the stream and the
+> IPTV provider sends the first video. Channels
 > marked **[Geo-blocked]** in the list only play from their own country, and free IPTV streams sometimes go offline.
 
 ## 8. Using the remote
@@ -225,6 +244,7 @@ Streamix plays whatever Live TV your Jellyfin server has: a TV tuner (HDHomeRun 
 | Player, controls hidden | **OK / ▲ / ▼** | Show controls |
 | Live TV, controls hidden | **▲ / ▼** | Next / previous channel |
 | Live TV | **CH+ / CH−** | Next / previous channel |
+| Live TV | **0–9** | Type a channel number |
 | Player, time bar focused | **◀ / ▶** (hold) | Scrub with thumbnails, then release to jump |
 | Player, controls showing | **Back** | Hide controls. Press again to stop playback |
 | Player | **⏯ / ⏩ / ⏪** | Play/pause, fast-forward, rewind |
@@ -260,6 +280,7 @@ Streamix already does the heavy lifting, and a few TV and server settings help f
 | **"Update now" does nothing** | Allow Streamix to install apps: Settings → Apps → Security & restrictions → Unknown sources → Streamix. |
 | **"Playback error" / video won't start** | The server couldn't read the file. Check Dashboard → Logs: `EBML header parsing failed` or `ffprobe failed` means the file is damaged or still downloading. Re-copy it and rescan the library. |
 | **A channel says "isn't available right now"** | The stream is offline or geo-blocked. Press ▲ or ▼ to try another. If no channel plays, check **Dashboard → Live TV** on the server. |
+| **A channel says "Still tuning..."** | Some free streams are slow to start; give it up to 30 seconds, or press ▲ / ▼ for another channel. |
 | **Live TV guide is empty** | The playlist has no programme data. Add an XMLTV guide: [Add channels on the server](#add-channels-on-the-server). |
 | **Can't install the update** | The new APK must be signed with the same key as the installed one. If you built your own copy, uninstall the old one first. |
 
@@ -292,7 +313,8 @@ The APK is written to `app/build/outputs/apk/libre/release/Streamix-v<version>-l
 - `WebViewFragment.kt`, `assets/native/nativeshell.js`, `assets/native/streamix.css`: TV layout, splash hand-off,
   login detection, TV performance and login styling.
 - `PlayerFragment.kt`, `DisplayModeHelper.kt`: remote controls, refresh-rate matching, theater subtitles.
-- `LiveTvController.kt`, `fragment_player.xml`: Live TV tuning card, channel banner and channel flipping.
+- `LiveTvController.kt`, `fragment_player.xml`: Live TV tuning card, channel banner, channel flipping and number keys.
+- `tools/iptv/streamix_channels.py`: builds the free Hindi & English channel list.
 - `StreamixRenderersFactory.kt`, `DeviceProfileBuilder.kt`: audio passthrough switch, wider audio and subtitle direct play.
 - Branding: logo, launcher icons, TV banner, colours, app name. The wordmark is set in
   [Unbounded](https://github.com/googlefonts/unbounded) (SIL Open Font License).

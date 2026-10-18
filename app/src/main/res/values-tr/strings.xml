@@ -57,7 +57,6 @@
     <string name="pref_video_player_type_title">Video oynatıcı türü</string>
     <string name="pref_category_video_player">Video oynatıcı</string>
     <string name="pref_category_music_player">Müzik çalar</string>
-    <string name="activity_name_settings">Jellyfin Ayarları</string>
     <string name="external_player_invalid_play_method">Geçersiz oynatma yöntemi.</string>
     <string name="playback_info_audio_streams">Ses akışları</string>
     <string name="playback_info_video_streams">Video akışları</string>

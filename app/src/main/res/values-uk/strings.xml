@@ -57,7 +57,6 @@
     <string name="pref_music_notification_always_dismissible_summary_off">Сповіщення можна відхилити, лише коли відтворення призупинено</string>
     <string name="pref_music_notification_always_dismissible_title">Сповіщення плеєра, яке можна закрити</string>
     <string name="pref_category_music_player">Музичний плеєр</string>
-    <string name="activity_name_settings">Налаштування Jellyfin</string>
     <string name="external_player_unknown_error">Невідома помилка у зовнішньому плеєрі. Відстеження відтворення вимкнено.</string>
     <string name="external_player_invalid_player">Не обрано жодного дійсного зовнішнього плеєра. Відстеження відтворення вимкнено.</string>
     <string name="external_player_not_supported_yet">Відстеження відтворення поки що не підтримується у вибраному зовнішньому плеєрі. Зверніться до розробників, щоб спробувати додати підтримку.</string>

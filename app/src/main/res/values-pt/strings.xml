@@ -75,7 +75,6 @@
     <string name="playback_info_and_x_more">…e mais %d</string>
     <string name="menu_item_software_decoding">Decodificação por software</string>
     <string name="skip_media_segment">Pular</string>
-    <string name="activity_name_settings">Configurações do Jellyfin</string>
     <string name="mobile_data_summary">A mídia será baixada via WiFi e redes móveis.</string>
     <string name="playback_info_play_method">Método de reprodução: %s</string>
     <string name="menu_item_none">Nenhum</string>

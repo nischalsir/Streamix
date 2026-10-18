@@ -85,7 +85,6 @@
     <string name="pref_download_location">Месца для спамповак</string>
     <string name="pref_category_downloads">Спампоўкі</string>
     <string name="pref_subtitle_style_summary">Вы можаце змяніць стыль субцітраў у наладах Android</string>
-    <string name="activity_name_settings">Налады Jellyfin</string>
     <string name="external_player_unknown_error">Невядомая памылка знешняга прайгравальніка. Адсочванне прайгравання адключана.</string>
     <string name="external_player_system_default_description">Дазвольце сістэме выбар прайгравальніка, некаторыя прайгравальнікі могуць быць не цалкам сумяшчальныя.</string>
     <string name="external_player_not_supported_yet">Адсочванне прайгравання пакуль не падтрымліваецца ў выбраным знешнім прайгравальніку. Звяжыцеся з распрацоўшчыкамі, каб паспрабаваць дадаць падтрымку.</string>

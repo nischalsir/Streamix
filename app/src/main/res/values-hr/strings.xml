@@ -10,7 +10,6 @@
     <string name="pref_category_video_player">Video reproduktor</string>
     <string name="pref_music_notification_always_dismissible_title">Obavijesti aplikacije koje se mogu odbaciti</string>
     <string name="pref_category_music_player">Izvođač Glazbe</string>
-    <string name="activity_name_settings">Jellyfin Postavke</string>
     <string name="external_player_unknown_error">Nepoznata greška u vanjskom programu za reprodukciju. Praćenje reprodukcije onemogućeno.</string>
     <string name="external_player_invalid_player">Nije odabran važeći vanjski program za reprodukciju. Praćenje reprodukcije onemogućeno.</string>
     <string name="external_player_not_supported_yet">Praćenje reprodukcije još nije podržano u odabranom vanjskom programu za reprodukciju. Obratite se programerima da pokušaju dodati podršku za to.</string>

@@ -29,7 +29,6 @@
     <string name="pref_music_notification_always_dismissible_summary_off">Jakinarazpena erreprodukzioa geldituta dagoen bitartean bakarrik ezaba daiteke</string>
     <string name="pref_music_notification_always_dismissible_title">Erreproduzigailu baztergarriaren jakinarazpena</string>
     <string name="pref_category_music_player">Musika-erreproduzitzailea</string>
-    <string name="activity_name_settings">Jellyfinen ezarpenak</string>
     <string name="external_player_unknown_error">Errore ezezaguna kanpo-erreproduzitzailea. Erreprodukzioaren jarraipena desaktibatuta dago.</string>
     <string name="external_player_invalid_player">Ez da kanpoko erreproduzigailu baliozkorik hautatu. Erreprodukzioaren jarraipena desaktibatu da.</string>
     <string name="external_player_not_supported_yet">Hautatutako kanpo-erreproduzitzaileak ez du erreprodukzioaren jarraipena jasaten. Jar zaitez harremanetan garatzaileekin.</string>

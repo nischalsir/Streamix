@@ -22,7 +22,6 @@
     <string name="pref_category_video_player">Reproductor de video</string>
     <string name="pref_music_notification_always_dismissible_title">Permitir descartar la notificación del reproductor de música</string>
     <string name="pref_category_music_player">Reproductor de música</string>
-    <string name="activity_name_settings">Configuraciones de Jellyfin</string>
     <string name="external_player_unknown_error">Error desconocido en el reproductor externo. Se deshabilitará el seguimiento de la reproducción.</string>
     <string name="external_player_invalid_player">No se ha seleccionado un reproductor externo válido. Se deshabilitará el seguimiento de la reproducción.</string>
     <string name="external_player_not_supported_yet">El seguimiento de la reproducción aún no está soportada en el reproductor externo. Favor de contactar a los desarrolladores para que intenten darle soporte.</string>

@@ -75,7 +75,6 @@
     <string name="external_player_not_supported_yet">Сонгосон гадаад тоглуулагчид тоглуулах явцыг хянах дэмжлэг одоогоор байхгүй байна. Үүнийг нэмэхийн тулд хөгжүүлэгчидтэй холбогдоно уу.</string>
     <string name="external_player_invalid_player">Хүчинтэй гадаад тоглуулагч сонгогдоогүй байна. Тоглуулах хяналт идэвхгүй боллоо.</string>
     <string name="external_player_unknown_error">Гадаад тоглуулагчид тодорхойгүй алдаа гарлаа. Тоглуулах хяналт идэвхгүй боллоо.</string>
-    <string name="activity_name_settings">Jellyfin тохиргоо</string>
     <string name="pref_category_music_player">Хөгжим тоглуулагч</string>
     <string name="pref_music_notification_always_dismissible_title">Хаах боломжтой тоглуулагч мэдэгдэл</string>
     <string name="pref_music_notification_always_dismissible_summary_off">Мэдэгдлийг зөвхөн тоглуулахыг түр зогсоосон үед хааж болно</string>

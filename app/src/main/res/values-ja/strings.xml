@@ -40,7 +40,6 @@
     <string name="pref_category_video_player">ビデオプレーヤー</string>
     <string name="pref_music_notification_always_dismissible_title">削除可能なプレイヤー通知</string>
     <string name="pref_category_music_player">ミュージックプレーヤー</string>
-    <string name="activity_name_settings">Jellyfinの設定</string>
     <string name="external_player_unknown_error">外部のプレーヤーに不明なエラーがあります。プレイバックトラッキングが無効になっています。</string>
     <string name="external_player_invalid_player">有効な外部のプレーヤーが選択されていません。プレイバックトラッキングが無効になっています。</string>
     <string name="external_player_not_supported_yet">選択している外部のプレーヤーの再生記録がまだサポートされていません。開発元にご連絡してください。</string>

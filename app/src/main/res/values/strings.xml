@@ -24,7 +24,7 @@
     <string name="button_use_different_server">Use a different server</string>
 
     <string name="bluetooth_permission_title">Allow Bluetooth access?</string>
-    <string name="bluetooth_permission_message">To detect when wireless headphones or speakers are disconnected, the app requires Bluetooth access. On Android, this permission is described as access to nearby devices, and warns that Bluetooth devices can be used to infer the current location. However, the Jellyfin app will never use this permission to detect your location.</string>
+    <string name="bluetooth_permission_message">To detect when wireless headphones or speakers are disconnected, the app requires Bluetooth access. On Android, this permission is described as access to nearby devices, and warns that Bluetooth devices can be used to infer the current location. However, Streamix will never use this permission to detect your location.</string>
     <string name="bluetooth_permission_continue">Continue</string>
     <string name="bluetooth_permission_granted">Bluetooth permission was granted</string>
     <string name="battery_optimizations_message">Please disable battery optimizations for media playback while the screen is off.</string>
@@ -57,7 +57,7 @@
     <string name="media_service_car_section_playlists">Playlists</string>
     <string name="media_service_car_item_no_title">No title</string>
 
-    <string name="music_notification_channel">Jellyfin Music Player</string>
+    <string name="music_notification_channel">Streamix Music Player</string>
     <string name="music_notification_channel_description">Used for music playback controls</string>
     <string name="notification_action_previous">Previous</string>
     <string name="notification_action_rewind">Rewind</string>
@@ -138,6 +138,8 @@
     <string name="live_tv_channel_number">Channel %1$s</string>
     <string name="live_tv_channel_position">Channel %1$d of %2$d</string>
     <string name="live_tv_hint">▲ ▼  Change channel</string>
+    <string name="live_tv_no_channel">No channel with this number</string>
+    <string name="live_tv_still_tuning">Still tuning… some channels take a while to start</string>
     <string name="pref_check_updates">Check for updates</string>
     <string name="pref_check_updates_summary">You have version %1$s</string>
     <string name="update_checking">Checking for updates…</string>

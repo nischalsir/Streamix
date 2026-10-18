@@ -101,7 +101,6 @@
     <string name="playback_info_and_x_more">...и још %d</string>
     <string name="menu_item_none">Ниједан</string>
     <string name="external_player_invalid_play_method">Неисправан метод репродукције.</string>
-    <string name="activity_name_settings">Jellyfin подешавања</string>
     <string name="pref_category_music_player">Музички плејер</string>
     <string name="pref_music_notification_always_dismissible_summary_off">Обавештење се може одбацити само кад је репродукција паузирана</string>
     <string name="pref_category_video_player">Видео плејер</string>

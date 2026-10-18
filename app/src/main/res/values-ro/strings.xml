@@ -13,7 +13,6 @@
     <string name="pref_category_video_player">Player video</string>
     <string name="pref_music_notification_always_dismissible_title">Respinge notificarea jucătorului</string>
     <string name="pref_category_music_player">Redare muzică</string>
-    <string name="activity_name_settings">Setări Jellyfin</string>
     <string name="playback_info_and_x_more">...și %d mai mult</string>
     <string name="playback_info_audio_streams">Emitetrea audio</string>
     <string name="playback_info_video_streams">Emiterea video</string>
@@ -56,7 +55,7 @@
     <string name="external_player_app">Aplicație player externă</string>
     <string name="pref_exoplayer_allow_brightness_volume_gesture">Gesturi de luminozitate și volum</string>
     <string name="music_notification_channel_description">Folosit pentru comenzile de redare a muzicii</string>
-    <string name="music_notification_channel">Jellyfin Music Player</string>
+    <string name="music_notification_channel">Streamix Music Player</string>
     <string name="media_service_car_item_no_title">Fără titlu</string>
     <string name="media_service_car_section_genres">Genuri</string>
     <string name="media_service_car_section_songs">Melodii</string>

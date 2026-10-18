@@ -28,7 +28,6 @@
     <string name="menu_item_none">Puudub</string>
     <string name="menu_item_auto">Automaatne</string>
     <string name="pref_category_music_player">Muusikapleier</string>
-    <string name="activity_name_settings">Jellyfini sätted</string>
     <string name="pref_category_video_player">Videopleier</string>
     <string name="pref_video_player_type_title">Videopleieri tüüp</string>
     <string name="video_player_web">Veebi pleier</string>

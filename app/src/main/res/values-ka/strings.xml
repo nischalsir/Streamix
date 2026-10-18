@@ -80,7 +80,6 @@
     <string name="network_buffer_large">დიდი</string>
     <string name="media_service_car_section_favorites">რჩეულები</string>
     <string name="media_service_car_section_audiobooks">აუდიოწიგნები</string>
-    <string name="activity_name_settings">Jellyfin-ის მორგება</string>
     <string name="pref_category_music_player">მუსიკის დამკვრელი</string>
     <string name="pref_category_video_player">ვიდეოს დამკვრელი</string>
     <string name="video_player_web">ვების დამკვრელი</string>

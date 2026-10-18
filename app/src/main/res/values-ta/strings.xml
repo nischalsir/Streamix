@@ -3,7 +3,6 @@
     <string name="pref_category_video_player">வீடியோ பிளேயர்</string>
     <string name="pref_music_notification_always_dismissible_title">நிராகரிக்கக்கூடிய பிளேயர் அறிவிப்பு</string>
     <string name="pref_category_music_player">இசைப்பான்</string>
-    <string name="activity_name_settings">ஜெல்லிஃபின் அமைப்புகள்</string>
     <string name="menu_item_none">எதுவுமில்லை</string>
     <string name="downloading">பதிவிறக்குகிறது</string>
     <string name="mobile_data_and_roaming">மொபைல் தரவு &amp; ரோமிங்</string>

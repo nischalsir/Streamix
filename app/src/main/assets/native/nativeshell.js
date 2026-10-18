@@ -234,6 +234,30 @@ if (isTv) {
         page.querySelectorAll('a.button-link:not([tabindex])').forEach((link) => link.setAttribute('tabindex', '-1'));
     };
 
+    // Show, season and collection pages put "Next Up", "Seasons", the episode list and a collection's
+    // titles in the narrow column beside the poster, while cast and "More like this" span the page.
+    // Move them down into the full-width area so every row starts at the same edge and has room.
+    const alignDetailRows = () => {
+        if (!isTv) return;
+        const page = document.querySelector('.mainAnimatedPage.itemDetailPage:not(.hide)');
+        if (!page) return;
+        const primary = page.querySelector('.detailPagePrimaryContainer');
+        const secondary = page.querySelector('.detailPageSecondaryContainer');
+        if (primary && secondary) {
+            const rows = [...primary.querySelectorAll('.detailVerticalSection, .collectionItems')];
+            rows.reverse().forEach((row) => {
+                row.classList.add('streamixMovedRow');
+                secondary.insertBefore(row, secondary.firstChild);
+            });
+        }
+        // Hide rows that ended up empty, and show them again if they fill in later
+        page.querySelectorAll('.detailVerticalSection').forEach((row) => {
+            const list = row.querySelector('.itemsContainer, .childrenItemsContainer, #childrenContent');
+            const empty = !!list && !list.querySelector('.card, .listItem, button');
+            row.classList.toggle('streamixEmptyRow', empty && !row.classList.contains('hide'));
+        });
+    };
+
     // Backdrops belong to pages with posters (home, libraries, search results), not settings or details
     const updateBrowseState = () => {
         const page = document.querySelector('.mainAnimatedPage:not(.hide)');
@@ -246,9 +270,11 @@ if (isTv) {
         if (browsing || detail) backdrop.refresh();
         if (detail) {
             skipTextLinks();
+            alignDetailRows();
             // The page fills in after it's shown
             setTimeout(skipTextLinks, 400);
             setTimeout(skipTextLinks, 1500);
+            [400, 1200, 2500].forEach((delay) => setTimeout(alignDetailRows, delay));
             // Detail pages: that title's artwork, full-bleed, like Apple TV
             const id = new URLSearchParams((window.location.hash.split('?')[1]) || '').get('id');
             if (id) backdrop.item(id);
@@ -308,6 +334,35 @@ if (isTv) {
         retileLibraries();
         if (root.classList.contains('streamix-browse')) backdrop.focus(card);
     });
+
+    // Text fields: on a TV, landing on one pops the on-screen keyboard up, even when you were only moving
+    // past it (settings pages are full of them). Keep fields read-only until OK is pressed on them, the way
+    // the TV's own settings work. The search box is left alone: there you always want to type.
+    const TYPEABLE = 'input:not([type]), input[type=text], input[type=number], input[type=password], '
+        + 'input[type=email], input[type=url], input[type=tel], textarea';
+    let unlocking = null;
+    if (isTv) {
+        document.addEventListener('focusin', (e) => {
+            const field = e.target;
+            if (!field.matches || !field.matches(TYPEABLE) || field === unlocking) return;
+            if (field.closest('.searchFields, .searchfields-txtSearch') || field.type === 'search') return;
+            if (field.readOnly && !field.hasAttribute('data-streamix-lock')) return; // read-only by design
+            field.readOnly = true;
+            field.setAttribute('data-streamix-lock', '1');
+        }, true);
+        document.addEventListener('keydown', (e) => {
+            const field = document.activeElement;
+            if (e.key !== 'Enter' || !field || !field.hasAttribute('data-streamix-lock') || !field.readOnly) return;
+            e.preventDefault();
+            e.stopPropagation();
+            field.readOnly = false;
+            // Re-focusing an editable field from a key press brings the keyboard up
+            unlocking = field;
+            field.blur();
+            field.focus();
+            unlocking = null;
+        }, true);
+    }
 
     // Tell the app when the first page is on screen, so the splash can fade into it
     let readyReported = false;
@@ -372,19 +427,30 @@ if (isTv) {
         if (firstTab && !firstTab.classList.contains('emby-tab-button-active')) firstTab.click();
     };
 
-    // A newly shown page starts with focus on its content, not left behind in the top bar
+    // A newly shown page starts with focus on its content, not left behind in the top bar or on the
+    // sort / filter buttons above a grid (where Jellyfin's autofocus tends to put it)
+    let movedSinceShown = false;
+    document.addEventListener('keydown', (e) => {
+        if (e.key && e.key.startsWith('Arrow')) movedSinceShown = true;
+    }, true);
     const focusContent = () => {
         if (!isTv) return;
         const active = document.activeElement;
         const inTopBar = active && active.closest && active.closest('.skinHeader');
-        if (!inTopBar && active && active !== document.body) return;
+        const onToolbar = !movedSinceShown && active && active.closest
+            && active.closest('.alphaPicker, .pageTabContent > .flex:first-child, .libraryPage > .flex:first-child');
+        if (!inTopBar && !onToolbar && active && active !== document.body) return;
         const page = document.querySelector('.mainAnimatedPage:not(.hide)');
-        const target = page && (page.querySelector('.btnPlay:not(.hide), .btnResume:not(.hide)')
-            || page.querySelector('.card[data-id], a.listItem-border:not(.hide)'));
-        if (target && target.offsetParent !== null) target.focus();
+        // On pages with tabs, the visible tab: hidden tabs keep their cards in the page
+        const scope = page && (page.querySelector('.pageTabContent.is-active') || page);
+        const visible = (el) => el.offsetParent !== null;
+        const target = scope && ([...scope.querySelectorAll('.btnPlay:not(.hide), .btnResume:not(.hide)')].find(visible)
+            || [...scope.querySelectorAll('.card[data-id], a.listItem-border:not(.hide)')].find(visible));
+        if (target) target.focus();
     };
 
     document.addEventListener('viewshow', () => {
+        movedSinceShown = false;
         updatePageState();
         reportReady();
         setTimeout(focusContent, 350);

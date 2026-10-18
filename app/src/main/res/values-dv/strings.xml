@@ -74,7 +74,6 @@
     <string name="menu_item_auto">އޮޓޯ</string>
     <string name="menu_item_software_decoding">ސޮފްޓްވެއަރ ޑިކޯޑިން</string>
     <string name="menu_item_hardware_decoding">ހާޑްވެއަރ ޑިކޯޑިން</string>
-    <string name="activity_name_settings">ޖެލީފިން ސެޓިންގސް</string>
     <string name="external_player_not_supported_yet">ނަގާފައިވާ އެޕުންބޭރު ޕްލޭޔަރުން ޕްލޭބެކް ޓްރެކިން ސަޕޯޓެއް ނުކުރޭ. ޑިވެލޮޕަރުންނާއި ވާހަކަ ދައްކައިގެން ސަޕޯޓް ކުރާ ގޮތް ވޭތޯ މަސައްކަތް ކުރެވިދާނެ.</string>
     <string name="external_player_invalid_player">ނަގާފައިވާ އެޕުންބޭރު ޕްލޭޔަރު ރަނގަޅެއް ނޫން. ޕްލޭބެކް ޓްރެކިން ހުއްޓިފައި.</string>
     <string name="external_player_unknown_error">އެޕުންބޭރު ޕްލޭޔަރަށް ގޮތްނޭންގޭ މައްސަލައެއް ދިމާވެއްޖެ. ޕްލޭބެކް ޓްރެކިން ހުއްޓިފައި.</string>

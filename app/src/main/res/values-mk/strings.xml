@@ -31,7 +31,6 @@
     <string name="menu_item_none">Ниедно</string>
     <string name="menu_item_auto">Автоматски</string>
     <string name="external_player_invalid_play_method">Неважечки метод за репродукција.</string>
-    <string name="activity_name_settings">Jellyfin Поставки</string>
     <string name="pref_category_music_player">Плеер за музика</string>
     <string name="pref_category_video_player">Плеер за видео</string>
     <string name="pref_video_player_type_title">Тип на видео плеер</string>

@@ -68,7 +68,6 @@
     <string name="external_player_invalid_play_method">چلانے کا طریقہ غلط ہے۔</string>
     <string name="external_player_invalid_player">کوئی درست بیرونی پلیئر منتخب نہیں کیا گیا۔ پلے بیک ٹریکنگ غیر فعال ہے۔</string>
     <string name="external_player_unknown_error">بیرونی پلیئر میں نامعلوم خرابی ہے۔ پلے بیک ٹریکنگ غیر فعال ہے۔</string>
-    <string name="activity_name_settings">(جیلیفن) کی ترتیبات</string>
     <string name="pref_music_notification_always_dismissible_title">مسترد کیے جا سکنے والی پلیئر نوٹیفیکیشن</string>
     <string name="pref_music_notification_always_dismissible_summary_off">نوٹیفکیشن صرف تب ہی برخاست کیا جا سکتا ہے جب پلے بیک موقوف ہو</string>
     <string name="pref_video_player_type_title">ویڈیو پلیئر کی قسم</string>

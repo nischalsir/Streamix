@@ -1,14 +1,18 @@
 package org.jellyfin.mobile.settings
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+import android.widget.CompoundButton
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.children
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import de.Maxr1998.modernpreferences.Preference
@@ -85,27 +89,57 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         binding.toolbar.setTitle(R.string.activity_name_settings)
         requireMainActivity().apply {
             setSupportActionBar(binding.toolbar)
-            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            // A TV remote has its own Back button
+            supportActionBar?.setDisplayHomeAsUpEnabled(!isTv)
         }
         binding.recyclerView.adapter = settingsAdapter
-        if (isTv) setupForRemote(binding.recyclerView)
+        if (isTv) setupForRemote(binding)
         return binding.root
     }
 
     /**
-     * Visible focus on every row, and focus starts in the list rather than on the toolbar.
+     * TV layout: a large title on the page's own background, rows kept clear of the screen edges, and focus
+     * that sits on the control - a ring around the tick box, or a soft highlight on rows without one.
+     * Focus starts in the list rather than on the toolbar.
      */
-    private fun setupForRemote(recyclerView: RecyclerView) {
+    private fun setupForRemote(binding: FragmentSettingsBinding) {
+        val sidePadding = resources.getDimensionPixelSize(R.dimen.tv_settings_side_padding)
+        with(binding.toolbar) {
+            setBackgroundColor(Color.TRANSPARENT)
+            setTitleTextAppearance(context, R.style.TvSettingsTitle)
+            updateLayoutParams { height = resources.getDimensionPixelSize(R.dimen.tv_settings_toolbar_height) }
+            setPadding(sidePadding / 2, 0, sidePadding, 0)
+        }
+        val recyclerView = binding.recyclerView
+        recyclerView.setPadding(sidePadding, 0, sidePadding, sidePadding)
+        recyclerView.clipToPadding = false
         recyclerView.addOnChildAttachStateChangeListener(
             object : RecyclerView.OnChildAttachStateChangeListener {
                 override fun onChildViewAttachedToWindow(view: View) {
-                    view.foreground = ContextCompat.getDrawable(view.context, R.drawable.tv_focus_highlight)
+                    view.foreground = null
+                    val checkBox = view.findCompoundButton()
+                    if (checkBox != null) {
+                        // The row keeps focus (OK still toggles it); the tick box shows it
+                        view.background = null
+                        val ring = ContextCompat.getDrawable(view.context, R.drawable.tv_checkbox_focus)
+                        checkBox.foreground = ring.takeIf { view.hasFocus() }
+                        view.setOnFocusChangeListener { _, hasFocus -> checkBox.foreground = ring.takeIf { hasFocus } }
+                    } else {
+                        view.onFocusChangeListener = null
+                        view.background = ContextCompat.getDrawable(view.context, R.drawable.tv_settings_row_focus)
+                    }
                 }
 
                 override fun onChildViewDetachedFromWindow(view: View) = Unit
             },
         )
         recyclerView.post { recyclerView.requestFocus() }
+    }
+
+    private fun View.findCompoundButton(): CompoundButton? = when (this) {
+        is CompoundButton -> this
+        is ViewGroup -> children.firstNotNullOfOrNull { it.findCompoundButton() }
+        else -> null
     }
 
     override fun onInterceptBackPressed(): Boolean {

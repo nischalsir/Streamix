@@ -2,7 +2,6 @@
 <resources>
     <string name="pref_music_notification_always_dismissible_title">Notifikasi pemutar yang bisa dihapus</string>
     <string name="pref_category_music_player">Pemutar lagu</string>
-    <string name="activity_name_settings">Pengaturan Jellyfin</string>
     <string name="wifi_only">Hanya WiFi</string>
     <string name="connect_button_text">Menghubungkan</string>
     <string name="connect_to_server_title">Sambungkan ke Server</string>

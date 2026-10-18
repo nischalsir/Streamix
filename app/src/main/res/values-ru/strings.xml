@@ -10,7 +10,6 @@
     <string name="connect_to_server_title">Соединение с сервером</string>
     <string name="pref_category_video_player">Видео проигрыватель</string>
     <string name="pref_category_music_player">Музыкальный проигрыватель</string>
-    <string name="activity_name_settings">Параметры Jellyfin</string>
     <string name="menu_item_none">Ничего</string>
     <string name="connect_button_text">Соединение</string>
     <string name="host_input_hint">Узел</string>

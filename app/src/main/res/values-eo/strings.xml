@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="activity_name_settings">Parametroj de Jellyfin</string>
     <string name="playback_info_stream_unknown_title">Nekonata titolo</string>
     <string name="media_service_car_item_no_title">Sen titolo</string>
     <string name="mobile_data">Poŝfonaj Datenoj</string>

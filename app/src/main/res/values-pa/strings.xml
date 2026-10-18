@@ -22,7 +22,6 @@
     <string name="pref_category_video_player">ਵੀਡੀਓ ਪਲੇਅਰ</string>
     <string name="pref_music_notification_always_dismissible_title">ਸੰਗੀਤ ਪਲੇਅਰ ਦੀ ਨੋਟੀਫਿਕੇਸ਼ਨ ਹਮੇਸ਼ਾ ਖਾਰਜ ਕਰੋ</string>
     <string name="pref_category_music_player">ਸੰਗੀਤ ਪਲੇਅਰ</string>
-    <string name="activity_name_settings">ਜੈਲੀਫਿਨ ਸੈਟਿੰਗਜ਼</string>
     <string name="external_player_unknown_error">ਬਾਹਰੀ ਖਿਡਾਰੀ ਵਿੱਚ ਅਣਜਾਣ ਗਲਤੀ. ਪਲੇਬੈਕ ਟਰੈਕਿੰਗ ਅਸਮਰਥਿਤ.</string>
     <string name="external_player_invalid_player">ਕੋਈ ਵੈਧ ਬਾਹਰੀ ਖਿਡਾਰੀ ਨਹੀਂ ਚੁਣਿਆ ਗਿਆ. ਪਲੇਬੈਕ ਟਰੈਕਿੰਗ ਅਸਮਰਥਿਤ.</string>
     <string name="external_player_not_supported_yet">ਪਲੇਅਬੈਕ ਟਰੈਕਿੰਗ ਅਜੇ ਤੱਕ ਚੁਣੇ ਬਾਹਰੀ ਖਿਡਾਰੀ ਵਿੱਚ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ. ਇਸਦੇ ਲਈ ਸਮਰਥਨ ਜੋੜਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਨ ਲਈ ਡਿਵੈਲਪਰਾਂ ਨਾਲ ਸੰਪਰਕ ਕਰੋ.</string>

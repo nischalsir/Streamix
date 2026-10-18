@@ -34,7 +34,6 @@
     <string name="menu_item_auto">Automàtic</string>
     <string name="menu_item_software_decoding">Descodificació de programari</string>
     <string name="external_player_invalid_play_method">Mètode de reproducció no vàlid.</string>
-    <string name="activity_name_settings">Configuració de Jellyfin</string>
     <string name="video_player_web">Reproductor web</string>
     <string name="video_player_external">Reproductor extern</string>
     <string name="pref_exoplayer_start_landscape_video_in_landscape">Iniciar vídeos en mode paisatge en orientació paisatge</string>

@@ -80,7 +80,6 @@
     <string name="external_player_not_supported_yet">Seçilmiş xarici pleyer hələ oxutma izlənməsini dəstəkləmir. Bu dəstəyin əlavə edilməsi üçün tərtibatçılarla əlaqə saxlaya bilərsiniz</string>
     <string name="external_player_invalid_player">Uyğun xarici pleyer seçilmədiyi üçün oxutma izlənməsi söndürülüb.</string>
     <string name="external_player_unknown_error">Xarici pleyerdə naməlum xəta baş verdi. Oxutma izlənməsi deaktiv edilib.</string>
-    <string name="activity_name_settings">Jellyfin Parametrləri</string>
     <string name="pref_category_music_player">Musiqi oxuducusu</string>
     <string name="pref_music_notification_always_dismissible_title">Bağlana bilən pleyer bildirişi</string>
     <string name="pref_music_notification_always_dismissible_summary_off">Bildiriş yalnız oxutma fasiləyə verildikdə bağlana bilər</string>

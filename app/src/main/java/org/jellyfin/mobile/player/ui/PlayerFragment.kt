@@ -359,9 +359,19 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
 
     /**
      * Live TV: CH+/CH- always change channel, and so do up/down while the controls are hidden.
+     * Number keys type a channel number.
      */
     private fun handleChannelKey(event: KeyEvent): Boolean {
         val liveTv = liveTv?.takeIf { it.isActive } ?: return false
+        val digit = when (event.keyCode) {
+            in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> event.keyCode - KeyEvent.KEYCODE_0
+            in KeyEvent.KEYCODE_NUMPAD_0..KeyEvent.KEYCODE_NUMPAD_9 -> event.keyCode - KeyEvent.KEYCODE_NUMPAD_0
+            else -> -1
+        }
+        if (digit >= 0) {
+            if (event.action == KeyEvent.ACTION_DOWN) liveTv.enterDigit(digit)
+            return true
+        }
         val controlsHidden = !playerView.isControllerFullyVisible
         val step = when (event.keyCode) {
             KeyEvent.KEYCODE_CHANNEL_UP -> 1

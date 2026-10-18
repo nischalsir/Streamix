@@ -35,6 +35,7 @@ import java.util.UUID
  * - once it plays, a banner shows the channel for a few seconds
  * - up/down (or CH+/CH-) flip through the channel list; quick presses only move the banner, and the
  *   channel tunes once the remote goes quiet
+ * - number keys jump straight to a channel number (101, 205, ...)
  */
 class LiveTvController(
     private val binding: FragmentPlayerBinding,
@@ -59,6 +60,7 @@ class LiveTvController(
     private var current: Channel? = null
     private var pendingIndex = -1
     private var controlsVisible = false
+    private val typedNumber = StringBuilder()
 
     /** True from the moment a channel is picked until its first frame plays */
     var isTuning = false
@@ -68,6 +70,10 @@ class LiveTvController(
 
     private val hideBanner = Runnable { fadeOut(binding.liveTvBanner) }
     private val tunePending = Runnable { tune(pendingIndex) }
+    private val tuneTypedNumber = Runnable { finishNumberEntry() }
+    private val stillTuning = Runnable {
+        if (isTuning && binding.liveTvTuningProgress.isVisible) binding.liveTvTuningStatus.setText(R.string.live_tv_still_tuning)
+    }
 
     fun start(channelId: UUID, info: LiveTvChannelInfo) {
         // The tuning card and channel banner say what's on; the controls only come up when asked for
@@ -124,6 +130,51 @@ class LiveTvController(
         return true
     }
 
+    /**
+     * A number key: shows the channel being typed, and tunes it once the remote goes quiet.
+     *
+     * @return true if the key was used
+     */
+    fun enterDigit(digit: Int): Boolean {
+        if (current == null) return false
+        if (typedNumber.length >= MAX_NUMBER_DIGITS) typedNumber.setLength(0)
+        typedNumber.append(digit)
+        handler.removeCallbacks(tunePending)
+        pendingIndex = -1
+
+        val typed = typedNumber.toString()
+        val match = channels.indexOfFirst { it.number == typed }.takeIf { it >= 0 }
+            ?: channels.indexOfFirst { it.number?.startsWith(typed) == true }.takeIf { it >= 0 }
+        when (match) {
+            null -> showMissingNumber(typed)
+            else -> showBanner(channels[match], autoHide = false, numberText = typed)
+        }
+        handler.removeCallbacks(tuneTypedNumber)
+        handler.postDelayed(tuneTypedNumber, NUMBER_SETTLE_MS)
+        return true
+    }
+
+    private fun finishNumberEntry() {
+        val typed = typedNumber.toString()
+        typedNumber.setLength(0)
+        val index = channels.indexOfFirst { it.number == typed }
+        if (index >= 0) tune(index) else fadeOut(binding.liveTvBanner)
+    }
+
+    private fun showMissingNumber(typed: String) {
+        if (controlsVisible) return
+        with(binding) {
+            liveTvBannerNumber.text = context.getString(R.string.live_tv_channel_number, typed)
+            liveTvBannerName.text = context.getString(R.string.live_tv_no_channel)
+            liveTvBannerProgram.isVisible = false
+            liveTvBannerLogo.setImageResource(R.drawable.ic_live_tv_channel)
+            liveTvBanner.animate().cancel()
+            liveTvBanner.alpha = 1f
+            liveTvBanner.isVisible = true
+        }
+        handler.removeCallbacks(hideBanner)
+    }
+
     private fun tune(index: Int) {
         val channel = channels.getOrNull(index) ?: return
         pendingIndex = -1
@@ -171,6 +222,9 @@ class LiveTvController(
     private fun showTuning(channel: Channel) {
         isTuning = true
         playerView.hideController()
+        // Some providers take half a minute; say so, so it doesn't look stuck
+        handler.removeCallbacks(stillTuning)
+        handler.postDelayed(stillTuning, STILL_TUNING_MS)
         with(binding) {
             liveTvTuningName.text = channel.name
             liveTvTuningStatus.setText(R.string.live_tv_tuning)
@@ -182,12 +236,13 @@ class LiveTvController(
         }
     }
 
-    private fun showBanner(channel: Channel, autoHide: Boolean) {
+    private fun showBanner(channel: Channel, autoHide: Boolean, numberText: String? = null) {
         if (controlsVisible) return
         val index = channels.indexOfFirst { it.id == channel.id }
         with(binding) {
             liveTvBannerName.text = channel.name
             liveTvBannerNumber.text = when {
+                numberText != null -> context.getString(R.string.live_tv_channel_number, numberText)
                 !channel.number.isNullOrBlank() -> context.getString(R.string.live_tv_channel_number, channel.number)
                 index >= 0 -> context.getString(R.string.live_tv_channel_position, index + 1, channels.size)
                 else -> ""
@@ -243,6 +298,9 @@ class LiveTvController(
         fun cleanName(name: String): String = name.replace(QUALITY_TAG, "").trim().ifEmpty { name }
 
         private const val ZAP_SETTLE_MS = 800L
+        private const val NUMBER_SETTLE_MS = 1500L
+        private const val STILL_TUNING_MS = 12_000L
+        private const val MAX_NUMBER_DIGITS = 4
         private const val BANNER_TIMEOUT_MS = 4500L
         private const val FADE_MS = 220L
         private const val TUNING_LOGO_HEIGHT = 320

@@ -25,4 +25,11 @@
     <style name="ThemeOverlay.App.BackButton" parent="">
         <item name="colorControlNormal">?android:textColorPrimary</item>
     </style>
+
+    <!-- Settings title on TV -->
+    <style name="TvSettingsTitle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">26sp</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
 </resources>

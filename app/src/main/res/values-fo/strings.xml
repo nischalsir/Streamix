@@ -36,7 +36,6 @@
     <string name="menu_item_hardware_decoding">Tólbúnaðaravkoting</string>
     <string name="menu_item_software_decoding">Ritbúnaðaravkoting</string>
     <string name="skip_media_segment">Leyp um</string>
-    <string name="activity_name_settings">Jellyfin-stillingar</string>
     <string name="pref_category_music_player">Tónleikaspælari</string>
     <string name="video_player_web">Vevspælari</string>
     <string name="video_player_external">Ytri spælari</string>

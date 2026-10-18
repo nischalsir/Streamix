@@ -9,7 +9,6 @@
     <string name="pref_category_video_player">Videoafspiller</string>
     <string name="pref_music_notification_always_dismissible_title">Afviselig notifikation fra afspiller</string>
     <string name="pref_category_music_player">Musikafspiller</string>
-    <string name="activity_name_settings">Jellyfin-indstillinger</string>
     <string name="external_player_unknown_error">Ukendt fejl i den eksterne afspiller. Afspilningssporing er deaktiveret.</string>
     <string name="external_player_invalid_player">Den valgte eksterne afspiller er ikke understøttet. Afspilningssporing er deaktiveret.</string>
     <string name="external_player_not_supported_yet">Afspilningsspring understøttes endnu ikke i den valgte eksterne afspiller. Kontakt udvikleren for at få understøttelse til den.</string>

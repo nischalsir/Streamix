@@ -34,9 +34,16 @@ html.streamix-tv .card.show-animation:focus > .cardBox {
     transform: scale(1.08) !important;
 }
 
-/* Smaller resting shadows are cheaper to paint while rows scroll in */
+/* No blurred shadow under every poster: on a TV's GPU each one is a blur to paint while rows scroll,
+   and on the dark page it barely shows */
 html.streamix-tv .cardScalable {
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+    box-shadow: none !important;
+}
+
+/* Images fade in quickly instead of dozens of slow fades running at once as a page loads */
+html.streamix-tv .lazy-image-fadein,
+html.streamix-tv .lazy-image-fadein-fast {
+    animation-duration: 0.14s !important;
 }
 
 /* Remote navigation has no hover; drop the hover-only sheen sweep on every focus change */
@@ -50,28 +57,58 @@ html.streamix-tv .paper-icon-button-light.show-focus:focus {
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9), 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
-/* Checkboxes, switches and sliders: the whole row lights up with a white rim when the remote is on it
-   (the checkbox input itself is invisible, so Jellyfin shows nothing by default) */
-html.streamix-tv .checkboxContainer,
-html.streamix-tv .mdl-switch,
-html.streamix-tv .sliderContainer,
-html.streamix-tv .mdl-slider-container {
-    border-radius: 12px;
-    transition: background-color 140ms ease, box-shadow 140ms ease;
-}
-
-html.streamix-tv .checkboxContainer:focus-within,
-html.streamix-tv label.emby-checkbox-label:focus-within,
-html.streamix-tv .mdl-switch:focus-within,
-html.streamix-tv .sliderContainer:focus-within,
-html.streamix-tv .mdl-slider-container:focus-within {
-    background-color: rgba(255, 255, 255, 0.14) !important;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92) !important;
+/* Checkboxes, switches and sliders: focus shows on the control itself, a white ring around the tick box,
+   switch or slider knob. (Jellyfin's checkbox input is invisible, so by default nothing shows at all.) */
+html.streamix-tv .checkboxOutline {
+    transition: transform 140ms ease, box-shadow 140ms ease;
 }
 
 html.streamix-tv .emby-checkbox:focus + span + .checkboxOutline,
 html.streamix-tv .emby-checkbox:focus ~ .checkboxOutline {
-    box-shadow: 0 0 0 3px #fff !important;
+    box-shadow: 0 0 0 2px #000, 0 0 0 5px #fff !important;
+    transform: scale(1.12);
+}
+
+html.streamix-tv .emby-checkbox:focus + .checkboxLabel,
+html.streamix-tv .emby-checkbox:focus ~ .checkboxLabel {
+    color: #fff !important;
+}
+
+html.streamix-tv .mdl-switch__input:focus ~ .mdl-switch__track {
+    box-shadow: 0 0 0 2px #000, 0 0 0 5px #fff !important;
+}
+
+html.streamix-tv .mdl-slider:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px #000, 0 0 0 6px #fff !important;
+}
+
+/* Ticked boxes in the Streamix violet instead of Jellyfin's blue */
+html.streamix .emby-checkbox:checked + span + .checkboxOutline {
+    background-color: #8b6cff !important;
+    border-color: #8b6cff !important;
+}
+
+/* Display settings: custom CSS is for computers (and its text box pops the keyboard up on a TV) */
+html.streamix-tv .customCssContainer,
+html.streamix-tv .checkboxContainer:has(#chkDisableCustomCss) {
+    display: none !important;
+}
+
+/* Rows in lists (the settings menu and its pages): a soft rounded highlight instead of a solid white
+   block, so the text stays white and readable */
+html.streamix-tv a.listItem-border.show-focus:focus,
+html.streamix-tv .listItem.show-focus:focus,
+html.streamix-tv button.listItem-button:focus {
+    background: rgba(255, 255, 255, 0.13) !important;
+    color: #fff !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+}
+
+html.streamix-tv a.listItem-border.show-focus:focus .listItem,
+html.streamix-tv a.listItem-border.show-focus:focus .listItemIcon,
+html.streamix-tv a.listItem-border.show-focus:focus .secondary {
+    color: #fff !important;
 }
 
 html.streamix-tv .layout-tv,
@@ -115,6 +152,17 @@ html.streamix-login #divUsers .card .cardScalable::after {
 /* Movie / show pages glide between rows instead of jumping */
 html.streamix-tv.streamix-detail {
     scroll-behavior: smooth;
+}
+
+/* The focused poster grows over the space below it, so its title slides down out of the way */
+html.streamix-tv .card.show-focus .cardFooter,
+html.streamix-tv .card.show-focus .cardBox > .cardText {
+    transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.streamix-tv .card.show-focus:focus .cardFooter,
+html.streamix-tv .card.show-focus:focus .cardBox > .cardText {
+    transform: translateY(0.55em);
 }
 
 /* The focused title reads a step brighter than its neighbours */
@@ -370,14 +418,77 @@ html.streamix-detail #streamixBackdrop {
 /* Detail pages: text sits on the left half, so darken from the left */
 html.streamix-detail #streamixBackdrop .sbScrim {
     background:
-        linear-gradient(90deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.72) 50%, rgba(0, 0, 0, 0.55) 100%),
-        linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.85) 100%);
+        linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.78) 50%, rgba(0, 0, 0, 0.62) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.1) 35%, rgba(0, 0, 0, 0.9) 100%);
 }
 
-html.streamix-detail .itemDetailPage .itemName,
-html.streamix-detail .itemDetailPage .overview,
-html.streamix-detail .itemDetailPage .itemMiscInfo {
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+/* Home and library rows: every title starts exactly where its first poster starts (Jellyfin indents titles
+   with a link, like "Recently Added", further than the others) */
+html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .verticalSection > .sectionTitle-cards.padded-left {
+    padding-left: calc(3.3% + 12px) !important;
+}
+
+html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .sectionTitleContainer-cards {
+    padding-left: 3.3% !important;
+}
+
+html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .sectionTitleContainer-cards .sectionTitle-cards {
+    padding-left: 12px !important;
+}
+
+/* Library grids (Movies, Shows, Anime, Collections...) on TV:
+   - no A-Z picker: the page started with focus on it, its top letter off screen, and the remote moves
+     through titles faster anyway
+   - the count with sort / filter sits at the top left; the repeat under the grid goes unless it has page buttons */
+html.streamix-tv .alphaPicker-tv {
+    display: none !important;
+}
+
+html.streamix-tv .itemsContainer.padded-right-withalphapicker {
+    padding-right: 3.3% !important;
+}
+
+html.streamix-tv .pageTabContent > .flex.justify-content-center:first-child,
+html.streamix-tv .libraryPage > .flex.justify-content-center:first-child {
+    justify-content: flex-start !important;
+    padding-left: calc(3.3% + 12px) !important;
+}
+
+html.streamix-tv .pageTabContent > .itemsContainer ~ .flex:has(.paging):not(:has(button:not([disabled]):not(.hide))),
+html.streamix-tv .libraryPage .itemsContainer ~ .flex:has(.paging):not(:has(button:not([disabled]):not(.hide))) {
+    display: none !important;
+}
+
+/* Plain list pages (a collection library, a folder) put the same row inside the page's padding */
+html.streamix-tv .libraryPage .flex.focuscontainer-x:has(> .paging) {
+    justify-content: flex-start !important;
+    padding-left: 12px !important;
+}
+
+/* Every row on a detail page (including those moved out of the narrow text column, see nativeshell.js)
+   starts its title exactly where its first card starts */
+html.streamix-tv .itemDetailPage .detailPageSecondaryContainer .sectionTitle {
+    padding-left: 12px !important;
+    margin-left: 0 !important;
+}
+
+html.streamix-tv .itemDetailPage .streamixMovedRow.padded-left,
+html.streamix-tv .itemDetailPage .streamixMovedRow .padded-left {
+    padding-left: 0 !important;
+}
+
+/* Sections Jellyfin shows with nothing in them (e.g. "Seasons" for a show without seasons) */
+html.streamix-tv .itemDetailPage .streamixEmptyRow {
+    display: none !important;
+}
+
+/* A played title's tick uses the Streamix violet instead of Jellyfin's red */
+html.streamix .playstatebutton-icon-played {
+    color: #8b6cff !important;
+}
+
+html.streamix .btnPlaystate.show-focus:focus .playstatebutton-icon-played {
+    color: #6a4fe0 !important;
 }
 
 #streamixBackdrop .sbLayer {
@@ -674,6 +785,14 @@ html.streamix-tv .sectionTitleTextButton:focus h2 {
 /* ---------------------------------------------------------------------------------------------
  * Branding
  * ------------------------------------------------------------------------------------------- */
+
+/* While the web interface loads it shows a big logo: Streamix's, not Jellyfin's */
+html.streamix .splashLogo {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 88.603 102'%3E%3Cdefs%3E%3CclipPath id='stopc'%3E%3Cpath d='M-12,29C21.67,39 45.55,42.7 76.6,50L154.48,68.3L400,-400L-400,-400L-400,29Z'/%3E%3C/clipPath%3E%3ClinearGradient id='stopg' gradientUnits='userSpaceOnUse' x1='0' y1='0' x2='86.603' y2='40'%3E%3Cstop offset='0' stop-color='%2345D4FF'/%3E%3Cstop offset='1' stop-color='%236A7BFF'/%3E%3C/linearGradient%3E%3CclipPath id='sbotc'%3E%3Cpath d='M-12,71C21.67,61 45.55,57.3 76.6,50L154.48,31.7L400,400L-400,400L-400,71Z'/%3E%3C/clipPath%3E%3ClinearGradient id='sbotg' gradientUnits='userSpaceOnUse' x1='0' y1='60' x2='86.603' y2='100'%3E%3Cstop offset='0' stop-color='%23FF4F9A'/%3E%3Cstop offset='1' stop-color='%23FF8A5C'/%3E%3C/linearGradient%3E%3CclipPath id='smidc'%3E%3Cpath d='M-12,35C21.67,45 45.55,42.7 76.6,50L400,50L76.6,50C45.55,57.3 21.67,55 -12,65Z'/%3E%3C/clipPath%3E%3ClinearGradient id='smidg' gradientUnits='userSpaceOnUse' x1='0' y1='30' x2='86.603' y2='70'%3E%3Cstop offset='0' stop-color='%237C5CFF'/%3E%3Cstop offset='1' stop-color='%23C25CFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(1 1)'%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23stopg)' clip-path='url(%23stopc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23sbotg)' clip-path='url(%23sbotc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23smidg)' clip-path='url(%23smidc)'/%3E%3C/g%3E%3C/svg%3E") !important;
+    background-size: auto 22vh !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
 
 /* Streamix lock-up in place of the default Jellyfin logo in the header */
 html.streamix .pageTitleWithDefaultLogo {

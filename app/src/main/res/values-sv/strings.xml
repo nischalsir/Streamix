@@ -5,7 +5,6 @@
     <string name="video_player_web">Webbspelare</string>
     <string name="pref_category_video_player">Videospelare</string>
     <string name="pref_category_music_player">Musikspelare</string>
-    <string name="activity_name_settings">Jellyfin-inställningar</string>
     <string name="playback_info_audio_streams">Ljudströmmar</string>
     <string name="playback_info_video_streams">Videoströmmar</string>
     <string name="playback_info_transcoding">Omkodning: %b</string>
