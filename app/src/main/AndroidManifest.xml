@@ -24,6 +24,9 @@
     <!-- In-app updates from GitHub releases (Android asks the user once to allow it) -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- Phones: one system dialog to let playback carry on with the screen off -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- Streamix runs on Google TV / Android TV: no touchscreen needed, appears in the TV launcher -->
     <uses-feature
         android:name="android.hardware.touchscreen"

@@ -16,8 +16,11 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -82,6 +85,10 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
     // UI
     private var webViewBinding: FragmentWebviewBinding? = null
 
+    /** Phone layout: sets the system bar heights on the page, see [drawBehindSystemBars] */
+    private var systemBarsScript: String? = null
+    private val pushSystemBarsRunnable = Runnable { pushSystemBars() }
+
     // External file access
     private var fileChooserActivityLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
@@ -115,6 +122,9 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
                     // The TV remote drives the web UI through the focused WebView
                     webView.requestFocus()
                     webView.postDelayed(contentReadyFallbackRunnable, Constants.WEB_READY_FALLBACK_DELAY)
+                    // The page is new: give it the system bar heights again, and once more when it has settled
+                    pushSystemBars()
+                    webView.postDelayed(pushSystemBarsRunnable, SYSTEM_BARS_REPEAT_DELAY_MS)
                 }
                 requestNoBatteryOptimizations(webViewBinding.root)
             }
@@ -136,8 +146,9 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
         super.onViewCreated(view, savedInstanceState)
         val webView = webViewBinding!!.webView
 
-        // Apply window insets
-        webView.applyWindowInsetsAsMargins()
+        // Apply window insets: on a TV the page sits inside the safe area; on a phone it runs under the
+        // status and navigation bars like a native app
+        if (requireContext().isTvDevice()) webView.applyWindowInsetsAsMargins() else webView.drawBehindSystemBars()
 
         // Setup exclusion rects for gestures
         if (AndroidVersion.isAtLeastQ) {
@@ -188,7 +199,36 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
     override fun onDestroyView() {
         super.onDestroyView()
         webViewBinding?.webView?.removeCallbacks(contentReadyFallbackRunnable)
+        webViewBinding?.webView?.removeCallbacks(pushSystemBarsRunnable)
         webViewBinding = null
+    }
+
+    /**
+     * Phone layout: the page fills the screen under the status and navigation bars, so artwork and the glass
+     * bars reach the edges. Their heights go to the page as --streamix-inset-top / --streamix-inset-bottom
+     * (CSS pixels), which streamix.css keeps the header, tab bar and content clear of. The keyboard still
+     * pushes the page up.
+     */
+    private fun WebView.drawBehindSystemBars() {
+        ViewCompat.setOnApplyWindowInsetsListener(this) { view, windowInsets ->
+            val bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val keyboard = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+            view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                setMargins(bars.left, 0, bars.right, keyboard.bottom)
+            }
+            val density = resources.displayMetrics.density
+            val top = bars.top / density
+            val bottom = if (keyboard.bottom > 0) 0f else bars.bottom / density
+            systemBarsScript = "(function(s){s.setProperty('--streamix-inset-top','${top}px');" +
+                "s.setProperty('--streamix-inset-bottom','${bottom}px')})(document.documentElement.style)"
+            pushSystemBars()
+            windowInsets
+        }
+    }
+
+    private fun pushSystemBars() {
+        val script = systemBarsScript ?: return
+        webViewBinding?.webView?.evaluateJavascript(script, null)
     }
 
     /**
@@ -307,5 +347,9 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
     override fun onShowFileChooser(intent: Intent, filePathCallback: ValueCallback<Array<Uri>>) {
         fileChooserCallback = filePathCallback
         fileChooserActivityLauncher.launch(intent)
+    }
+
+    private companion object {
+        const val SYSTEM_BARS_REPEAT_DELAY_MS = 1500L
     }
 }

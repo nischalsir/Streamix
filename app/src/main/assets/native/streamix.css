@@ -867,15 +867,474 @@ html.streamix-tv .sectionTitleTextButton:focus h2 {
  * Branding
  * ------------------------------------------------------------------------------------------- */
 
+/* The Streamix mark (the three streams forming a play arrow) */
+html.streamix {
+    --streamix-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 88.603 102'%3E%3Cdefs%3E%3CclipPath id='stopc'%3E%3Cpath d='M-12,29C21.67,39 45.55,42.7 76.6,50L154.48,68.3L400,-400L-400,-400L-400,29Z'/%3E%3C/clipPath%3E%3ClinearGradient id='stopg' gradientUnits='userSpaceOnUse' x1='0' y1='0' x2='86.603' y2='40'%3E%3Cstop offset='0' stop-color='%2345D4FF'/%3E%3Cstop offset='1' stop-color='%236A7BFF'/%3E%3C/linearGradient%3E%3CclipPath id='sbotc'%3E%3Cpath d='M-12,71C21.67,61 45.55,57.3 76.6,50L154.48,31.7L400,400L-400,400L-400,71Z'/%3E%3C/clipPath%3E%3ClinearGradient id='sbotg' gradientUnits='userSpaceOnUse' x1='0' y1='60' x2='86.603' y2='100'%3E%3Cstop offset='0' stop-color='%23FF4F9A'/%3E%3Cstop offset='1' stop-color='%23FF8A5C'/%3E%3C/linearGradient%3E%3CclipPath id='smidc'%3E%3Cpath d='M-12,35C21.67,45 45.55,42.7 76.6,50L400,50L76.6,50C45.55,57.3 21.67,55 -12,65Z'/%3E%3C/clipPath%3E%3ClinearGradient id='smidg' gradientUnits='userSpaceOnUse' x1='0' y1='30' x2='86.603' y2='70'%3E%3Cstop offset='0' stop-color='%237C5CFF'/%3E%3Cstop offset='1' stop-color='%23C25CFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(1 1)'%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23stopg)' clip-path='url(%23stopc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23sbotg)' clip-path='url(%23sbotc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23smidg)' clip-path='url(%23smidc)'/%3E%3C/g%3E%3C/svg%3E");
+}
+
 /* While the web interface loads it shows a big logo: Streamix's, not Jellyfin's */
 html.streamix .splashLogo {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 88.603 102'%3E%3Cdefs%3E%3CclipPath id='stopc'%3E%3Cpath d='M-12,29C21.67,39 45.55,42.7 76.6,50L154.48,68.3L400,-400L-400,-400L-400,29Z'/%3E%3C/clipPath%3E%3ClinearGradient id='stopg' gradientUnits='userSpaceOnUse' x1='0' y1='0' x2='86.603' y2='40'%3E%3Cstop offset='0' stop-color='%2345D4FF'/%3E%3Cstop offset='1' stop-color='%236A7BFF'/%3E%3C/linearGradient%3E%3CclipPath id='sbotc'%3E%3Cpath d='M-12,71C21.67,61 45.55,57.3 76.6,50L154.48,31.7L400,400L-400,400L-400,71Z'/%3E%3C/clipPath%3E%3ClinearGradient id='sbotg' gradientUnits='userSpaceOnUse' x1='0' y1='60' x2='86.603' y2='100'%3E%3Cstop offset='0' stop-color='%23FF4F9A'/%3E%3Cstop offset='1' stop-color='%23FF8A5C'/%3E%3C/linearGradient%3E%3CclipPath id='smidc'%3E%3Cpath d='M-12,35C21.67,45 45.55,42.7 76.6,50L400,50L76.6,50C45.55,57.3 21.67,55 -12,65Z'/%3E%3C/clipPath%3E%3ClinearGradient id='smidg' gradientUnits='userSpaceOnUse' x1='0' y1='30' x2='86.603' y2='70'%3E%3Cstop offset='0' stop-color='%237C5CFF'/%3E%3Cstop offset='1' stop-color='%23C25CFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(1 1)'%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23stopg)' clip-path='url(%23stopc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23sbotg)' clip-path='url(%23sbotc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23smidg)' clip-path='url(%23smidc)'/%3E%3C/g%3E%3C/svg%3E") !important;
+    background-image: var(--streamix-mark) !important;
     background-size: auto 22vh !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
 }
 
-/* Streamix lock-up in place of the default Jellyfin logo in the header */
+/* Streamix lock-up (logo + wordmark): in place of the Jellyfin logo in the header, and in the phone header */
+html.streamix {
+    --streamix-lockup: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='155.989' height='29' viewBox='0 0 155.989 29'%3E%3Cdefs%3E%3CclipPath id='htopc'%3E%3Cpath d='M-12,29C21.67,39 45.55,42.7 76.6,50L154.48,68.3L400,-400L-400,-400L-400,29Z'/%3E%3C/clipPath%3E%3ClinearGradient id='htopg' gradientUnits='userSpaceOnUse' x1='0' y1='0' x2='86.603' y2='40'%3E%3Cstop offset='0' stop-color='%2345D4FF'/%3E%3Cstop offset='1' stop-color='%236A7BFF'/%3E%3C/linearGradient%3E%3CclipPath id='hbotc'%3E%3Cpath d='M-12,71C21.67,61 45.55,57.3 76.6,50L154.48,31.7L400,400L-400,400L-400,71Z'/%3E%3C/clipPath%3E%3ClinearGradient id='hbotg' gradientUnits='userSpaceOnUse' x1='0' y1='60' x2='86.603' y2='100'%3E%3Cstop offset='0' stop-color='%23FF4F9A'/%3E%3Cstop offset='1' stop-color='%23FF8A5C'/%3E%3C/linearGradient%3E%3CclipPath id='hmidc'%3E%3Cpath d='M-12,35C21.67,45 45.55,42.7 76.6,50L400,50L76.6,50C45.55,57.3 21.67,55 -12,65Z'/%3E%3C/clipPath%3E%3ClinearGradient id='hmidg' gradientUnits='userSpaceOnUse' x1='0' y1='30' x2='86.603' y2='70'%3E%3Cstop offset='0' stop-color='%237C5CFF'/%3E%3Cstop offset='1' stop-color='%23C25CFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(0.5 0.5) scale(0.28)'%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23htopg)' clip-path='url(%23htopc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23hbotg)' clip-path='url(%23hbotc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23hmidg)' clip-path='url(%23hmidc)'/%3E%3C/g%3E%3Cg transform='translate(33.667 8.34) scale(0.308)'%3E%3Cpath d='M1.95 26.91H12.17Q12.45 28.76 13.83 30.13Q15.21 31.5 17.52 32.25Q19.84 32.99 22.94 32.99Q27.34 32.99 29.88 31.78Q32.41 30.57 32.41 28.34Q32.41 26.62 30.96 25.67Q29.5 24.73 25.48 24.31L17.75 23.5Q9.7 22.71 6.1 19.79Q2.5 16.87 2.5 11.81Q2.5 7.77 4.87 4.94Q7.23 2.11 11.54 0.64Q15.85 -0.84 21.62 -0.84Q27.3 -0.84 31.68 0.79Q36.07 2.43 38.67 5.37Q41.27 8.3 41.51 12.24H31.29Q31.07 10.63 29.84 9.47Q28.61 8.31 26.48 7.66Q24.35 7.01 21.41 7.01Q17.39 7.01 15.03 8.15Q12.66 9.29 12.66 11.42Q12.66 13 14.05 13.92Q15.45 14.84 19.1 15.26L27.27 16.15Q32.87 16.73 36.22 18.03Q39.57 19.33 41.06 21.57Q42.55 23.81 42.55 27.21Q42.55 31.31 40.08 34.38Q37.61 37.46 33.16 39.15Q28.7 40.84 22.76 40.84Q16.66 40.84 12.04 39.1Q7.41 37.35 4.76 34.21Q2.12 31.07 1.95 26.91ZM66.97 4.45H77.04V40H66.97ZM51.4 0H92.61V8.92H51.4ZM110.45 17.62H125.44Q128.29 17.62 129.92 16.31Q131.56 14.99 131.56 12.65Q131.56 10.28 129.92 8.99Q128.29 7.69 125.44 7.69H109.03L113.54 2.73V40H103.48V0H126.75Q131.23 0 134.6 1.59Q137.96 3.18 139.85 6.01Q141.73 8.83 141.73 12.65Q141.73 16.37 139.85 19.2Q137.96 22.04 134.6 23.62Q131.23 25.2 126.75 25.2H110.45ZM116.9 21.28H128.29L143.01 40H131.29ZM187.9 16.25V23.75H158.97V16.25ZM163.11 20V31.76H189.64V40H153.03V0H189.38V8.24H163.11ZM209.46 31.93V23.81H237.09V31.93ZM230.03 0 248.49 40H237.75L221.94 4.2H225.02L209.22 40H198.48L216.94 0ZM315.86 0V40H306.29V3.5L308.62 3.7L292.33 40H282.07L265.79 3.81L268.12 3.58V40H258.54V0H274.05L289.28 34.99H285.21L300.36 0ZM329.66 0H339.73V40H329.66ZM376.14 22.21V16.16L395.53 40H383.14L369.84 22.9H374.66L361.29 40H349.11L368.6 16.22V22.15L350.3 0H362.87L374.96 15.47H370.08L382.02 0H394.34Z' fill='%23FFFFFF'/%3E%3C/g%3E%3C/svg%3E");
+}
+
 html.streamix .pageTitleWithDefaultLogo {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='155.989' height='29' viewBox='0 0 155.989 29'%3E%3Cdefs%3E%3CclipPath id='htopc'%3E%3Cpath d='M-12,29C21.67,39 45.55,42.7 76.6,50L154.48,68.3L400,-400L-400,-400L-400,29Z'/%3E%3C/clipPath%3E%3ClinearGradient id='htopg' gradientUnits='userSpaceOnUse' x1='0' y1='0' x2='86.603' y2='40'%3E%3Cstop offset='0' stop-color='%2345D4FF'/%3E%3Cstop offset='1' stop-color='%236A7BFF'/%3E%3C/linearGradient%3E%3CclipPath id='hbotc'%3E%3Cpath d='M-12,71C21.67,61 45.55,57.3 76.6,50L154.48,31.7L400,400L-400,400L-400,71Z'/%3E%3C/clipPath%3E%3ClinearGradient id='hbotg' gradientUnits='userSpaceOnUse' x1='0' y1='60' x2='86.603' y2='100'%3E%3Cstop offset='0' stop-color='%23FF4F9A'/%3E%3Cstop offset='1' stop-color='%23FF8A5C'/%3E%3C/linearGradient%3E%3CclipPath id='hmidc'%3E%3Cpath d='M-12,35C21.67,45 45.55,42.7 76.6,50L400,50L76.6,50C45.55,57.3 21.67,55 -12,65Z'/%3E%3C/clipPath%3E%3ClinearGradient id='hmidg' gradientUnits='userSpaceOnUse' x1='0' y1='30' x2='86.603' y2='70'%3E%3Cstop offset='0' stop-color='%237C5CFF'/%3E%3Cstop offset='1' stop-color='%23C25CFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='translate(0.5 0.5) scale(0.28)'%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23htopg)' clip-path='url(%23htopc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23hbotg)' clip-path='url(%23hbotc)'/%3E%3Cpath d='M19.5,11.26L70.1,40.47C80.33,46.38 80.33,53.62 70.1,59.53L19.5,88.74C7.41,95.72 0,91.44 0,77.48L0,22.52C0,8.56 7.41,4.28 19.5,11.26Z' fill='url(%23hmidg)' clip-path='url(%23hmidc)'/%3E%3C/g%3E%3Cg transform='translate(33.667 8.34) scale(0.308)'%3E%3Cpath d='M1.95 26.91H12.17Q12.45 28.76 13.83 30.13Q15.21 31.5 17.52 32.25Q19.84 32.99 22.94 32.99Q27.34 32.99 29.88 31.78Q32.41 30.57 32.41 28.34Q32.41 26.62 30.96 25.67Q29.5 24.73 25.48 24.31L17.75 23.5Q9.7 22.71 6.1 19.79Q2.5 16.87 2.5 11.81Q2.5 7.77 4.87 4.94Q7.23 2.11 11.54 0.64Q15.85 -0.84 21.62 -0.84Q27.3 -0.84 31.68 0.79Q36.07 2.43 38.67 5.37Q41.27 8.3 41.51 12.24H31.29Q31.07 10.63 29.84 9.47Q28.61 8.31 26.48 7.66Q24.35 7.01 21.41 7.01Q17.39 7.01 15.03 8.15Q12.66 9.29 12.66 11.42Q12.66 13 14.05 13.92Q15.45 14.84 19.1 15.26L27.27 16.15Q32.87 16.73 36.22 18.03Q39.57 19.33 41.06 21.57Q42.55 23.81 42.55 27.21Q42.55 31.31 40.08 34.38Q37.61 37.46 33.16 39.15Q28.7 40.84 22.76 40.84Q16.66 40.84 12.04 39.1Q7.41 37.35 4.76 34.21Q2.12 31.07 1.95 26.91ZM66.97 4.45H77.04V40H66.97ZM51.4 0H92.61V8.92H51.4ZM110.45 17.62H125.44Q128.29 17.62 129.92 16.31Q131.56 14.99 131.56 12.65Q131.56 10.28 129.92 8.99Q128.29 7.69 125.44 7.69H109.03L113.54 2.73V40H103.48V0H126.75Q131.23 0 134.6 1.59Q137.96 3.18 139.85 6.01Q141.73 8.83 141.73 12.65Q141.73 16.37 139.85 19.2Q137.96 22.04 134.6 23.62Q131.23 25.2 126.75 25.2H110.45ZM116.9 21.28H128.29L143.01 40H131.29ZM187.9 16.25V23.75H158.97V16.25ZM163.11 20V31.76H189.64V40H153.03V0H189.38V8.24H163.11ZM209.46 31.93V23.81H237.09V31.93ZM230.03 0 248.49 40H237.75L221.94 4.2H225.02L209.22 40H198.48L216.94 0ZM315.86 0V40H306.29V3.5L308.62 3.7L292.33 40H282.07L265.79 3.81L268.12 3.58V40H258.54V0H274.05L289.28 34.99H285.21L300.36 0ZM329.66 0H339.73V40H329.66ZM376.14 22.21V16.16L395.53 40H383.14L369.84 22.9H374.66L361.29 40H349.11L368.6 16.22V22.15L350.3 0H362.87L374.96 15.47H370.08L382.02 0H394.34Z' fill='%23FFFFFF'/%3E%3C/g%3E%3C/svg%3E") !important;
+    background-image: var(--streamix-lockup) !important;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Phone layout (html.streamix-mobile)
+ *  - the page runs edge to edge under the status and navigation bars; WebViewFragment passes their
+ *    heights in as --streamix-inset-top / --streamix-inset-bottom
+ *  - a floating glass tab bar at the bottom (built by nativeshell.js) takes over from the header's search
+ *  - a swipeable hero of what to watch at the top of the home screen (also nativeshell.js)
+ * ------------------------------------------------------------------------------------------- */
+html.streamix-mobile {
+    --sx-top: var(--streamix-inset-top, 0px);
+    --sx-bottom: var(--streamix-inset-bottom, 0px);
+    --sx-tabbar-height: 62px;
+    /* Room the tab bar takes at the bottom of every page */
+    --sx-tabbar-space: calc(var(--sx-tabbar-height) + var(--sx-bottom) + 20px);
+}
+
+html.streamix-mobile,
+html.streamix-mobile body {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Status bar: a soft shade keeps the clock and icons readable over bright artwork */
+html.streamix-mobile body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--sx-top) + 12px);
+    z-index: 1090;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.32) 60%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* Header capsule just under the status bar, and page content under the header */
+html.streamix-mobile .MuiAppBar-root.MuiAppBar-positionFixed:not(:has(.dashboard-appBar)) {
+    top: calc(var(--sx-top) + 4px) !important;
+}
+
+/* Jellyfin sizes the space under the header to the header's height; add the status bar on top */
+html.streamix-mobile .MuiAppBar-root.MuiAppBar-positionFixed + div[aria-hidden="true"] {
+    margin-top: var(--sx-top);
+}
+
+/* The admin dashboard keeps its full-width bar; it just starts under the status bar */
+html.streamix-mobile .MuiAppBar-root.MuiAppBar-positionFixed:has(.dashboard-appBar) {
+    padding-top: var(--sx-top) !important;
+}
+
+/* Streamix lock-up in the header, after the menu (and back) button. Library pages add a second row
+   (library, sort, filter) to the bar; that one is left alone. */
+html.streamix-mobile .MuiAppBar-root > .MuiToolbar-root:first-child > .MuiBox-root:not(:last-child)::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 108px;
+    height: 20px;
+    margin: 0 auto 0 6px;
+    background: var(--streamix-lockup) left center / contain no-repeat;
+}
+
+html.streamix-mobile .MuiAppBar-root > .MuiToolbar-root:first-child > .MuiBox-root:not(:last-child) {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Search lives in the tab bar (the header's search, including a library's own, would only repeat it) */
+html.streamix-mobile.streamix-tabbar .MuiAppBar-root a[href^="#/search"] {
+    display: none !important;
+}
+
+/* Side menu floats clear of the status and navigation bars */
+html.streamix-mobile .MuiDrawer-modal .MuiDrawer-paper {
+    top: calc(var(--sx-top) + 8px) !important;
+    bottom: calc(var(--sx-bottom) + 8px) !important;
+}
+
+/* Every page leaves room for the tab bar at the bottom */
+html.streamix-mobile.streamix-tabbar .mainAnimatedPage {
+    padding-bottom: var(--sx-tabbar-space) !important;
+}
+
+/* Music and other now-playing bars sit above the tab bar */
+html.streamix-mobile.streamix-tabbar .nowPlayingBar {
+    bottom: calc(var(--sx-tabbar-height) + var(--sx-bottom) + 14px) !important;
+}
+
+/* Pages without the tab bar (sign-in, settings forms) still keep clear of the navigation bar */
+html.streamix-mobile:not(.streamix-tabbar) .mainAnimatedPage {
+    padding-bottom: calc(var(--sx-bottom) + 24px) !important;
+}
+
+/* Tab bar: a floating Liquid Glass capsule, like iOS */
+html.streamix-mobile .streamixTabBar {
+    position: fixed;
+    left: 14px;
+    right: 14px;
+    bottom: calc(var(--sx-bottom) + 8px);
+    z-index: 1000;
+    display: flex;
+    align-items: stretch;
+    height: var(--sx-tabbar-height);
+    padding: 5px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background: var(--lg-sheen), var(--lg-fill), var(--lg-tint-strong);
+    box-shadow: var(--lg-rim), var(--lg-depth);
+    -webkit-backdrop-filter: var(--lg-blur);
+    backdrop-filter: var(--lg-blur);
+    transform: translateY(0);
+    transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 240ms ease;
+}
+
+html.streamix-mobile:not(.streamix-tabbar) .streamixTabBar {
+    transform: translateY(calc(100% + var(--sx-bottom) + 16px));
+    opacity: 0;
+    pointer-events: none;
+}
+
+html.streamix-mobile .streamixTabBar a {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-radius: 999px;
+    color: rgba(235, 235, 245, 0.62);
+    text-decoration: none;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: color 200ms ease, background-color 200ms ease, transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.streamix-mobile .streamixTabBar a span {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+html.streamix-mobile .streamixTabBar svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+html.streamix-mobile .streamixTabBar a.active {
+    color: #fff;
+    background: var(--lg-fill-bright);
+    box-shadow: var(--lg-rim-soft);
+}
+
+html.streamix-mobile .streamixTabBar a:active {
+    transform: scale(0.92);
+}
+
+/* Touch feedback: posters and tiles give a little under the finger, like iOS */
+html.streamix-mobile .card .cardScalable {
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.streamix-mobile .card:active .cardScalable {
+    transform: scale(0.96);
+}
+
+/* Detail pages: the title's artwork band reaches up under the status bar (it keeps its height below it) */
+html.streamix-mobile .itemDetailPage .itemBackdrop {
+    box-sizing: content-box;
+    margin-top: calc(-48px - var(--sx-top)) !important;
+    padding-top: var(--sx-top);
+}
+
+/* Detail pages: the text runs full width on a phone, so the artwork darkens from the top down */
+html.streamix-mobile.streamix-detail #streamixBackdrop .sbScrim {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.82) 40%, rgba(0, 0, 0, 0.94) 100%);
+}
+
+/* Live TV on a phone: three channels across, the whole logo on a glass plate, the name underneath */
+html.streamix-mobile.streamix-livetv .card[data-type="TvChannel"] {
+    width: 33.333% !important;
+}
+
+html.streamix-mobile.streamix-livetv .card[data-type="TvChannel"] .cardPadder {
+    padding-bottom: 66% !important;
+}
+
+html.streamix-mobile.streamix-livetv .card[data-type="TvChannel"] .cardImageContainer {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    border-radius: 14px;
+}
+
+html.streamix-mobile.streamix-livetv .card[data-type="TvChannel"] .cardImageContainer img {
+    box-sizing: border-box;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 10% 14%;
+    object-fit: contain !important;
+}
+
+/* The tile is the play button; the small one in the corner only crowds the logo */
+html.streamix-mobile.streamix-livetv .card[data-type="TvChannel"] .cardOverlayButton-br {
+    display: none !important;
+}
+
+html.streamix-mobile.streamix-livetv .card[data-type="TvChannel"] .cardText {
+    font-size: 12.5px;
+    line-height: 1.25;
+}
+
+html.streamix-mobile.streamix-livetv .card[data-type="TvChannel"] .cardText-first {
+    display: -webkit-box !important;
+    min-height: 2.5em;
+    padding-top: 0.45em;
+    white-space: normal !important;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+html.streamix-mobile.streamix-livetv .card[data-type="TvChannel"] .cardText-secondary:empty,
+html.streamix-mobile .card .cardText.streamixEmpty {
+    display: none !important;
+}
+
+/* Live TV pages: a soft colour wash instead of poster backdrops (channel logos aren't artwork) */
+html.streamix-mobile.streamix-livetv .backgroundContainer {
+    background: radial-gradient(120% 70% at 15% 0%, #221a42 0%, #0c0a15 55%, #050507 100%) !important;
+}
+
+/* Browsing on a phone is scrolling, not focusing, so poster backdrops would only linger from the last
+   detail page; the hero carries the artwork instead */
+html.streamix-mobile.streamix-browse:not(.streamix-detail) #streamixBackdrop {
+    opacity: 0;
+}
+
+/* Home hero: full-bleed artwork up under the status bar and header, swiped sideways */
+html.streamix-mobile .streamixHero {
+    /* It's an items container (for Jellyfin's play / details actions), which would otherwise lay out as a row */
+    display: block !important;
+    position: relative;
+    height: min(64vh, 620px);
+    margin: calc(-48px - var(--sx-top)) 0 4px;
+    overflow: hidden;
+    background: #000;
+}
+
+html.streamix-mobile .sxHeroTrack {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+}
+
+html.streamix-mobile .sxHeroTrack::-webkit-scrollbar {
+    display: none;
+}
+
+html.streamix-mobile .sxHeroSlide {
+    position: relative;
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    overflow: hidden;
+}
+
+html.streamix-mobile .sxHeroArt {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 25%;
+}
+
+/* Pictures fade in as they arrive (nativeshell.js marks them loaded) */
+html.streamix-mobile .sxHeroArt,
+html.streamix-mobile .sxHeroLogo {
+    opacity: 0;
+    transition: opacity 450ms ease;
+}
+
+html.streamix-mobile .sxHeroArt.loaded,
+html.streamix-mobile .sxHeroLogo.loaded {
+    opacity: 1;
+}
+
+/* Darkens into the page below, with a lighter shade at the top for the header */
+html.streamix-mobile .sxHeroSlide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 22%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.55) 62%, rgba(0, 0, 0, 0.92) 86%, #000 100%);
+}
+
+html.streamix-mobile .sxHeroInfo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 36px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 24px;
+    text-align: center;
+}
+
+html.streamix-mobile .sxHeroLogo {
+    max-width: 72%;
+    max-height: 88px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.55));
+}
+
+html.streamix-mobile .sxHeroTitle {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+}
+
+html.streamix-mobile .sxHeroMeta {
+    margin-top: 10px;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(235, 235, 245, 0.75);
+}
+
+html.streamix-mobile .sxHeroProgress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(235, 235, 245, 0.75);
+}
+
+html.streamix-mobile .sxHeroBar {
+    position: relative;
+    width: 96px;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+html.streamix-mobile .sxHeroBar > span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: 2px;
+    background: #fff;
+}
+
+html.streamix-mobile .sxHeroButtons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+html.streamix-mobile .sxHeroPlay,
+html.streamix-mobile .sxHeroMore {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.streamix-mobile .sxHeroPlay {
+    gap: 6px;
+    min-width: 148px;
+    padding: 0 28px 0 22px;
+    background: #fff;
+    color: #000;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+html.streamix-mobile .sxHeroMore {
+    width: 46px;
+    padding: 0;
+    color: #fff;
+    background: var(--lg-sheen), var(--lg-fill), var(--lg-tint);
+    box-shadow: var(--lg-rim-soft);
+    -webkit-backdrop-filter: var(--lg-blur-small);
+    backdrop-filter: var(--lg-blur-small);
+}
+
+html.streamix-mobile .sxHeroPlay svg,
+html.streamix-mobile .sxHeroMore svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+html.streamix-mobile .sxHeroPlay:active,
+html.streamix-mobile .sxHeroMore:active {
+    transform: scale(0.94);
+}
+
+html.streamix-mobile .sxHeroDots {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 14px;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+html.streamix-mobile .sxHeroDots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.35);
+    transition: width 260ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 260ms ease;
+}
+
+html.streamix-mobile .sxHeroDots span.active {
+    width: 18px;
+    background: #fff;
+}
+
+/* Jellyfin's icon in its newer header (signed out) and at the top of the side menu: the Streamix mark */
+html.streamix img[src*="icon-transparent"] {
+    content: var(--streamix-mark);
+    object-fit: contain;
 }

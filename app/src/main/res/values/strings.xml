@@ -143,6 +143,10 @@
     <string name="live_tv_channel_number">Channel %1$s</string>
     <string name="live_tv_channel_position">Channel %1$d of %2$d</string>
     <string name="live_tv_hint">▲ ▼  Change channel</string>
+    <string name="battery_optimizations_prompt">Let Streamix keep playing when the screen is off?</string>
+    <string name="battery_optimizations_allow">Allow</string>
+    <string name="live_tv_unavailable_touch">This channel isn\'t available right now. Swipe left or right to try another.</string>
+    <string name="live_tv_hint_touch">Swipe left or right to change channel</string>
     <string name="live_tv_no_channel">No channel with this number</string>
     <string name="live_tv_still_tuning">Still tuning… some channels take a while to start</string>
     <string name="pref_check_updates">Check for updates</string>

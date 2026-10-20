@@ -97,6 +97,11 @@ class PlayerGestureHelper(
     private var mediaDuration = 0L
 
     /**
+     * Live TV: whether the current swipe has already changed channel (one channel per swipe).
+     */
+    private var liveTvSwipeHandled = false
+
+    /**
      * Runnable that hides [playerView] controller
      */
     private val hidePlayerViewControllerAction = Runnable {
@@ -209,6 +214,15 @@ class PlayerGestureHelper(
                     currentGesture = if (abs(deltaX) > abs(deltaY) * 2) GestureDirection.HORIZONTAL
                     else if (abs(deltaY) > abs(deltaX) * 2) GestureDirection.VERTICAL
                     else return false
+                }
+
+                // Live TV: swipe left for the next channel, right for the previous one
+                if (currentGesture == GestureDirection.HORIZONTAL && fragment.isLiveTv) {
+                    val deltaX = currentEvent.x - firstEvent.x
+                    if (!liveTvSwipeHandled && abs(deltaX) > playerView.resources.dip(LIVE_TV_SWIPE_DISTANCE_DP)) {
+                        liveTvSwipeHandled = fragment.onLiveTvSwipe(if (deltaX < 0) 1 else -1)
+                    }
+                    return true
                 }
 
                 // Handle horizontal swipe for seek
@@ -422,6 +436,7 @@ class PlayerGestureHelper(
                     }
                 }
                 currentGesture = GestureDirection.NONE
+                liveTvSwipeHandled = false
                 isHorizontalSeeking = false
                 seekTimeAccumulator = 0L
                 seekStartPosition = 0L
@@ -464,5 +479,10 @@ class PlayerGestureHelper(
         } else {
             String.format(Locale.US, "%02d:%02d", minutes, seconds)
         }
+    }
+
+    private companion object {
+        /** How far a sideways swipe has to travel before Live TV changes channel */
+        const val LIVE_TV_SWIPE_DISTANCE_DP = 72
     }
 }

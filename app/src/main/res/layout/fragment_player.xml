@@ -255,6 +255,7 @@
                     tools:text="Evening News" />
 
                 <TextView
+                    android:id="@+id/live_tv_banner_hint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"

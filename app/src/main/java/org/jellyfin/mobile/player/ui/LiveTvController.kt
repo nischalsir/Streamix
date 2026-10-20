@@ -19,6 +19,7 @@ import org.jellyfin.mobile.R
 import org.jellyfin.mobile.databinding.FragmentPlayerBinding
 import org.jellyfin.mobile.player.PlayerViewModel
 import org.jellyfin.mobile.player.interaction.LiveTvChannelInfo
+import org.jellyfin.mobile.utils.isTvDevice
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.exception.ApiClientException
 import org.jellyfin.sdk.api.client.extensions.imageApi
@@ -36,6 +37,7 @@ import java.util.UUID
  * - up/down (or CH+/CH-) flip through the channel list; quick presses only move the banner, and the
  *   channel tunes once the remote goes quiet
  * - number keys jump straight to a channel number (101, 205, ...)
+ * - on a phone, a sideways swipe flips to the next or previous channel
  */
 class LiveTvController(
     private val binding: FragmentPlayerBinding,
@@ -55,6 +57,9 @@ class LiveTvController(
     private val imageLoader: ImageLoader = get()
     private val handler = Handler(Looper.getMainLooper())
     private val context get() = binding.root.context
+
+    /** On a phone there's no remote: channels change with a sideways swipe (see PlayerGestureHelper) */
+    private val isTv = context.isTvDevice()
 
     private var channels: List<Channel> = emptyList()
     private var current: Channel? = null
@@ -80,6 +85,7 @@ class LiveTvController(
         playerView.controllerAutoShow = false
         val channel = Channel(channelId, cleanName(info.name), info.number, info.imageTag, programName = null)
         current = channel
+        if (!isTv) binding.liveTvBannerHint.setText(R.string.live_tv_hint_touch)
         showTuning(channel)
         loadChannels()
     }
@@ -203,7 +209,7 @@ class LiveTvController(
         binding.liveTvTuning.isVisible = true
         binding.liveTvTuning.alpha = 1f
         binding.liveTvTuningProgress.isVisible = false
-        binding.liveTvTuningStatus.setText(R.string.live_tv_unavailable)
+        binding.liveTvTuningStatus.setText(if (isTv) R.string.live_tv_unavailable else R.string.live_tv_unavailable_touch)
     }
 
     fun onControlsVisibilityChanged(visible: Boolean) {

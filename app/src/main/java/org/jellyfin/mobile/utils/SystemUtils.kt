@@ -41,13 +41,22 @@ fun WebViewFragment.requestNoBatteryOptimizations(rootView: CoordinatorLayout) {
         !appPreferences.ignoreBatteryOptimizations &&
         !powerManager.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID)
     ) {
-        Snackbar.make(rootView, R.string.battery_optimizations_message, Snackbar.LENGTH_INDEFINITE).apply {
-            setAction(android.R.string.ok) {
+        Snackbar.make(rootView, R.string.battery_optimizations_prompt, Snackbar.LENGTH_INDEFINITE).apply {
+            setAction(R.string.battery_optimizations_allow) {
+                // Android's own Allow / Deny dialog for this app; the full list of apps only as a fallback
+                val request = Intent(
+                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    Uri.parse("package:${BuildConfig.APPLICATION_ID}"),
+                )
                 try {
-                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                    startActivity(intent)
-                } catch (e: ActivityNotFoundException) {
-                    Timber.e(e)
+                    startActivity(request)
+                } catch (notFound: ActivityNotFoundException) {
+                    Timber.w(notFound, "No battery optimization dialog, opening the settings list")
+                    try {
+                        startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                    } catch (e: ActivityNotFoundException) {
+                        Timber.e(e)
+                    }
                 }
 
                 // Ignore after the user interacted with the snackbar at least once

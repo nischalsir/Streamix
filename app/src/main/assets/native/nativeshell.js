@@ -46,7 +46,7 @@ if (isTv) {
 (() => {
     const root = document.documentElement;
     root.classList.add('streamix');
-    if (isTv) root.classList.add('streamix-tv');
+    root.classList.add(isTv ? 'streamix-tv' : 'streamix-mobile');
 
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -107,16 +107,15 @@ if (isTv) {
             })
             .catch(() => {});
     };
-    if (isTv) {
-        document.addEventListener('click', (e) => {
-            const tile = e.target.closest && e.target.closest('.card[data-collectiontype="livetv"]');
-            if (!tile || liveTvHasGuide) return;
-            e.preventDefault();
-            e.stopPropagation();
-            const serverId = tile.getAttribute('data-serverid');
-            window.location.hash = '#/livetv?collectionType=livetv&tab=2' + (serverId ? '&serverId=' + serverId : '');
-        }, true);
-    }
+    document.addEventListener('click', (e) => {
+        const tile = e.target.closest && e.target.closest('.card[data-collectiontype="livetv"]');
+        if (!tile || liveTvHasGuide) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const serverId = tile.getAttribute('data-serverid');
+        window.location.hash = '#/livetv?collectionType=livetv&tab=2' + (serverId ? '&serverId=' + serverId : '');
+    }, true);
+
 
     let artPending = 0;
     const retileLibraries = () => {
@@ -306,7 +305,8 @@ if (isTv) {
     const updateBrowseState = () => {
         const page = document.querySelector('.mainAnimatedPage:not(.hide)');
         const detail = !!page && page.classList.contains('itemDetailPage');
-        const liveTv = !!page && page.classList.contains('liveTvPage');
+        // Phones get Jellyfin's newer Live TV page, which has no class of its own
+        const liveTv = !!page && (page.classList.contains('liveTvPage') || (!isTv && /^#\/livetv/i.test(window.location.hash)));
         const browsing = !!page && !detail && !liveTv && !!page.querySelector('.card[data-id]');
         root.classList.toggle('streamix-browse', browsing);
         root.classList.toggle('streamix-detail', detail);
@@ -351,9 +351,11 @@ if (isTv) {
             card.querySelectorAll('.cardFooter .cardText').forEach((line) => {
                 if (!line.textContent.trim()) line.classList.add('streamixEmpty');
             });
-            const name = card.querySelector('.cardText-first bdi');
-            if (name && QUALITY_TAG.test(name.textContent)) {
-                name.textContent = name.textContent.replace(QUALITY_TAG, '').trim();
+            // Edits the text in place: on phones the card belongs to React, which keeps hold of its text nodes
+            const name = card.querySelector('.cardText-first bdi, .cardText-first a');
+            const walker = name && document.createTreeWalker(name, NodeFilter.SHOW_TEXT);
+            for (let node = walker && walker.nextNode(); node; node = walker.nextNode()) {
+                if (QUALITY_TAG.test(node.nodeValue)) node.nodeValue = node.nodeValue.replace(QUALITY_TAG, '').trim();
             }
         });
     };
@@ -428,7 +430,10 @@ if (isTv) {
         }
         const images = [...page.querySelectorAll('.cardImageContainer')].filter(onScreen);
         if (images.some((el) => el.classList.contains('lazy') && !el.style.backgroundImage)) return 'images';
+        // Jellyfin's newer cards (phones) use img tags, with a blurred preview until the picture is in
+        if ([...page.querySelectorAll('.cardImageContainer img')].filter(onScreen).some((img) => !img.complete)) return 'images';
         if (artPending > 0) return 'library art';
+        if (phone.pending()) return 'hero';
         if (root.classList.contains('streamix-browse') && !backdrop.settled()) return 'backdrop';
         return '';
     };
@@ -472,10 +477,383 @@ if (isTv) {
         relabel('.selectServer', 'Switch Server');
     };
 
+    // ---------------------------------------------------------------------------------------------
+    // Phone layout: a tab bar, a hero on the home screen and touch-friendly Live TV (see streamix.css)
+    // ---------------------------------------------------------------------------------------------
+    const phone = (() => {
+        if (isTv) return { update() {}, pending: () => false };
+
+        // Material icons (Apache 2.0)
+        const ICONS = {
+            home: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+            movies: 'M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z',
+            tvshows: 'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z',
+            livetv: 'M21 6h-7.59l3.29-3.29L16 2l-4 4-4-4-.71.71L10.59 6H3c-1.1 0-2 .89-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.11-.9-2-2-2zm0 14H3V8h18v12zM9 10v8l7-4z',
+            music: 'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z',
+            library: 'M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z',
+            search: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
+            play: 'M8 5v14l11-7z',
+            info: 'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
+        };
+        const icon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name] || ICONS.library}"/></svg>`;
+        const escapeHtml = (text) => String(text == null ? '' : text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+        const api = () => window.ApiClient;
+        const signedIn = () => !!(api() && api().getCurrentUserId && api().getCurrentUserId());
+
+        // Tab bar: Home, up to three libraries (movies, shows and Live TV first) and Search
+        const LIBRARY_ROUTES = { movies: 'movies', tvshows: 'tv', music: 'music' };
+        const LIBRARY_ORDER = ['movies', 'tvshows', 'livetv', 'music', 'boxsets', 'homevideos', 'musicvideos'];
+        let bar = null;
+        let tabs = [];
+        let tabsUser = null;
+        let activeKey = 'home';
+
+        const routeFor = (tab) => {
+            if (tab.key === 'home') return '#/home';
+            if (tab.key === 'search') return '#/search';
+            // Straight to the channels when there's no guide (see the Live TV tile above)
+            if (tab.type === 'livetv') return '#/livetv?collectionType=livetv' + (liveTvHasGuide ? '' : '&tab=2');
+            const route = LIBRARY_ROUTES[tab.type] || 'list';
+            return `#/${route}?topParentId=${tab.id}` + (tab.type ? `&collectionType=${tab.type}` : '');
+        };
+
+        const pickTabs = (views) => {
+            const libraries = [];
+            for (const type of LIBRARY_ORDER) {
+                const view = views.find((v) => v.type === type && !libraries.includes(v));
+                if (view) libraries.push(view);
+                if (libraries.length === 3) break;
+            }
+            return [
+                { key: 'home', name: 'Home', icon: 'home' },
+                ...libraries.map((v) => ({ key: v.id, id: v.id, type: v.type, name: v.name, icon: ICONS[v.type] ? v.type : 'library' })),
+                { key: 'search', name: 'Search', icon: 'search' }
+            ];
+        };
+
+        // Which tab the page belongs to; null keeps the current one (a title opened from a library stays under it)
+        const keyForRoute = () => {
+            const hash = window.location.hash || '';
+            const path = hash.split('?')[0].toLowerCase();
+            if (path === '' || path === '#/' || path.startsWith('#/home')) return 'home';
+            if (path.startsWith('#/search')) return 'search';
+            if (path.startsWith('#/livetv')) {
+                const liveTab = tabs.find((t) => t.type === 'livetv');
+                return liveTab ? liveTab.key : null;
+            }
+            const params = new URLSearchParams(hash.split('?')[1] || '');
+            const parent = params.get('topParentId') || params.get('parentId');
+            const tab = parent && tabs.find((t) => t.id === parent);
+            return tab ? tab.key : null;
+        };
+
+        const markActive = () => {
+            if (!bar) return;
+            bar.querySelectorAll('a[data-tab]').forEach((link) => {
+                link.classList.toggle('active', link.getAttribute('data-tab') === activeKey);
+            });
+            // Live TV's address depends on whether there's a guide, which is only known after a while
+            const live = tabs.find((t) => t.type === 'livetv');
+            const liveLink = live && bar.querySelector(`a[data-tab="${live.key}"]`);
+            if (liveLink) liveLink.setAttribute('href', routeFor(live));
+        };
+
+        const renderTabs = () => {
+            if (!bar) {
+                bar = document.createElement('nav');
+                bar.className = 'streamixTabBar';
+                bar.addEventListener('click', (e) => {
+                    const link = e.target.closest('a[data-tab]');
+                    if (!link) return;
+                    e.preventDefault();
+                    const tab = tabs.find((t) => t.key === link.getAttribute('data-tab'));
+                    if (!tab) return;
+                    // Tapping the tab you're on takes you back to its top, like iOS
+                    if (tab.key === activeKey && keyForRoute() === tab.key) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        return;
+                    }
+                    activeKey = tab.key;
+                    markActive();
+                    window.location.hash = routeFor(tab);
+                });
+                document.body.appendChild(bar);
+            }
+            bar.innerHTML = tabs.map((tab) => `<a href="${routeFor(tab)}" data-tab="${escapeHtml(tab.key)}">`
+                + `${icon(tab.icon)}<span>${escapeHtml(tab.name)}</span></a>`).join('');
+            markActive();
+        };
+
+        const loadTabs = () => {
+            const userId = api().getCurrentUserId();
+            if (tabsUser === userId) return;
+            tabsUser = userId;
+            const cacheKey = 'streamix-tabs-' + userId;
+            // Last session's libraries first, so the bar is there straight away
+            try {
+                const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+                if (cached) {
+                    tabs = pickTabs(cached);
+                    renderTabs();
+                }
+            } catch (e) { /* no storage */ }
+            api().getUserViews({}, userId).then((result) => {
+                const views = ((result && result.Items) || []).map((v) => ({ id: v.Id, type: v.CollectionType || '', name: v.Name }));
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(views));
+                } catch (e) { /* no storage */ }
+                tabs = pickTabs(views);
+                renderTabs();
+            }).catch(() => {
+                if (!tabs.length) {
+                    tabs = pickTabs([]);
+                    renderTabs();
+                }
+            });
+            checkLiveTvGuide();
+        };
+
+        // The bar steps aside on sign-in pages, the admin dashboard and while typing (it would ride the keyboard)
+        let typing = false;
+        const updateBar = () => {
+            const route = (window.location.hash || '').toLowerCase();
+            const show = signedIn() && !root.classList.contains('streamix-login') && !typing
+                && !/^#\/(dashboard|configurationpage|video|wizard)/.test(route);
+            root.classList.toggle('streamix-tabbar', show);
+            if (!show) return;
+            loadTabs();
+            const key = keyForRoute();
+            if (key) activeKey = key;
+            markActive();
+        };
+        const TYPEABLE_FIELD = 'input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]), textarea, [contenteditable="true"]';
+        const checkTyping = () => {
+            const active = document.activeElement;
+            const nowTyping = !!(active && active.matches && active.matches(TYPEABLE_FIELD));
+            if (nowTyping === typing) return;
+            typing = nowTyping;
+            updateBar();
+        };
+        document.addEventListener('focusin', checkTyping);
+        document.addEventListener('focusout', () => setTimeout(checkTyping, 50));
+
+        // Live TV: tapping a channel starts watching it, like the TV's OK button, instead of opening its
+        // info page. Phones show channels on Jellyfin's newer cards (a link with a play button in the corner);
+        // the older cards carry data-action="link".
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest) return;
+            const card = e.target.closest('.card[data-type="TvChannel"]');
+            const play = card && card.querySelector('button[data-action="play"]');
+            if (play && !e.target.closest('button') && e.target.closest('a[href*="details"]')) {
+                e.preventDefault();
+                e.stopPropagation();
+                play.click();
+                return;
+            }
+            const target = e.target.closest('[data-action]');
+            if (!target || !target.matches('[data-type="TvChannel"][data-action="link"]')) return;
+            target.setAttribute('data-action', 'play');
+            if (!target.hasAttribute('data-mediatype')) target.setAttribute('data-mediatype', 'Video');
+        }, true);
+
+        // Channel names lose their "(720p)" tags as the grid fills in or turns a page
+        let tidyQueued = false;
+        new MutationObserver(() => {
+            if (tidyQueued || !root.classList.contains('streamix-livetv')) return;
+            tidyQueued = true;
+            requestAnimationFrame(() => {
+                tidyQueued = false;
+                tidyChannelCards();
+            });
+        }).observe(document.body, { childList: true, subtree: true });
+
+        // Home hero: what you were watching, then the newest films and shows, as full-bleed artwork you can
+        // swipe through. The buttons are Jellyfin item actions, so Play and Details work like a poster's.
+        const HERO_SLIDES = 6;
+        // Often enough that Resume shows where you left off after watching something
+        const HERO_REFRESH_MS = 2 * 60 * 1000;
+        const HERO_FIELDS = 'Overview,Genres,ProductionYear,OfficialRating,RunTimeTicks,UserData,SeriesName,'
+            + 'ParentIndexNumber,IndexNumber,ParentBackdropItemId,ParentBackdropImageTags,ParentLogoItemId,ParentLogoImageTag';
+        let hero = null;
+        let heroUser = null;
+        let heroLoadedAt = 0;
+        let heroSignature = '';
+
+        const backdropOf = (item) => {
+            const opts = { type: 'Backdrop', index: 0, maxWidth: 1280, quality: 80 };
+            if (item.BackdropImageTags && item.BackdropImageTags.length) {
+                return api().getImageUrl(item.Id, { ...opts, tag: item.BackdropImageTags[0] });
+            }
+            if (item.ParentBackdropItemId && item.ParentBackdropImageTags && item.ParentBackdropImageTags.length) {
+                return api().getImageUrl(item.ParentBackdropItemId, { ...opts, tag: item.ParentBackdropImageTags[0] });
+            }
+            return null;
+        };
+        const logoOf = (item) => {
+            const opts = { type: 'Logo', maxWidth: 600, quality: 90 };
+            if (item.ImageTags && item.ImageTags.Logo) return api().getImageUrl(item.Id, { ...opts, tag: item.ImageTags.Logo });
+            if (item.ParentLogoItemId && item.ParentLogoImageTag) {
+                return api().getImageUrl(item.ParentLogoItemId, { ...opts, tag: item.ParentLogoImageTag });
+            }
+            return null;
+        };
+        const timeLeft = (item) => {
+            const position = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
+            if (!item.RunTimeTicks || !position) return null;
+            const minutes = Math.max(1, Math.round((item.RunTimeTicks - position) / 600000000));
+            return minutes >= 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60} min left` : `${minutes} min left`;
+        };
+
+        const slideHtml = (item) => {
+            const position = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
+            const isEpisode = item.Type === 'Episode';
+            const title = isEpisode ? item.SeriesName : item.Name;
+            const logo = logoOf(item);
+            const meta = isEpisode
+                ? [item.ParentIndexNumber != null && item.IndexNumber != null ? `S${item.ParentIndexNumber} · E${item.IndexNumber}` : null, item.Name]
+                : [item.Type === 'Series' ? 'Series' : 'Film', item.ProductionYear, (item.Genres || []).slice(0, 2).join(', '), item.OfficialRating];
+            const attrs = `data-id="${item.Id}" data-serverid="${item.ServerId}" data-type="${item.Type}" `
+                + `data-mediatype="${item.MediaType || ''}" data-isfolder="${!!item.IsFolder}"`;
+            const left = timeLeft(item);
+            const percent = left ? Math.min(100, (position / item.RunTimeTicks) * 100) : 0;
+            const heading = logo
+                ? `<img class="sxHeroLogo" src="${logo}" alt="${escapeHtml(title)}" decoding="async">`
+                : `<h2 class="sxHeroTitle">${escapeHtml(title)}</h2>`;
+            const progress = left
+                ? `<div class="sxHeroProgress"><span class="sxHeroBar"><span style="width:${percent.toFixed(1)}%"></span></span>${escapeHtml(left)}</div>`
+                : '';
+            return `<div class="sxHeroSlide">
+                <img class="sxHeroArt" src="${backdropOf(item)}" alt="" decoding="async">
+                <div class="sxHeroInfo">
+                    ${heading}
+                    <div class="sxHeroMeta">${meta.filter(Boolean).map(escapeHtml).join(' · ')}</div>
+                    ${progress}
+                    <div class="sxHeroButtons">
+                        <button type="button" class="sxHeroPlay itemAction" data-action="${left ? 'resume' : 'play'}" ${attrs} data-positionticks="${position}">${icon('play')}<span>${left ? 'Resume' : 'Play'}</span></button>
+                        <button type="button" class="sxHeroMore itemAction" data-action="link" ${attrs} aria-label="Details">${icon('info')}</button>
+                    </div>
+                </div>
+            </div>`;
+        };
+
+        const loadHero = async () => {
+            const userId = api().getCurrentUserId();
+            const [resume, latest] = await Promise.all([
+                api().getResumableItems(userId, {
+                    Limit: 3, MediaTypes: 'Video', Recursive: true, Fields: HERO_FIELDS, EnableImageTypes: 'Backdrop,Logo,Primary'
+                }).catch(() => null),
+                api().getItems(userId, {
+                    IncludeItemTypes: 'Movie,Series', Recursive: true, SortBy: 'DateCreated', SortOrder: 'Descending',
+                    Limit: 12, ImageTypes: 'Backdrop', Fields: HERO_FIELDS, EnableImageTypes: 'Backdrop,Logo,Primary'
+                }).catch(() => null)
+            ]);
+            const picked = [];
+            const seen = new Set();
+            for (const item of [...((resume && resume.Items) || []), ...((latest && latest.Items) || [])]) {
+                const key = item.SeriesId || item.Id;
+                if (seen.has(key) || !backdropOf(item)) continue;
+                seen.add(key);
+                picked.push(item);
+                if (picked.length === HERO_SLIDES) break;
+            }
+            return picked;
+        };
+
+        const updateDots = () => {
+            const track = hero && hero.querySelector('.sxHeroTrack');
+            if (!track) return;
+            const index = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+            hero.querySelectorAll('.sxHeroDots span').forEach((dot, i) => dot.classList.toggle('active', i === index));
+        };
+
+        // The home tab (not Favorites) of the home page on screen, if that's where we are
+        const homeTab = () => {
+            const tab = document.querySelector('.mainAnimatedPage.homePage:not(.hide) .pageTabContent.is-active');
+            return tab && tab.querySelector('.homeSectionsContainer') ? tab : null;
+        };
+
+        // One hero element for every visit: an items container, so Jellyfin handles its buttons' play and
+        // details actions. Its slides are refilled every so often.
+        let heroLoading = false;
+        const heroElement = () => {
+            if (!hero) {
+                hero = document.createElement('div');
+                hero.setAttribute('is', 'emby-itemscontainer');
+                hero.setAttribute('data-multiselect', 'false');
+                hero.className = 'streamixHero';
+                // Scroll events don't bubble, but they can be caught on the way down
+                hero.addEventListener('scroll', () => requestAnimationFrame(updateDots), { passive: true, capture: true });
+            }
+            return hero;
+        };
+
+        const placeHero = (attempt = 0) => {
+            const tab = homeTab();
+            if (!tab) {
+                // The home page sets up its tab a moment after it's shown
+                if (attempt < 12 && document.querySelector('.mainAnimatedPage.homePage:not(.hide)')) {
+                    setTimeout(() => placeHero(attempt + 1), 250);
+                }
+                return;
+            }
+            const userId = api().getCurrentUserId();
+            const fresh = heroUser === userId && Date.now() - heroLoadedAt < HERO_REFRESH_MS;
+            if (fresh || heroLoading) {
+                if (hero && hero.childElementCount && tab.firstElementChild !== hero) tab.prepend(hero);
+                return;
+            }
+            heroUser = userId;
+            heroLoadedAt = Date.now();
+            heroLoading = true;
+            // Hold the hero's place straight away, so the rows don't jump down when it arrives
+            const element = heroElement();
+            if (tab.firstElementChild !== element) tab.prepend(element);
+            loadHero().then(async (items) => {
+                if (!items.length) {
+                    element.remove();
+                    element.replaceChildren();
+                    heroSignature = '';
+                    return;
+                }
+                // Nothing new (same titles, same progress): leave the slides, and where they're swiped to, alone
+                const signature = items.map((item) => item.Id + ':' + ((item.UserData && item.UserData.PlaybackPositionTicks) || 0)).join();
+                if (signature === heroSignature && element.childElementCount) return;
+                heroSignature = signature;
+                // The first picture is ready before the hero shows, then each one fades in
+                const first = new Image();
+                first.src = backdropOf(items[0]);
+                await first.decode().catch(() => {});
+                element.innerHTML = `<div class="sxHeroTrack">${items.map(slideHtml).join('')}</div>`
+                    + (items.length > 1 ? `<div class="sxHeroDots">${items.map(() => '<span></span>').join('')}</div>` : '');
+                element.querySelectorAll('.sxHeroArt, .sxHeroLogo').forEach((img) => {
+                    if (img.complete) img.classList.add('loaded');
+                    else img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                });
+                const current = homeTab();
+                if (current && current.firstElementChild !== element) current.prepend(element);
+                updateDots();
+            }).catch(() => {
+                heroLoadedAt = 0;
+            }).finally(() => {
+                heroLoading = false;
+            });
+        };
+
+        return {
+            update() {
+                updateBar();
+                if (root.classList.contains('streamix-tabbar')) placeHero();
+            },
+            // For the splash: the home screen isn't complete until its hero is in
+            pending: () => !!document.querySelector('.mainAnimatedPage.homePage:not(.hide)') && (heroLoading || !heroLoadedAt)
+        };
+    })();
+
     const updatePageState = () => {
         updateLoginState();
         updateBrowseState();
         retileLibraries();
+        phone.update();
         relabelSettingsMenu();
         setTimeout(relabelSettingsMenu, 300);
     };
@@ -483,7 +861,6 @@ if (isTv) {
     // Libraries open on "Suggestions"; when that's empty, show the full list (Shows / Movies) instead.
     // Live TV opens on "Programs", which is empty without guide data; show the channels then.
     const skipEmptySuggestions = () => {
-        if (!isTv) return;
         const page = document.querySelector('.mainAnimatedPage.withTabs:not(.hide)');
         if (!page) return;
         const tabs = document.querySelectorAll('.skinHeader .headerTabs .emby-tab-button');
@@ -494,6 +871,7 @@ if (isTv) {
             if (!channelsTab) return;
             channelsTab.click();
             setTimeout(tidyChannelCards, 400);
+            if (!isTv) return;
             // Land on the first channel once the grid is in
             let tries = 0;
             const focusFirstChannel = setInterval(() => {

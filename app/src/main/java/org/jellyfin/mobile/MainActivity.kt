@@ -48,7 +48,9 @@ import org.jellyfin.mobile.utils.PermissionRequestHelper
 import org.jellyfin.mobile.utils.SmartOrientationListener
 import org.jellyfin.mobile.utils.extensions.replaceFragment
 import org.jellyfin.mobile.utils.isRemoteNavigationKey
+import org.jellyfin.mobile.utils.isTvDevice
 import org.jellyfin.mobile.utils.isWebViewSupported
+import org.jellyfin.mobile.utils.preferFastestRefreshRate
 import org.jellyfin.mobile.webapp.RemotePlayerService
 import org.jellyfin.mobile.webapp.WebViewFragment
 import org.koin.android.ext.android.get
@@ -131,6 +133,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupSplash(splashScreen, savedInstanceState)
+
+        // Phones: browse at the screen's full 90/120 Hz (the player hands the choice back while it plays)
+        if (!isTvDevice()) window.decorView.post { window.preferFastestRefreshRate(true) }
 
         // Check WebView support
         if (!isWebViewSupported()) {

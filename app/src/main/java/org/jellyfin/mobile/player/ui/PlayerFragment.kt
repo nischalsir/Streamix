@@ -66,6 +66,7 @@ import org.jellyfin.mobile.utils.extensions.isLandscape
 import org.jellyfin.mobile.utils.extensions.keepScreenOn
 import org.jellyfin.mobile.utils.isRemoteNavigationKey
 import org.jellyfin.mobile.utils.isTvDevice
+import org.jellyfin.mobile.utils.preferFastestRefreshRate
 import org.jellyfin.mobile.utils.toast
 import org.jellyfin.sdk.model.api.MediaSegmentDto
 import org.jellyfin.sdk.model.api.MediaStream
@@ -117,6 +118,8 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
         playerFullscreenHelper = PlayerFullscreenHelper(window)
         displayModeHelper = DisplayModeHelper(window)
         isTv = requireContext().isTvDevice()
+        // Phones: let the system match the screen to the video rather than holding it at 120 Hz
+        if (!isTv) window.preferFastestRefreshRate(false)
 
         // Observe ViewModel
         viewModel.player.observe(this) { player ->
@@ -511,6 +514,21 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
 
     fun onSeekByOffset(offsetMs: Long) = viewModel.seekByOffset(offsetMs)
 
+    /**
+     * Live TV on a phone: a sideways swipe changes channel, as there's nothing to seek through.
+     *
+     * @param step +1 for the next channel, -1 for the previous one
+     * @return false when this isn't a Live TV channel, so the swipe seeks as usual
+     */
+    fun onLiveTvSwipe(step: Int): Boolean {
+        val liveTv = liveTv?.takeIf { it.isActive } ?: return false
+        playerView.hideController()
+        liveTv.zap(step)
+        return true
+    }
+
+    val isLiveTv: Boolean get() = liveTv?.isActive == true
+
     fun onPreviousChapter() = viewModel.previousChapter()
 
     fun onNextChapter() = viewModel.nextChapter()
@@ -653,6 +671,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
     override fun onDestroy() {
         super.onDestroy()
         displayModeHelper.restore()
+        if (!isTv) requireActivity().window.preferFastestRefreshRate(true)
         with(requireActivity()) {
             // Reset screen orientation
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED

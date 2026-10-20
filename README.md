@@ -2,12 +2,14 @@
   <img src="docs/banner.png" alt="Streamix" width="640">
 </p>
 
-<h3 align="center">A Jellyfin client for Google TV and Android TV — Liquid Glass design, native 4K HDR playback, Dolby Atmos and DTS.</h3>
+<h3 align="center">A Jellyfin client for Google TV, Android TV and Android phones — Liquid Glass design, native 4K HDR playback, Dolby Atmos and DTS.</h3>
 
 <p align="center">
   <a href="https://github.com/nischalsir/Streamix/releases/latest"><b>Download the latest APK</b></a>
   ·
-  <a href="#2-install-it-on-your-tv-from-a-usb-drive">Install</a>
+  <a href="#2-install-it-on-your-tv-from-a-usb-drive">Install on a TV</a>
+  ·
+  <a href="#install-it-on-an-android-phone">Install on a phone</a>
   ·
   <a href="#3-connect-to-your-jellyfin-server">Connect</a>
   ·
@@ -20,7 +22,8 @@ Streamix turns your Jellyfin server into a living-room app. Browsing uses the Je
 TV layout, so your server's **Liquid Glass** theme applies everywhere. Video plays in a **native player**, so
 4K HDR10 (HEVC 10-bit), Dolby Atmos and DTS play directly from the server without transcoding.
 
-It was built for a **TCL 43V6C (Google TV, 2 GB RAM)** and tuned so a budget TV stays smooth.
+It was built for a **TCL 43V6C (Google TV, 2 GB RAM)** and tuned so a budget TV stays smooth. The same APK
+also runs on **Android phones** with a touch layout of its own (tested on a Xiaomi 15T screen size).
 
 <p align="center">
   <img src="docs/intro.gif" alt="Streamix intro animation" width="200">
@@ -53,6 +56,7 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 | **Animated splash** | Three colour streams glide in and merge into the Streamix play arrow, then it fades into your home screen once that has loaded (press OK to skip). |
 | **Updates itself** | Streamix checks GitHub for new releases, downloads the update and installs it, all from the TV. No USB drive needed after the first install. |
 | **Simple settings** | The TV shows only settings a viewer needs, in plain words. Technical options keep sensible defaults and stay reachable from a computer. |
+| **Phone layout too** | On a phone the same app opens a touch layout: artwork runs full screen under the status bar, the home screen starts with a swipeable hero of what you were watching and what's new (Resume / Play right there), a floating glass tab bar takes you to Home, Movies, Shows, Live TV and Search, and the screen runs at its full 90 / 120 Hz while you browse. |
 | **Everything else from Jellyfin** | TV guide and recordings, music, books, Quick Connect, multiple servers, playback speed, chapter skip, intro/outro skip, trickplay thumbnails. |
 
 ---
@@ -61,8 +65,9 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 
 - A **Jellyfin server** (10.9 or newer; tested with 12.2) on your computer or NAS.
 - A **Google TV or Android TV** (Android 9+). Tested on TCL 43V6C.
-- The TV and the server on the **same home network** (or a server reachable over the internet).
-- A **USB drive** (FAT32 or exFAT) to carry the APK to the TV.
+- Or an **Android phone** (Android 6+).
+- The TV or phone and the server on the **same home network** (or a server reachable over the internet).
+- For a TV, a **USB drive** (FAT32 or exFAT) to carry the APK to it.
 
 ## 2. Install it on your TV from a USB drive
 
@@ -87,6 +92,19 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 > to the Google account on the TV, and Android puts them back when Streamix is installed again, so it opens
 > signed in. This needs the TV signed in to Google with backup on, and Android makes the backup about once a
 > day, so a fresh install that's removed within a few hours may still ask you to sign in once.
+
+### Install it on an Android phone
+
+1. On the phone, open the [latest release](https://github.com/nischalsir/Streamix/releases/latest) and download
+   the APK (`Streamix-v1.4.0.apk` or newer).
+2. Open the download. Android asks you to allow your browser (or file manager) to install apps: turn it on,
+   go back, and tap **Install**. Xiaomi phones may scan the app first; let the scan finish and continue.
+3. Open **Streamix**, enter your server address (or tap **Choose server**) and sign in, the same as on the TV
+   (see [Connect](#3-connect-to-your-jellyfin-server)).
+4. Tap **Allow** when Streamix asks to keep playing with the screen off, so music and video aren't cut off in
+   the background.
+
+It's the same app as on the TV, so it updates itself on the phone too.
 
 ## 3. Connect to your Jellyfin server
 
@@ -251,6 +269,11 @@ come and go, so run it again every month or so, then **Dashboard → Scheduled t
   **5 0 1** for DD Sports.
 - **OK** shows the player controls. On Live TV they show a **LIVE** tag instead of a time bar, and **⏮ / ⏭** change
   channel. **Back** returns to the channel grid.
+
+### Watch on a phone
+
+- The **Live TV** tab opens the channel grid. **Tap a channel** to start it.
+- **Swipe left or right** on the picture for the next or previous channel; **⏮ / ⏭** in the controls do the same.
 
 > Channels from an IPTV (M3U) playlist play straight from the provider, so most start in 2–3 seconds. If a
 > provider's stream won't play directly, Streamix asks the server to stream it instead, which is slower. Channels
