@@ -3,8 +3,10 @@ package org.jellyfin.mobile.player.ui
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
@@ -85,7 +87,15 @@ class LiveTvController(
         playerView.controllerAutoShow = false
         val channel = Channel(channelId, cleanName(info.name), info.number, info.imageTag, programName = null)
         current = channel
-        if (!isTv) binding.liveTvBannerHint.setText(R.string.live_tv_hint_touch)
+        if (!isTv) {
+            binding.liveTvBannerHint.setText(R.string.live_tv_hint_touch)
+            // A phone held upright has little room across: keep the banner just clear of both edges
+            val margin = context.resources.getDimensionPixelSize(R.dimen.live_tv_banner_margin_phone)
+            binding.liveTvBanner.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                marginStart = margin
+                marginEnd = margin
+            }
+        }
         showTuning(channel)
         loadChannels()
     }

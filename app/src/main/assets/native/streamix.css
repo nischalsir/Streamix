@@ -955,7 +955,7 @@ html.streamix-mobile .MuiAppBar-root > .MuiToolbar-root:first-child > .MuiBox-ro
 }
 
 /* Search lives in the tab bar (the header's search, including a library's own, would only repeat it) */
-html.streamix-mobile.streamix-tabbar .MuiAppBar-root a[href^="#/search"] {
+html.streamix-mobile .MuiAppBar-root a[href^="#/search"] {
     display: none !important;
 }
 
