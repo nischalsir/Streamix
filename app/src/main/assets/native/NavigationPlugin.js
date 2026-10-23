@@ -6,6 +6,11 @@ export class NavigationPlugin {
     }
 
     goBack() {
+        // Streamix: on a TV the navigation rail gets Back first (see nativeshell.js)
+        var shell = window['StreamixShell'];
+        if (shell && shell.onBack && shell.onBack()) {
+            return;
+        }
         var appRouter = window['Emby']['Page'];
         if (appRouter.canGoBack()) {
             appRouter.back();

@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Focus on a settings row without a tick box: a soft rounded highlight, no hard outline -->
+<!-- Focus on a settings row without a tick box: a soft highlight with an amber edge, no hard outline -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:enterFadeDuration="120"
-    android:exitFadeDuration="120">
+    android:enterFadeDuration="150"
+    android:exitFadeDuration="150">
     <item android:state_focused="true">
-        <shape android:shape="rectangle">
-            <corners android:radius="16dp" />
-            <solid android:color="#24FFFFFF" />
-        </shape>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="6dp" />
+                    <solid android:color="#17FFFFFF" />
+                </shape>
+            </item>
+            <item
+                android:width="4dp"
+                android:gravity="start">
+                <shape android:shape="rectangle">
+                    <corners
+                        android:bottomLeftRadius="6dp"
+                        android:topLeftRadius="6dp" />
+                    <solid android:color="@color/jellyfin_accent" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
     <item android:drawable="@android:color/transparent" />
 </selector>

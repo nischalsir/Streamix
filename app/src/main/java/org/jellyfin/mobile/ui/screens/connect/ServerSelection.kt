@@ -368,7 +368,7 @@ private fun ServerDiscoveryItem(
         modifier = Modifier
             .tvFocusScale(interactionSource, focusedScale = 1.02f)
             .clip(MaterialTheme.shapes.medium)
-            .background(if (focused) Color.White.copy(alpha = 0.16f) else Color.Transparent)
+            .background(if (focused) MaterialTheme.colors.primary.copy(alpha = 0.22f) else Color.Transparent)
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClickServer),
         text = {
             Text(text = serverSuggestion.name)

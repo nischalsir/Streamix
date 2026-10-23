@@ -89,5 +89,7 @@ fun WebViewAssetLoader.AssetsPathHandler.inject(path: String): WebResourceRespon
     } else if (path.endsWith(".css", ignoreCase = true)) {
         // Stylesheets served with any other type are ignored by the browser
         mimeType = "text/css"
+    } else if (path.endsWith(".woff2", ignoreCase = true)) {
+        mimeType = "font/woff2"
     }
 }

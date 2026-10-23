@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Player control button on TV: a soft disc with a white rim when focused, so it's obvious from the sofa -->
+<!-- Player control button on TV: an amber disc behind the icon when focused, so it's obvious from the sofa -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:enterFadeDuration="100"
-    android:exitFadeDuration="100">
+    android:enterFadeDuration="150"
+    android:exitFadeDuration="150">
     <item android:state_focused="true">
         <shape android:shape="oval">
-            <solid android:color="#40FFFFFF" />
+            <solid android:color="#4DE5A00D" />
             <stroke
                 android:width="2dp"
-                android:color="#FFFFFFFF" />
+                android:color="@color/jellyfin_accent" />
         </shape>
     </item>
     <item android:state_pressed="true">
         <shape android:shape="oval">
-            <solid android:color="#33FFFFFF" />
+            <solid android:color="#33E5A00D" />
         </shape>
     </item>
     <item android:drawable="@android:color/transparent" />

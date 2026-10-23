@@ -6,13 +6,15 @@
         <item name="colorAccent">@color/jellyfin_accent</item>
         <item name="android:windowBackground">@color/theme_background</item>
         <item name="android:navigationBarColor">@color/theme_background</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
     </style>
 
     <style name="AppTheme" parent="AppTheme.V21" />
 
     <style name="AppTheme.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/theme_background</item>
-        <!-- Plain black while the app starts; MainActivity then plays the animated Streamix intro.
+        <!-- Plain charcoal while the app starts; MainActivity then plays the animated Streamix intro.
              (TVs differ in whether they animate a system splash icon, so the app owns the whole intro.) -->
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
         <item name="postSplashScreenTheme">@style/AppTheme</item>
@@ -30,6 +32,15 @@
     <style name="TvSettingsTitle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
         <item name="android:textSize">26sp</item>
         <item name="android:textColor">#FFFFFFFF</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Title at the top of the player -->
+    <style name="TextAppearance.Streamix.PlayerTitle" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>

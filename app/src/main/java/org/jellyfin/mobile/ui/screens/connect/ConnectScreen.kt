@@ -98,7 +98,7 @@ fun StyledTextButton(
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
-    // Focused button turns white with dark text and lifts, like Apple TV, so it's obvious from the sofa
+    // Focused button turns amber with dark text and lifts, so it's obvious from the sofa
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.isFocused()
     TextButton(
@@ -111,8 +111,8 @@ fun StyledTextButton(
         interactionSource = interactionSource,
         shape = MaterialTheme.shapes.medium,
         colors = ButtonDefaults.buttonColors(
-            backgroundColor = if (focused) Color.White else Color.White.copy(alpha = 0.12f),
-            contentColor = if (focused) Color.Black else Color.White,
+            backgroundColor = if (focused) MaterialTheme.colors.primary else Color.White.copy(alpha = 0.12f),
+            contentColor = if (focused) MaterialTheme.colors.onPrimary else Color.White,
             disabledBackgroundColor = Color.White.copy(alpha = 0.06f),
             disabledContentColor = Color.White.copy(alpha = 0.38f),
         ),

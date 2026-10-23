@@ -1,7 +1,6 @@
 package org.jellyfin.mobile.webapp
 
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
@@ -16,6 +15,7 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnNextLayout
@@ -255,8 +255,8 @@ class WebViewFragment : Fragment(), BackPressInterceptor, JellyfinWebChromeClien
         webChromeClient = JellyfinWebChromeClient(this@WebViewFragment)
         settings.applyDefault()
 
-        // Black before the first paint (no white flash), no edge glow, no native scrollbars on TV
-        setBackgroundColor(Color.BLACK)
+        // The page's charcoal before the first paint (no white flash), no edge glow, no native scrollbars on TV
+        setBackgroundColor(ContextCompat.getColor(context, R.color.theme_background))
         overScrollMode = View.OVER_SCROLL_NEVER
         if (requireContext().isTvDevice()) {
             isVerticalScrollBarEnabled = false

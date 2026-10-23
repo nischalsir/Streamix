@@ -157,10 +157,27 @@ if (isTv) {
         });
     };
 
-    // Apple TV style backdrops: while browsing, the focused title's artwork fills the background.
-    // Waits for focus to settle, decodes off the main thread, then cross-fades two layers on the GPU.
+    // Backdrops: while browsing, the focused title's artwork fills the background, and a title's page sits
+    // on its own artwork. Waits for focus to settle, decodes off the main thread, then cross-fades two
+    // layers on the GPU. On a TV the artwork is blurred, once, into a small canvas that's stretched to the
+    // screen: a CSS blur would be redone by the GPU on every frame of every animation.
     const backdrop = (() => {
         const SETTLE_MS = 350;
+        const BLUR = isTv;
+        const BACKDROP_WIDTH = BLUR ? 480 : 1280;
+        const blurred = (img) => {
+            const canvas = document.createElement('canvas');
+            const width = 320;
+            const height = Math.round(width * (img.naturalHeight || 9) / (img.naturalWidth || 16));
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return img;
+            ctx.filter = 'blur(7px)';
+            // Drawn a little oversize, so the blur doesn't fade out towards the edges
+            ctx.drawImage(img, -14, -14, width + 28, height + 28);
+            return canvas;
+        };
         const cache = new Map();
         let root = null;
         let layers = [];
@@ -199,19 +216,19 @@ if (isTv) {
                 if (LIBRARY_TYPES.test(type || '')) {
                     // Libraries: the server's generated art has the library name drawn on it
                     const pick = await pickFromLibrary(id);
-                    url = pick && libraryArtUrl(pick, 1280);
+                    url = pick && libraryArtUrl(pick, BACKDROP_WIDTH);
                     cache.set(id, url);
                     return url;
                 }
                 const item = await api.getItem(api.getCurrentUserId(), id);
-                const opts = { type: 'Backdrop', maxWidth: 1280, quality: 72 };
+                const opts = { type: 'Backdrop', maxWidth: BACKDROP_WIDTH, quality: 72 };
                 if (item.BackdropImageTags && item.BackdropImageTags.length) {
                     url = api.getImageUrl(item.Id, { ...opts, index: 0, tag: item.BackdropImageTags[0] });
                 } else if (item.ParentBackdropItemId && item.ParentBackdropImageTags && item.ParentBackdropImageTags.length) {
                     url = api.getImageUrl(item.ParentBackdropItemId, { ...opts, index: 0, tag: item.ParentBackdropImageTags[0] });
                 } else if (item.IsFolder) {
                     const pick = await pickFromLibrary(item.Id);
-                    url = pick && libraryArtUrl(pick, 1280);
+                    url = pick && libraryArtUrl(pick, BACKDROP_WIDTH);
                 }
             } catch (e) {
                 url = null;
@@ -237,7 +254,7 @@ if (isTv) {
             }
             if (requested !== url) return; // focus moved on while this was loading
             const back = 1 - front;
-            layers[back].replaceChildren(img);
+            layers[back].replaceChildren(BLUR ? blurred(img) : img);
             layers[back].classList.add('active');
             layers[front].classList.remove('active');
             const old = layers[front];
@@ -470,11 +487,67 @@ if (isTv) {
             const label = page.querySelector(selector + ' .listItemBodyText');
             if (label && label.textContent !== text) label.textContent = text;
         };
-        relabel('.lnkDisplayPreferences', 'Display & language');
-        relabel('.lnkHomePreferences', 'Home screen');
-        relabel('.lnkPlaybackPreferences', 'Audio & playback');
+        relabel('.lnkDisplayPreferences', 'Display & Language');
+        relabel('.lnkHomePreferences', 'Home Screen');
+        relabel('.lnkPlaybackPreferences', 'Audio & Playback');
         relabel('.clientSettings', 'Streamix Settings');
         relabel('.selectServer', 'Switch Server');
+    };
+
+    // Response on press (TV): OK marks the focused element for as long as it's held, so it answers the
+    // moment the button goes down rather than when something opens (see "Feel" in streamix.css)
+    if (isTv) {
+        let pressed = null;
+        const release = () => {
+            if (pressed) pressed.classList.remove('sx-pressed');
+            pressed = null;
+        };
+        window.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' || e.repeat) return;
+            const target = document.activeElement;
+            if (!target || target === document.body || !target.matches('.card, button, .emby-button, .sxRailItem')) return;
+            release();
+            pressed = target;
+            target.classList.add('sx-pressed');
+        }, true);
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') release();
+        }, true);
+        document.addEventListener('focusout', release, true);
+    }
+
+    // Material icons (Apache 2.0), for the phone's tab bar and the TV's navigation rail
+    const ICONS = {
+        home: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+        movies: 'M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z',
+        tvshows: 'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z',
+        livetv: 'M21 6h-7.59l3.29-3.29L16 2l-4 4-4-4-.71.71L10.59 6H3c-1.1 0-2 .89-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.11-.9-2-2-2zm0 14H3V8h18v12zM9 10v8l7-4z',
+        music: 'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z',
+        library: 'M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z',
+        search: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
+        settings: 'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
+        play: 'M8 5v14l11-7z',
+        info: 'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
+    };
+    const icon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name] || ICONS.library}"/></svg>`;
+    const escapeHtml = (text) => String(text == null ? '' : text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    const api = () => window.ApiClient;
+    const signedIn = () => !!(api() && api().getCurrentUserId && api().getCurrentUserId());
+
+    // A user's libraries, last session's first so menus can show straight away, then the server's
+    const loadViews = (userId, onViews) => {
+        const cacheKey = 'streamix-tabs-' + userId;
+        try {
+            const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+            if (cached) onViews(cached, true);
+        } catch (e) { /* no storage */ }
+        return api().getUserViews({}, userId).then((result) => {
+            const views = ((result && result.Items) || []).map((v) => ({ id: v.Id, type: v.CollectionType || '', name: v.Name }));
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify(views));
+            } catch (e) { /* no storage */ }
+            onViews(views, false);
+        });
     };
 
     // ---------------------------------------------------------------------------------------------
@@ -482,23 +555,6 @@ if (isTv) {
     // ---------------------------------------------------------------------------------------------
     const phone = (() => {
         if (isTv) return { update() {}, pending: () => false };
-
-        // Material icons (Apache 2.0)
-        const ICONS = {
-            home: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
-            movies: 'M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z',
-            tvshows: 'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z',
-            livetv: 'M21 6h-7.59l3.29-3.29L16 2l-4 4-4-4-.71.71L10.59 6H3c-1.1 0-2 .89-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.11-.9-2-2-2zm0 14H3V8h18v12zM9 10v8l7-4z',
-            music: 'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z',
-            library: 'M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z',
-            search: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
-            play: 'M8 5v14l11-7z',
-            info: 'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
-        };
-        const icon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name] || ICONS.library}"/></svg>`;
-        const escapeHtml = (text) => String(text == null ? '' : text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-        const api = () => window.ApiClient;
-        const signedIn = () => !!(api() && api().getCurrentUserId && api().getCurrentUserId());
 
         // Tab bar: Home, up to three libraries (movies, shows and Live TV first) and Search
         const LIBRARY_ROUTES = { movies: 'movies', tvshows: 'tv', music: 'music' };
@@ -588,20 +644,8 @@ if (isTv) {
             const userId = api().getCurrentUserId();
             if (tabsUser === userId) return;
             tabsUser = userId;
-            const cacheKey = 'streamix-tabs-' + userId;
             // Last session's libraries first, so the bar is there straight away
-            try {
-                const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-                if (cached) {
-                    tabs = pickTabs(cached);
-                    renderTabs();
-                }
-            } catch (e) { /* no storage */ }
-            api().getUserViews({}, userId).then((result) => {
-                const views = ((result && result.Items) || []).map((v) => ({ id: v.Id, type: v.CollectionType || '', name: v.Name }));
-                try {
-                    localStorage.setItem(cacheKey, JSON.stringify(views));
-                } catch (e) { /* no storage */ }
+            loadViews(userId, (views) => {
                 tabs = pickTabs(views);
                 renderTabs();
             }).catch(() => {
@@ -849,11 +893,321 @@ if (isTv) {
         };
     })();
 
+    // ---------------------------------------------------------------------------------------------
+    // TV navigation rail: Search, Home, each library and Settings down the left edge. A strip of icons
+    // that opens out with labels when the remote moves into it: Left from the first thing on a row, or
+    // Back on a top-level page (see streamix.css). Its buttons stay out of Jellyfin's focus navigation
+    // (tabindex -1); while it's open this handles the remote itself.
+    // ---------------------------------------------------------------------------------------------
+    const rail = (() => {
+        if (!isTv) return { update() {}, onBack: () => false };
+
+        const LIBRARY_ROUTES = { movies: 'movies', tvshows: 'tv', music: 'music' };
+        // Pages the rail leads to: Back on one of them opens the rail rather than leaving it
+        const TOP_LEVEL = /^#\/(home|movies|tv|music|livetv|search|mypreferencesmenu|list|homevideos|musicvideos|books)(\.html)?$/;
+        let nav = null;
+        let items = [];
+        let itemsUser = null;
+        let activeKey = 'home';
+        let open = false;
+        let shown = false;
+        let returnFocus = null;
+
+        const routeFor = (item) => {
+            if (item.route) return item.route;
+            // Straight to the channels when there's no guide (see the Live TV tile above)
+            if (item.type === 'livetv') return '#/livetv?collectionType=livetv' + (liveTvHasGuide ? '' : '&tab=2');
+            try {
+                const url = window.Emby && window.Emby.Page && window.Emby.Page.getRouteUrl({
+                    Id: item.id, Name: item.name, Type: 'CollectionFolder', CollectionType: item.type || undefined,
+                    IsFolder: true, ServerId: api().serverId()
+                }, {});
+                if (url) return url.startsWith('#') ? url : '#' + url.replace(/^.*?#/, '');
+            } catch (e) { /* older web client */ }
+            const route = LIBRARY_ROUTES[item.type] || 'list';
+            return `#/${route}?topParentId=${item.id}` + (item.type ? `&collectionType=${item.type}` : '');
+        };
+
+        const parts = () => {
+            const hash = window.location.hash || '';
+            return { path: hash.split('?')[0].toLowerCase(), params: new URLSearchParams(hash.split('?')[1] || '') };
+        };
+
+        // Which rail entry the page belongs to; null keeps the current one (a title opened from a library stays under it)
+        const keyForRoute = () => {
+            const { path, params } = parts();
+            if (path === '' || path === '#/' || path.startsWith('#/home')) return 'home';
+            if (path.startsWith('#/search')) return 'search';
+            if (path.startsWith('#/mypreferences')) return 'settings';
+            if (path.startsWith('#/livetv')) {
+                const live = items.find((i) => i.type === 'livetv');
+                return live ? live.key : null;
+            }
+            const parent = params.get('topParentId') || params.get('parentId');
+            const item = parent && items.find((i) => i.id === parent);
+            return item ? item.key : null;
+        };
+
+        const isTopLevel = () => {
+            const { path, params } = parts();
+            if (!TOP_LEVEL.test(path)) return false;
+            // A plain list is top level only when it's a whole library (a collection folder from the rail)
+            if (path.startsWith('#/list')) {
+                const parent = params.get('topParentId') || params.get('parentId');
+                return !!parent && items.some((i) => i.id === parent);
+            }
+            return true;
+        };
+
+        const dialogOpen = () => !!document.querySelector('.dialogContainer .dialog, .dialogContainer');
+
+        const buttons = () => (nav ? [...nav.querySelectorAll('.sxRailItem')] : []);
+
+        const markActive = () => {
+            buttons().forEach((button) => {
+                const active = button.getAttribute('data-key') === activeKey;
+                button.classList.toggle('active', active);
+                if (active) button.setAttribute('aria-current', 'page');
+                else button.removeAttribute('aria-current');
+            });
+        };
+
+        const render = () => {
+            if (!nav) {
+                nav = document.createElement('nav');
+                nav.className = 'sxRail';
+                nav.setAttribute('aria-label', 'Main menu');
+                document.body.appendChild(nav);
+                nav.addEventListener('click', (e) => {
+                    const button = e.target.closest && e.target.closest('.sxRailItem');
+                    if (button) go(button.getAttribute('data-key'));
+                });
+            }
+            const button = (item) => `<button type="button" class="sxRailItem" tabindex="-1" data-key="${escapeHtml(item.key)}">`
+                + `${icon(item.icon)}<span>${escapeHtml(item.name)}</span></button>`;
+            const top = items.filter((i) => i.key !== 'settings');
+            const settings = items.find((i) => i.key === 'settings');
+            nav.innerHTML = '<div class="sxRailPanel"></div><div class="sxRailLogo" aria-hidden="true"></div>'
+                + `<div class="sxRailItems">${top.map(button).join('')}</div>`
+                + `<div class="sxRailFoot">${settings ? button(settings) : ''}</div>`;
+            markActive();
+        };
+
+        const setItems = (views) => {
+            items = [
+                { key: 'search', name: 'Search', icon: 'search', route: '#/search' },
+                { key: 'home', name: 'Home', icon: 'home', route: '#/home' },
+                ...views.map((v) => ({ key: v.id, id: v.id, type: v.type, name: v.name, icon: ICONS[v.type] ? v.type : 'library' })),
+                { key: 'settings', name: 'Settings', icon: 'settings', route: '#/mypreferencesmenu' }
+            ];
+            render();
+        };
+
+        const loadItems = () => {
+            const userId = api().getCurrentUserId();
+            if (itemsUser === userId) return;
+            itemsUser = userId;
+            loadViews(userId, setItems).catch(() => {
+                if (!items.length) setItems([]);
+            });
+            checkLiveTvGuide();
+        };
+
+        const visible = (el) => !!el && el.isConnected && el.offsetParent !== null;
+
+        const openRail = () => {
+            if (open || !shown || !nav) return;
+            const active = document.activeElement;
+            returnFocus = active && active !== document.body ? active : null;
+            open = true;
+            root.classList.add('sx-rail-open');
+            const target = buttons().find((b) => b.getAttribute('data-key') === activeKey) || buttons()[1] || buttons()[0];
+            if (target) target.focus({ preventScroll: true });
+        };
+
+        const closeRail = (restoreFocus) => {
+            if (!open) return;
+            open = false;
+            root.classList.remove('sx-rail-open');
+            if (!restoreFocus) return;
+            if (visible(returnFocus)) {
+                returnFocus.focus();
+            } else {
+                if (document.activeElement && nav && nav.contains(document.activeElement)) document.activeElement.blur();
+                focusContent();
+            }
+        };
+
+        const go = (key) => {
+            const item = items.find((i) => i.key === key);
+            if (!item) return;
+            const here = keyForRoute() === key && isTopLevel();
+            closeRail(here);
+            if (here) return;
+            activeKey = key;
+            markActive();
+            returnFocus = null;
+            // The page lost focus with the rail; the new page's focus comes from its own autofocus / focusContent
+            if (document.activeElement && nav.contains(document.activeElement)) document.activeElement.blur();
+            window.location.hash = routeFor(item);
+        };
+
+        const typing = (el) => !!el && !!el.matches && el.matches('input:not([type=checkbox]):not([type=radio]), textarea, select, [contenteditable="true"]');
+
+        window.addEventListener('keydown', (e) => {
+            if (!shown || !nav) return;
+            if (open) {
+                const list = buttons();
+                const index = list.indexOf(document.activeElement);
+                switch (e.key) {
+                    case 'ArrowUp':
+                    case 'ArrowDown': {
+                        const next = list[Math.max(0, Math.min(list.length - 1, (index < 0 ? 0 : index) + (e.key === 'ArrowUp' ? -1 : 1)))];
+                        if (next) next.focus({ preventScroll: true });
+                        break;
+                    }
+                    case 'ArrowRight':
+                        closeRail(true);
+                        break;
+                    case 'Enter':
+                        if (index >= 0) go(list[index].getAttribute('data-key'));
+                        break;
+                    case 'ArrowLeft':
+                        break;
+                    default:
+                        return;
+                }
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return;
+            }
+            // Left with nowhere further left to go (the first thing on a row or in a grid) opens the rail
+            if (e.key !== 'ArrowLeft' || e.repeat) return;
+            const before = document.activeElement;
+            if (typing(before) || dialogOpen()) return;
+            // Jellyfin moves focus within this same key press, so by the next task we know whether it went anywhere
+            setTimeout(() => {
+                if (!open && shown && document.activeElement === before && !dialogOpen()) openRail();
+            }, 0);
+        }, true);
+
+        // Focus that leaves the rail some other way (a dialog, a page change) closes it
+        document.addEventListener('focusin', (e) => {
+            if (open && nav && !nav.contains(e.target)) closeRail(false);
+        });
+
+        const update = () => {
+            const page = document.querySelector('.mainAnimatedPage:not(.hide)');
+            const route = (window.location.hash || '').toLowerCase();
+            const show = signedIn() && !!page && !root.classList.contains('streamix-login')
+                && !page.classList.contains('itemDetailPage')
+                && !/^#\/(video|nowplaying|queue|dashboard|configurationpage|wizard)/.test(route);
+            if (show !== shown) {
+                shown = show;
+                root.classList.toggle('sx-rail', show);
+                if (!show) closeRail(false);
+            }
+            if (!show) return;
+            loadItems();
+            const key = keyForRoute();
+            if (key) activeKey = key;
+            markActive();
+        };
+
+        return {
+            update,
+            // Back on a top-level page opens the rail; Back with the rail open goes Home, and on Home leaves the app
+            onBack() {
+                if (!shown || dialogOpen()) return false;
+                if (open) {
+                    if (keyForRoute() === 'home') return false;
+                    go('home');
+                    return true;
+                }
+                if (isTopLevel()) {
+                    openRail();
+                    return open;
+                }
+                return false;
+            }
+        };
+    })();
+
+    window.StreamixShell = { onBack: () => rail.onBack() };
+
+    // ---------------------------------------------------------------------------------------------
+    // TV posters: "Continue Watching" and "Next Up" come as wide thumbnails; on a TV every row is posters.
+    // The card swaps to Jellyfin's portrait shape, and to the film's poster or (for an episode) its show's.
+    // ---------------------------------------------------------------------------------------------
+    const posters = (() => {
+        if (!isTv) return { update() {} };
+        const POSTER_TYPES = /^(Movie|Episode|Series|Video|MusicVideo|Season)$/;
+        const seriesOf = new Map();
+        const imageId = (url) => {
+            const match = /\/Items\/([0-9a-f]{32})\/Images\//i.exec(url || '');
+            return match ? match[1] : null;
+        };
+        // The item whose poster stands for this card: a film's own, an episode's show
+        const posterItem = async (card, url) => {
+            const id = card.getAttribute('data-id');
+            const fromUrl = imageId(url);
+            if (card.getAttribute('data-type') !== 'Episode') return id;
+            // Episodes show their series' thumb by default, so the picture already names the show
+            if (fromUrl && fromUrl !== id) return fromUrl;
+            if (!seriesOf.has(id)) {
+                seriesOf.set(id, api().getItem(api().getCurrentUserId(), id).then((item) => item.SeriesId || id).catch(() => id));
+            }
+            return seriesOf.get(id);
+        };
+
+        const convert = (card) => {
+            card.setAttribute('data-sx-poster', '1');
+            const image = card.querySelector('.cardImageContainer');
+            const padder = card.querySelector('.cardPadder-overflowBackdrop');
+            if (!image || !padder) return;
+            const current = image.getAttribute('data-src') || (/url\("?([^")]+)"?\)/.exec(image.style.backgroundImage || '') || [])[1];
+            card.classList.replace('overflowBackdropCard', 'overflowPortraitCard');
+            padder.classList.replace('cardPadder-overflowBackdrop', 'cardPadder-overflowPortrait');
+            // The wide picture would be cropped to a sliver in the meantime (and Jellyfin's lazy loader would
+            // still put it in): the card shows its loading shimmer until the poster is ready
+            image.removeAttribute('data-src');
+            image.style.backgroundImage = '';
+            image.classList.add('sxPosterPending');
+            posterItem(card, current).then((id) => {
+                const url = api().getImageUrl(id, { type: 'Primary', fillHeight: 480, fillWidth: 320, quality: 90 });
+                const img = new Image();
+                img.decoding = 'async';
+                img.src = url;
+                return img.decode().catch(() => {}).then(() => {
+                    image.style.backgroundImage = `url("${url}")`;
+                    image.classList.remove('sxPosterPending');
+                });
+            }).catch(() => image.classList.remove('sxPosterPending'));
+        };
+
+        let queued = false;
+        const update = () => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(() => {
+                queued = false;
+                document.querySelectorAll('.mainAnimatedPage:not(.itemDetailPage) .card.overflowBackdropCard:not([data-sx-poster])').forEach((card) => {
+                    if (POSTER_TYPES.test(card.getAttribute('data-type') || '')) convert(card);
+                });
+            });
+        };
+        // Rows fill in after the page is shown, and refill after playback
+        new MutationObserver(update).observe(document.body, { childList: true, subtree: true });
+        return { update };
+    })();
+
     const updatePageState = () => {
         updateLoginState();
         updateBrowseState();
         retileLibraries();
         phone.update();
+        rail.update();
+        posters.update();
         relabelSettingsMenu();
         setTimeout(relabelSettingsMenu, 300);
     };

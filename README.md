@@ -2,7 +2,7 @@
   <img src="docs/banner.png" alt="Streamix" width="640">
 </p>
 
-<h3 align="center">A Jellyfin client for Google TV, Android TV and Android phones — Liquid Glass design, native 4K HDR playback, Dolby Atmos and DTS.</h3>
+<h3 align="center">A Jellyfin client for Google TV, Android TV and Android phones — a dark, remote-first TV design, native 4K HDR playback, Dolby Atmos and DTS.</h3>
 
 <p align="center">
   <a href="https://github.com/nischalsir/Streamix/releases/latest"><b>Download the latest APK</b></a>
@@ -19,8 +19,9 @@
 ---
 
 Streamix turns your Jellyfin server into a living-room app. Browsing uses the Jellyfin web interface in its
-TV layout, so your server's **Liquid Glass** theme applies everywhere. Video plays in a **native player**, so
-4K HDR10 (HEVC 10-bit), Dolby Atmos and DTS play directly from the server without transcoding.
+TV layout with Streamix's own design on top: a charcoal theme with one amber accent, a menu rail on the left,
+poster rows and title pages on blurred artwork (phones keep your server's **Liquid Glass** theme). Video plays in a
+**native player**, so 4K HDR10 (HEVC 10-bit), Dolby Atmos and DTS play directly from the server without transcoding.
 
 It was built for a **TCL 43V6C (Google TV, 2 GB RAM)** and tuned so a budget TV stays smooth. The same APK
 also runs on **Android phones** with a touch layout of its own (tested on a Xiaomi 15T screen size).
@@ -42,8 +43,8 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 | | |
 |---|---|
 | **Made for the TV** | Appears on the Google TV home screen with its own banner. Every screen works with the remote. |
-| **Apple TV style home** | The focused title's artwork fills the background, posters lift with a white rim, library tiles use clean artwork (no text baked in), and the top bar is one row: logo, a glass tab capsule, search, profile and clock. |
-| **Liquid Glass look** | The web UI opens in TV layout with your server's custom CSS, plus a Streamix layer for focus effects, spacing, detail-page artwork and the login screen. |
+| **TV design (1.5)** | Charcoal and grey with one amber accent for whatever is focused, active or playing, set in Inter. A menu rail on the left (Search, Home, each library, Settings) opens with labels when you press ◀ from the first item. Home is rows of posters (Continue Watching, Recently Added per library) with a thin progress bar on part-watched titles; the focused poster lifts with an amber rim. Title pages sit on the title's blurred artwork: poster on the left, then title, year, rating, runtime, Play / Resume and the story, with cast and "More like this" below. Grey placeholders shimmer while pictures load. |
+| **Fluid motion** | Focus, the menu rail and buttons move on a spring that settles without overshoot, answer the moment OK goes down, and can be interrupted at any time. Android's *Remove animations* setting swaps the movement for quick fades. |
 | **Smooth on budget TVs** | GPU-heavy effects (live blur, hundreds of GPU layers) are switched off on TVs. Release build, R8-optimised. |
 | **Native 4K HDR player** | Media3 / ExoPlayer with hardware decoding. HDR10 and HEVC 10-bit play directly. |
 | **Judder-free motion** | Switches the TV to the video's frame rate (24p, 25p, 50p) when the panel supports it. |
@@ -285,7 +286,8 @@ come and go, so run it again every month or so, then **Dashboard → Scheduled t
 |---|---|---|
 | Anywhere | **D-pad** | Move focus |
 | Anywhere | **OK** | Select |
-| Anywhere | **Back** | Go back. From the home screen, leave the app |
+| Anywhere | **Back** | Go back. On a main page (Home, a library, Live TV, Search, Settings) it opens the menu rail; press again to go Home, or on Home to leave the app |
+| First item of a row or grid | **◀** | Open the menu rail (▲ ▼ to choose, OK to open, ▶ or Back to close) |
 | Player, controls hidden | **◀ / ▶** | Jump back / forward 10 s |
 | Player, controls hidden | **OK / ▲ / ▼** | Show controls |
 | Live TV, controls hidden | **▲ / ▼** | Next / previous channel |
@@ -368,8 +370,11 @@ The APK is written to `app/build/outputs/apk/libre/release/Streamix-v<version>-l
 - `RemoteJellyfinMediaSource.kt`, `QueueManager.kt`: Live TV channels from IPTV playlists play straight from the
   provider (fast channel changes), with the server's stream as a fallback.
 - `StreamixRenderersFactory.kt`, `DeviceProfileBuilder.kt`: audio passthrough switch, wider audio and subtitle direct play.
+- `assets/native/NavigationPlugin.js`: Back opens the TV menu rail on main pages.
+- `exo_player_control_view.xml`, `res/values`, `res/font`: player controls, colours and the Inter typeface.
 - Branding: logo, launcher icons, TV banner, colours, app name. The wordmark is set in
-  [Unbounded](https://github.com/googlefonts/unbounded) (SIL Open Font License).
+  [Unbounded](https://github.com/googlefonts/unbounded) (SIL Open Font License); the interface uses
+  [Inter](https://github.com/rsms/inter) (SIL Open Font License, see `assets/licenses/inter-ofl.txt`).
 
 ## Credits and license
 

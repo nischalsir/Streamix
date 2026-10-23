@@ -5,7 +5,7 @@
     android:id="@+id/player_controls"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/playback_controls_background">
+    android:background="@drawable/player_controls_scrim">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -17,6 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="?attr/homeAsUpIndicator"
+        app:titleTextAppearance="@style/TextAppearance.Streamix.PlayerTitle"
         tools:title="Star Wars: A New Hope" />
 
     <androidx.appcompat.widget.AppCompatImageButton
@@ -94,7 +95,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/exo_player_controls_display_padding"
+        android:fontFamily="@font/inter_semibold"
+        android:fontFeatureSettings="tnum"
         android:textColor="?android:textColorPrimary"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/seek_bar_container"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/seek_bar_container"
@@ -131,10 +135,12 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:played_color="?colorAccent"
-            app:scrubber_color="?colorAccent"
-            app:scrubber_dragged_size="24dp"
-            app:scrubber_enabled_size="16dp"
+            app:bar_height="4dp"
+            app:buffered_color="@color/playback_timebar_buffered"
+            app:played_color="@color/jellyfin_accent"
+            app:scrubber_color="@color/jellyfin_accent"
+            app:scrubber_dragged_size="22dp"
+            app:scrubber_enabled_size="14dp"
             app:unplayed_color="@color/playback_timebar_unplayed" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -143,7 +149,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/exo_player_controls_display_padding"
-        android:textColor="?android:textColorPrimary"
+        android:fontFamily="@font/inter_semibold"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/streamix_text_secondary"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/seek_bar_container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/seek_bar_container"
@@ -156,7 +165,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/exo_player_controls_display_padding"
         android:background="@drawable/live_tv_badge_background"
-        android:fontFamily="sans-serif-medium"
+        android:fontFamily="@font/inter_bold"
         android:letterSpacing="0.08"
         android:paddingHorizontal="10dp"
         android:paddingVertical="3dp"
@@ -270,7 +279,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:background="#282828"
+        android:background="@drawable/trickplay_background"
         android:elevation="8dp"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/seek_bar_container"
