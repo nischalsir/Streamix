@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TV: the player's controls over the full picture (phones use layout/exo_player_control_view.xml).
+     The title's logo top left and the time top right; what's playing bottom left; the time, previous /
+     play / next and the actions (subtitles, audio, favourite, settings) in one row; a slim timeline along
+     the bottom for films and episodes, with a chevron under play saying that's where down goes.
+     Every view of the phone layout is here too (same ids and types) so the shared code finds them: the
+     ones a remote doesn't need are gone, and speed / decoder / info sit out of sight behind the settings
+     button, whose menu opens them (see PlayerMenus.useTvSettingsMenu). Previous / next stay direct
+     children of this layout: PlayerMenus re-anchors them when a title has chapters. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/player_controls"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/tv_player_scrim"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Top: the title's logo (a channel's logo on Live TV) and the time -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/player_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="52dp"
+        android:layout_marginStart="@dimen/tv_player_edge"
+        android:layout_marginTop="30dp"
+        android:adjustViewBounds="true"
+        android:importantForAccessibility="no"
+        android:maxWidth="220dp"
+        android:scaleType="fitStart"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextClock
+        android:id="@+id/player_clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="@dimen/tv_player_edge"
+        android:fontFamily="@font/inter"
+        android:textFontWeight="600"
+        android:fontFeatureSettings="tnum"
+        android:format12Hour="h:mm"
+        android:format24Hour="HH:mm"
+        android:shadowColor="#99000000"
+        android:shadowRadius="8"
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- What's playing -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/live_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/tv_player_edge"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/live_tv_badge_background"
+        android:fontFamily="@font/inter"
+        android:textStyle="bold"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="3dp"
+        android:text="@string/tv_player_live"
+        android:textColor="@android:color/white"
+        android:textSize="13sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/player_title"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/player_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/tv_player_edge"
+        android:ellipsize="end"
+        android:fontFamily="@font/inter"
+        android:maxLines="1"
+        android:textStyle="bold"
+        android:shadowColor="#99000000"
+        android:shadowRadius="10"
+        android:textColor="@android:color/white"
+        android:textSize="26sp"
+        app:layout_constraintBottom_toTopOf="@id/player_subtitle"
+        app:layout_constraintEnd_toStartOf="@id/info_end"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Animals and Nature" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/player_subtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/tv_player_edge"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="18dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/inter_regular"
+        android:maxLines="1"
+        android:shadowColor="#99000000"
+        android:shadowRadius="8"
+        android:textColor="#D9FFFFFF"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toTopOf="@id/play_pause_container"
+        app:layout_constraintEnd_toStartOf="@id/info_end"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Nat Geo Wild HD" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/info_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.62" />
+
+    <!-- The row: time on the left -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/exo_position"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/tv_player_edge"
+        android:fontFamily="@font/inter"
+        android:fontFeatureSettings="tnum"
+        android:textFontWeight="600"
+        android:shadowColor="#99000000"
+        android:shadowRadius="8"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container"
+        tools:text="00:42:27" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/time_separator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="@font/inter_regular"
+        android:text="/"
+        android:textColor="#99FFFFFF"
+        android:textSize="16sp"
+        app:layout_constraintBaseline_toBaselineOf="@id/exo_position"
+        app:layout_constraintStart_toEndOf="@id/exo_position"
+        tools:ignore="HardcodedText" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/exo_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="@font/inter_regular"
+        android:fontFeatureSettings="tnum"
+        android:textColor="#99FFFFFF"
+        android:textSize="16sp"
+        app:layout_constraintBaseline_toBaselineOf="@id/exo_position"
+        app:layout_constraintStart_toEndOf="@id/time_separator"
+        tools:text="1:45:00" />
+
+    <!-- The row: previous / play / next in the middle -->
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/previous_button"
+        android:nextFocusDown="@id/exo_progress"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginEnd="@dimen/tv_player_button_gap"
+        android:background="@drawable/tv_player_round_button"
+        android:contentDescription="@string/tv_player_previous"
+        android:padding="11dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_skip_previous_black_32dp"
+        android:stateListAnimator="@animator/tv_player_focus"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintEnd_toStartOf="@id/previous_chapter_button"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container"
+        app:tint="@color/tv_player_icon" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/previous_chapter_button"
+        android:nextFocusDown="@id/exo_progress"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginEnd="@dimen/tv_player_button_gap"
+        android:background="@drawable/tv_player_round_button"
+        android:padding="11dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_skip_previous_chapter_black_32dp"
+        android:stateListAnimator="@animator/tv_player_focus"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintEnd_toStartOf="@id/play_pause_container"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container"
+        app:tint="@color/tv_player_icon" />
+
+    <FrameLayout
+        android:id="@+id/play_pause_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:layout_marginBottom="26dp"
+        app:layout_constraintBottom_toTopOf="@id/seek_bar_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/exo_play_pause"
+            android:nextFocusDown="@id/exo_progress"
+            android:layout_width="62dp"
+            android:layout_height="62dp"
+            android:background="@drawable/tv_player_play_button"
+            android:contentDescription="@string/tv_player_play_pause"
+            android:padding="17dp"
+            android:scaleType="fitCenter"
+            android:stateListAnimator="@animator/tv_player_focus"
+            app:tint="@color/tv_player_icon" />
+    </FrameLayout>
+
+    <!-- Down leads to the timeline -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/timeline_hint"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginTop="2dp"
+        android:alpha="0.7"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_expand_more_24dp"
+        app:layout_constraintEnd_toEndOf="@id/play_pause_container"
+        app:layout_constraintStart_toStartOf="@id/play_pause_container"
+        app:layout_constraintTop_toBottomOf="@id/play_pause_container"
+        app:tint="@android:color/white" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/next_chapter_button"
+        android:nextFocusDown="@id/exo_progress"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginStart="@dimen/tv_player_button_gap"
+        android:background="@drawable/tv_player_round_button"
+        android:padding="11dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_skip_next_chapter_black_32dp"
+        android:stateListAnimator="@animator/tv_player_focus"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintStart_toEndOf="@id/play_pause_container"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container"
+        app:tint="@color/tv_player_icon" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/next_button"
+        android:nextFocusDown="@id/exo_progress"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginStart="@dimen/tv_player_button_gap"
+        android:background="@drawable/tv_player_round_button"
+        android:contentDescription="@string/tv_player_next"
+        android:padding="11dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_skip_next_black_32dp"
+        android:stateListAnimator="@animator/tv_player_focus"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintStart_toEndOf="@id/next_chapter_button"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container"
+        app:tint="@color/tv_player_icon" />
+
+    <!-- The row: actions on the right -->
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/subtitles_button"
+        android:nextFocusDown="@id/exo_progress"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginEnd="@dimen/tv_player_action_gap"
+        android:background="@drawable/tv_player_round_button"
+        android:contentDescription="@string/tv_player_subtitles"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_subtitles_stateful_24dp"
+        android:stateListAnimator="@animator/tv_player_focus"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintEnd_toStartOf="@id/audio_streams_button"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container"
+        app:tint="@color/tv_player_icon" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/audio_streams_button"
+        android:nextFocusDown="@id/exo_progress"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginEnd="@dimen/tv_player_action_gap"
+        android:background="@drawable/tv_player_round_button"
+        android:contentDescription="@string/tv_player_audio"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_music_note_white_24dp"
+        android:stateListAnimator="@animator/tv_player_focus"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintEnd_toStartOf="@id/favorite_button"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container"
+        app:tint="@color/tv_player_icon" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/favorite_button"
+        android:nextFocusDown="@id/exo_progress"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginEnd="@dimen/tv_player_action_gap"
+        android:background="@drawable/tv_player_round_button"
+        android:contentDescription="@string/tv_player_add_favourite"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_favourite_stateful_24dp"
+        android:stateListAnimator="@animator/tv_player_focus"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintEnd_toStartOf="@id/quality_button"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container"
+        app:tint="@color/tv_player_icon" />
+
+    <!-- Settings: its menu offers quality, playback speed, decoder and playback info -->
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/quality_button"
+        android:nextFocusDown="@id/exo_progress"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginEnd="@dimen/tv_player_edge"
+        android:background="@drawable/tv_player_round_button"
+        android:contentDescription="@string/tv_player_settings"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_settings_white_24dp"
+        android:stateListAnimator="@animator/tv_player_focus"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container"
+        app:tint="@color/tv_player_icon" />
+
+    <!-- Out of sight behind settings, so their lists open there -->
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/speed_button"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginEnd="@dimen/tv_player_edge"
+        android:background="@android:color/transparent"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/decoder_button"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginEnd="@dimen/tv_player_edge"
+        android:background="@android:color/transparent"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/info_button"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:layout_marginEnd="@dimen/tv_player_edge"
+        android:background="@android:color/transparent"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@id/play_pause_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/play_pause_container" />
+
+    <!-- Touch-only, never on a TV -->
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/lock_screen_button"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/fullscreen_switcher"
+        android:layout_width="@dimen/tv_player_button"
+        android:layout_height="@dimen/tv_player_button"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/controls_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="top"
+        app:constraint_referenced_ids="play_pause_container" />
+
+    <!-- The timeline (films and episodes) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/seek_bar_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="38dp"
+        android:layout_marginEnd="38dp"
+        android:layout_marginBottom="26dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/chapter_marking_container"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="11dp"
+            android:layout_marginEnd="11dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.media3.ui.DefaultTimeBar
+            android:id="@+id/exo_progress"
+            android:nextFocusUp="@id/exo_play_pause"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/tv_player_timebar"
+            app:bar_height="4dp"
+            app:buffered_color="#59FFFFFF"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:played_color="@android:color/white"
+            app:scrubber_color="@android:color/white"
+            app:scrubber_dragged_size="20dp"
+            app:scrubber_enabled_size="14dp"
+            app:unplayed_color="#33FFFFFF" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Seeking: the picture at that point, above the timeline -->
+    <FrameLayout
+        android:id="@+id/trickplay_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/trickplay_background"
+        android:elevation="8dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/seek_bar_container"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/trickplay_thumbnail"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/trickplay_thumbnail_height"
+            android:scaleType="fitXY" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:paddingStart="8dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="8dp">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/trickplay_chapter_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.9"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:shadowColor="#FF000000"
+                android:shadowRadius="6"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/trickplay_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:shadowColor="#FF000000"
+                android:shadowRadius="6"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

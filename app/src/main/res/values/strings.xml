@@ -239,4 +239,20 @@
     <string name="download_location_not_set_description">To download media, please select a folder where the files should be stored.</string>
     <string name="download_location_inaccessible">Download location inaccessible</string>
     <string name="download_location_inaccessible_description">The selected download location is no longer accessible. Please select a different folder to resume downloads.</string>
+
+    <!-- TV player -->
+    <string name="tv_player_live">Live</string>
+    <string name="tv_player_settings">Settings</string>
+    <string name="tv_player_quality">Quality</string>
+    <string name="tv_player_speed">Playback speed</string>
+    <string name="tv_player_decoder">Decoder</string>
+    <string name="tv_player_info">Playback info</string>
+    <string name="tv_player_audio">Audio</string>
+    <string name="tv_player_subtitles">Subtitles</string>
+    <string name="tv_player_previous">Previous</string>
+    <string name="tv_player_next">Next</string>
+    <string name="tv_player_play_pause">Play or pause</string>
+    <string name="tv_player_add_favourite">Add to Favourites</string>
+    <string name="tv_player_remove_favourite">Remove from Favourites</string>
+    <string name="tv_player_episode">S%1$d · E%2$d</string>
 </resources>

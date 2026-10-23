@@ -74,6 +74,10 @@ class PlayerMenus(
     private var subtitleCount = 0
     private var subtitlesEnabled = false
 
+    /** TV: the settings button opens one menu for quality, speed, decoder and info (see [useTvSettingsMenu]) */
+    private var tvSettings = false
+    private var qualityAvailable = true
+
     private val trickplayHelper = TrickplayHelper(
         trickplayContainer,
         trickplayThumbnail,
@@ -195,6 +199,11 @@ class PlayerMenus(
             is RemoteJellyfinMediaSource -> if (height != null && width != null) {
                 buildQualityMenu(qualityMenu.menu, mediaSource.maxStreamingBitrate, width, height)
             }
+        }
+        // On a TV the button is settings, which offers quality only when there's a choice
+        if (tvSettings) {
+            qualityAvailable = mediaSource is RemoteJellyfinMediaSource && qualityMenu.menu.size > 0
+            qualityButton.isVisible = true
         }
 
         val playMethod = context.getString(R.string.playback_info_play_method, mediaSource.playMethod)
@@ -350,6 +359,44 @@ class PlayerMenus(
         setOnDismissListener(this@PlayerMenus)
     }
 
+    /**
+     * TV: the settings button opens one menu for the less used settings (quality, playback speed, decoder,
+     * playback info), each opening its own list as before. The layout keeps the speed, decoder and info
+     * buttons out of sight behind it, so those lists open in the same place.
+     */
+    fun useTvSettingsMenu() {
+        tvSettings = true
+        qualityButton.setOnClickListener {
+            fragment.suppressControllerAutoHide(true)
+            createTvSettingsMenu().show()
+        }
+    }
+
+    private fun createTvSettingsMenu() = PopupMenu(context, qualityButton).apply {
+        if (qualityAvailable) menu.add(Menu.NONE, TV_SETTINGS_QUALITY, Menu.NONE, R.string.tv_player_quality)
+        menu.add(Menu.NONE, TV_SETTINGS_SPEED, Menu.NONE, R.string.tv_player_speed)
+        menu.add(Menu.NONE, TV_SETTINGS_DECODER, Menu.NONE, R.string.tv_player_decoder)
+        menu.add(Menu.NONE, TV_SETTINGS_INFO, Menu.NONE, R.string.tv_player_info)
+        setOnMenuItemClickListener { item ->
+            // This menu closes first (and lets the controls hide again), then the chosen list opens
+            qualityButton.post {
+                when (item.itemId) {
+                    TV_SETTINGS_INFO -> playbackInfo.isVisible = !playbackInfo.isVisible
+                    else -> {
+                        fragment.suppressControllerAutoHide(true)
+                        when (item.itemId) {
+                            TV_SETTINGS_QUALITY -> qualityMenu.show()
+                            TV_SETTINGS_SPEED -> speedMenu.show()
+                            TV_SETTINGS_DECODER -> decoderMenu.show()
+                        }
+                    }
+                }
+            }
+            true
+        }
+        setOnDismissListener(this@PlayerMenus)
+    }
+
     fun updatedSelectedDecoder(type: DecoderType) {
         decoderMenu.menu.findItem(type.ordinal).isChecked = true
     }
@@ -429,6 +476,11 @@ class PlayerMenus(
         private const val SPEED_MENU_GROUP = 2
         private const val QUALITY_MENU_GROUP = 3
         private const val DECODER_MENU_GROUP = 4
+
+        private const val TV_SETTINGS_QUALITY = 1
+        private const val TV_SETTINGS_SPEED = 2
+        private const val TV_SETTINGS_DECODER = 3
+        private const val TV_SETTINGS_INFO = 4
 
         private const val MAX_VIDEO_STREAMS_DISPLAY = 3
         private const val MAX_AUDIO_STREAMS_DISPLAY = 5

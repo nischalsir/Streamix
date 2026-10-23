@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TV player buttons grow a little when focused (scale only, drawn on the render thread) -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <set>
+            <objectAnimator
+                android:duration="160"
+                android:interpolator="@android:interpolator/decelerate_cubic"
+                android:propertyName="scaleX"
+                android:valueTo="1.12"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="160"
+                android:interpolator="@android:interpolator/decelerate_cubic"
+                android:propertyName="scaleY"
+                android:valueTo="1.12"
+                android:valueType="floatType" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:duration="140"
+                android:interpolator="@android:interpolator/decelerate_cubic"
+                android:propertyName="scaleX"
+                android:valueTo="1"
+                android:valueType="floatType" />
+            <objectAnimator
+                android:duration="140"
+                android:interpolator="@android:interpolator/decelerate_cubic"
+                android:propertyName="scaleY"
+                android:valueTo="1"
+                android:valueType="floatType" />
+        </set>
+    </item>
+</selector>

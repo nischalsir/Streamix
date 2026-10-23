@@ -17,6 +17,13 @@
     <dimen name="exo_chapter_marking_height">15dp</dimen>
     <dimen name="trickplay_thumbnail_height">160dp</dimen>
 
+    <!-- TV player (layout-television/exo_player_control_view.xml) -->
+    <dimen name="tv_player_edge">48dp</dimen>
+    <dimen name="tv_player_button">48dp</dimen>
+    <dimen name="tv_player_button_gap">22dp</dimen>
+    <dimen name="tv_player_action_gap">10dp</dimen>
+    <dimen name="tv_player_skip_segment_margin">136dp</dimen>
+
     <!-- Settings on TV -->
     <dimen name="tv_settings_side_padding">48dp</dimen>
     <dimen name="tv_settings_toolbar_height">88dp</dimen>

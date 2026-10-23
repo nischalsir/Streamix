@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TV player icons: white on the picture, dark on the white focus disc; the favourite star (selected)
+     is orange -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#FFF26B3A" android:state_focused="true" android:state_selected="true" />
+    <item android:color="#FF15112B" android:state_focused="true" />
+    <item android:color="#FFFF8A5C" android:state_selected="true" />
+    <item android:color="#FFFFFFFF" />
+</selector>

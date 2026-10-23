@@ -22,8 +22,6 @@ import android.view.accessibility.CaptioningManager
 import android.widget.ImageButton
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.Toolbar
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -91,6 +89,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
     private val fullscreenSwitcher: ImageButton get() = playerControlsBinding.fullscreenSwitcher
     private var playerMenus: PlayerMenus? = null
     private var liveTv: LiveTvController? = null
+    private var tvInfo: TvPlayerInfo? = null
 
     private lateinit var playerFullscreenHelper: PlayerFullscreenHelper
     private lateinit var displayModeHelper: DisplayModeHelper
@@ -165,6 +164,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
             // Update title and player menus
             toolbar.title = mediaSource.getName(requireContext())
             playerMenus?.onQueueItemChanged(mediaSource, viewModel.queueManager.hasNext())
+            tvInfo?.bind(mediaSource, live = liveTv?.isActive == true)
             // On Live TV, next flips to the next channel
             if (liveTv?.isActive == true) playerControlsBinding.nextButton.isEnabled = true
         }
@@ -273,25 +273,33 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
     }
 
     /**
-     * Remote-control layout: no touch-only buttons, and the time bar seeks in 10 second steps.
+     * Remote-control layout (layout-television/exo_player_control_view.xml): the title's logo and the time
+     * at the top, what's playing bottom left, one row of controls with focus as a white disc, and a slim
+     * timeline that seeks in 10 second steps. The less used settings share one menu.
      */
     private fun setupForTv() {
         fullscreenSwitcher.isVisible = false
         playerControlsBinding.lockScreenButton.isVisible = false
-        playerControlsBinding.audioStreamsButton.updateLayoutParams<ConstraintLayout.LayoutParams> {
-            goneStartMargin = resources.getDimensionPixelSize(R.dimen.exo_bottom_controls_margin)
-        }
         playerControlsBinding.exoProgress.setKeyTimeIncrement(Constants.DEFAULT_SEEK_TIME_MS)
         playerView.isFocusable = true
+        tvInfo = TvPlayerInfo(playerControlsBinding, viewLifecycleOwner.lifecycleScope)
+        playerMenus?.useTvSettingsMenu()
+        // "Skip intro" sits clear of the row of controls
+        playerBinding.skipSegmentButton.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            bottomMargin = resources.getDimensionPixelSize(R.dimen.tv_player_skip_segment_margin)
+        }
+        // Subtitles move up above the controls while they're showing, and back down after
+        playerView.setControllerVisibilityListener(
+            PlayerView.ControllerVisibilityListener { visibility -> onControlsVisibilityChanged(visibility == View.VISIBLE) },
+        )
+    }
 
-        // The phone ripple is too faint to follow from across the room
-        with(playerControlsBinding) {
-            listOf(
-                previousButton, previousChapterButton, exoPlayPause, nextChapterButton, nextButton,
-                audioStreamsButton, subtitlesButton, speedButton, qualityButton, decoderButton, infoButton,
-            ).forEach { button ->
-                button.background = ContextCompat.getDrawable(requireContext(), R.drawable.tv_player_button)
-            }
+    private fun onControlsVisibilityChanged(visible: Boolean) {
+        liveTv?.onControlsVisibilityChanged(visible)
+        if (isTv) {
+            playerView.subtitleView?.setBottomPaddingFraction(
+                if (visible) TV_SUBTITLE_BOTTOM_PADDING_WITH_CONTROLS else SUBTITLE_BOTTOM_PADDING_FRACTION,
+            )
         }
     }
 
@@ -306,9 +314,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
             start(channelId, channel)
         }
         playerView.setControllerVisibilityListener(
-            PlayerView.ControllerVisibilityListener { visibility ->
-                liveTv?.onControlsVisibilityChanged(visibility == View.VISIBLE)
-            },
+            PlayerView.ControllerVisibilityListener { visibility -> onControlsVisibilityChanged(visibility == View.VISIBLE) },
         )
         with(playerControlsBinding) {
             // A live stream has no timeline worth showing: a LIVE tag takes its place
@@ -666,6 +672,7 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
         _playerBinding = null
         _playerControlsBinding = null
         playerMenus = null
+        tvInfo = null
     }
 
     override fun onDestroy() {
@@ -687,5 +694,8 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
 
     private companion object {
         const val SUBTITLE_BOTTOM_PADDING_FRACTION = 0.08f
+
+        /** TV, controls showing: above the row of controls and the line of details */
+        const val TV_SUBTITLE_BOTTOM_PADDING_WITH_CONTROLS = 0.44f
     }
 }
