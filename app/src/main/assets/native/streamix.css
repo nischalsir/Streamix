@@ -2,9 +2,19 @@
  * Streamix layer, loaded by nativeshell.js on top of the server's custom CSS (the Liquid Glass theme).
  * Selectors start with html.streamix / html.streamix-tv so they outrank the theme's :root rules.
  *
- * TV look (1.5): a dark, even theme - charcoal page, grey surfaces, one amber accent for whatever is
- * active or focused - with a navigation rail on the left, poster rows, and pages that open on their
- * own blurred artwork. Motion is 200-300 ms and only ever animates transform and opacity.
+ * TV look (1.6): a top bar of section pills with search and profile; a slim icon sidebar; a featured title
+ * over a carousel on the home screen. The colours come from the artwork on screen: on pages with a title's
+ * picture behind them, nativeshell.js picks the picture's strongest hues and sets the accent, surfaces and
+ * rims from them (see "Colours from the artwork" there). Everywhere else, and until a picture is in, the
+ * Streamix banner's indigo and violet. Focus is a white capsule on controls and a rim of the picture's
+ * hues on artwork.
+ *
+ * One system, after Apple's HIG: corner radii 6 / 10 / 14 / 20 and capsules, each inner corner concentric
+ * with its container and every focus rim following its shape; controls 34px in the bar and 42px for
+ * actions; type 32 / 17 / 14 / 13 / 12px (nothing under tvOS's 23pt caption at 1080p); 28px gutters.
+ * Motion only animates transform and opacity, so it runs on the GPU and holds 60 fps on a 2 GB TV: colour,
+ * shadow and size changes are instant, and nothing animates forever (a running animation makes the TV
+ * redraw the whole screen every frame, even off screen).
  */
 
 /* ---------------------------------------------------------------------------------------------
@@ -21,15 +31,56 @@
 }
 
 html.streamix-tv {
-    --sx-bg: #1f1f1f;
-    --sx-surface: #282828;
-    --sx-surface-raised: #333333;
-    --sx-text: #ffffff;
-    --sx-text-2: #aaaaaa;
-    --sx-accent: #e5a00d;
-    --sx-accent-bright: #f5b52e;
-    --sx-on-accent: #141414;
-    --sx-radius: 6px;
+    /* Colour: the banner, until the artwork on screen sets its own (nativeshell.js puts the same names inline
+       on <html>). Page, surfaces, text on them (contrast against --sx-app in brackets) */
+    --sx-bg: #0e0c19;
+    --sx-app: #16132a;
+    --sx-surface: #1e1a38;
+    --sx-surface-raised: #272246;
+    --sx-text: #f4f2ff;          /* 16.9:1 */
+    --sx-text-2: #aba6c8;        /* 7.8:1 */
+    --sx-text-3: #cfcbe6;        /* 11.6:1 */
+    /* The logo's streams: cyan, violet (the accent) and pink */
+    --sx-cyan: #45d4ff;
+    --sx-accent: #7c5cff;
+    --sx-accent-2: #a68bff;
+    --sx-pink: #ff4f9a;
+    --sx-brand: linear-gradient(135deg, #45d4ff 0%, #7c5cff 50%, #ff4f9a 100%);
+    --sx-progress: linear-gradient(90deg, #45d4ff 0%, #7c5cff 55%, #ff4f9a 100%);
+    --sx-accent-soft: rgba(124, 92, 255, 0.24);
+    /* A light tint of the page's hue, for hairlines and quiet fills */
+    --sx-tint: #beb4ff;
+    /* Posters waiting for their picture, and their hairline: fixed, so a change of colours never repaints them */
+    --sx-skeleton: rgba(205, 200, 235, 0.09);
+    --sx-border: color-mix(in srgb, var(--sx-tint) 16%, transparent);
+    --sx-border-strong: color-mix(in srgb, var(--sx-tint) 30%, transparent);
+    /* Focus on a control: a white capsule with ink text */
+    --sx-focus: #f4f2ff;
+    --sx-on-focus: #15112b;
+    --sx-glow: 0 8px 24px rgba(124, 92, 255, 0.42);
+    /* Focus on artwork: the three streams as a rim (see Posters), with a violet glow */
+    --sx-rim: 0 0 0 2px var(--sx-accent-2), 0 0 22px rgba(124, 92, 255, 0.5);
+    --sx-rim-w: 3px;
+
+    /* Shape: one radius scale. Inner corners are concentric with their container (radius minus inset). */
+    --sx-r-xs: 6px;              /* badges, tooltips, tick boxes, small thumbnails */
+    --sx-radius: 10px;           /* posters, thumbnails, fields, list rows */
+    --sx-r-md: 14px;             /* a title page's poster */
+    --sx-radius-lg: 20px;        /* featured artwork, dialogs, panels */
+    --sx-pill: 999px;            /* every button, pill, tab, search field and sidebar item */
+
+    /* Size: control heights and the page gutter */
+    --sx-h-bar: 34px;            /* everything in the top bar */
+    --sx-h-action: 42px;         /* Play, Resume and the round buttons beside them */
+    --sx-h-side: 44px;           /* sidebar items */
+    --sx-gutter: 28px;
+
+    /* Type */
+    --sx-fs-display: 32px;
+    --sx-fs-title: 17px;
+    --sx-fs-body: 14px;
+    --sx-fs-callout: 13px;
+    --sx-fs-caption: 12px;
     --sx-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
     --sx-fast: 200ms;
     --sx-med: 250ms;
@@ -41,46 +92,56 @@ html.streamix-tv {
         0.9828 85%, 1);
     --sx-spring-dur: 360ms;
     --sx-font: 'Streamix Inter', 'Inter', 'Noto Sans', 'Roboto', sans-serif;
-    /* The rail's width while closed; 0 on pages without it (a title's page, sign-in) */
+    /* The sidebar's width; 0 on pages without it (a title's page, sign-in) */
     --sx-rail-w: 0px;
-    --sx-rail-open-w: 228px;
+    --sx-rail-open-w: 216px;
+    --sx-bar-h: 56px;
 
     /* The server theme's own variables, so everything it draws picks up the same palette */
-    --atv-bg: #1f1f1f !important;
-    --atv-elevated: #282828 !important;
-    --atv-fill: rgba(255, 255, 255, 0.1) !important;
-    --atv-fill-hover: rgba(255, 255, 255, 0.16) !important;
-    --atv-label: #ffffff !important;
-    --atv-label-2: #aaaaaa !important;
-    --atv-blue: #e5a00d !important;
-    --atv-radius: 6px !important;
+    --atv-bg: #0e0c19 !important;
+    --atv-elevated: #16132a !important;
+    --atv-fill: rgba(190, 180, 255, 0.1) !important;
+    --atv-fill-hover: rgba(190, 180, 255, 0.16) !important;
+    --atv-label: #f4f2ff !important;
+    --atv-label-2: #aba6c8 !important;
+    --atv-blue: #7c5cff !important;
+    --atv-radius: 8px !important;
     --atv-font: 'Streamix Inter', 'Inter', 'Noto Sans', 'Roboto', sans-serif !important;
-    --jf-card-borderRadius: 6px !important;
-    --jf-palette-background-default: #1f1f1f !important;
-    --jf-palette-background-paper: #282828 !important;
-    --jf-palette-primary-main: #e5a00d !important;
-    --jf-palette-text-secondary: #aaaaaa !important;
+    --jf-card-borderRadius: 8px !important;
+    --jf-palette-background-default: #0e0c19 !important;
+    --jf-palette-background-paper: #16132a !important;
+    --jf-palette-primary-main: #7c5cff !important;
+    --jf-palette-text-secondary: #aba6c8 !important;
 
     /* backdrop-filter re-blurs everything behind a panel on every frame. Swap it for a denser tint. */
     --lg-blur: none !important;
     --lg-blur-small: none !important;
     --lg-sheen: none !important;
     --lg-fill: linear-gradient(transparent, transparent) !important;
-    --lg-fill-bright: linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14)) !important;
+    --lg-fill-bright: linear-gradient(rgba(190, 180, 255, 0.14), rgba(190, 180, 255, 0.14)) !important;
     --lg-rim: none !important;
     --lg-rim-soft: none !important;
-    --lg-tint: rgba(40, 40, 40, 0.96) !important;
-    --lg-tint-strong: rgba(40, 40, 40, 0.98) !important;
+    --lg-tint: rgba(22, 19, 42, 0.96) !important;
+    --lg-tint-strong: rgba(22, 19, 42, 0.98) !important;
 }
 
 html.streamix-tv.sx-rail {
-    --sx-rail-w: 60px;
+    --sx-rail-w: 64px;
 }
 
+/* The app surface, from the banner: indigo-black, lit from the top left and the bottom right. On a TV the
+   screen is the frame, so the surface runs edge to edge rather than floating in a window. */
 html.streamix-tv,
-html.streamix-tv body,
-html.streamix-tv .backgroundContainer {
+html.streamix-tv body {
     background-color: var(--sx-bg) !important;
+}
+
+html.streamix-tv .backgroundContainer {
+    background:
+        radial-gradient(62% 58% at 20% 6%, rgba(76, 64, 170, 0.34) 0%, rgba(76, 64, 170, 0) 64%),
+        radial-gradient(58% 52% at 90% 100%, rgba(130, 34, 96, 0.28) 0%, rgba(130, 34, 96, 0) 64%),
+        linear-gradient(180deg, #14112a 0%, #100e20 48%, #0e0c19 100%) !important;
+    opacity: 1 !important;
 }
 
 html.streamix-tv,
@@ -117,15 +178,15 @@ html.streamix-tv .cardText-secondary {
 }
 
 html.streamix-tv ::selection {
-    background: rgba(229, 160, 13, 0.45);
+    background: color-mix(in srgb, var(--sx-accent) 45%, transparent);
 }
 
 /* Loading spinner in the accent */
 html.streamix-tv .mdl-spinner__layer {
-    border-color: var(--sx-accent) !important;
+    border-color: var(--sx-accent-2) !important;
 }
 
-/* No glass on a TV: every frame stays cheap so focus moves and scrolling hold 60 fps on a 2 GB TV */
+/* No live blur on a TV: every frame stays cheap so focus moves and scrolling hold 60 fps on a 2 GB TV */
 html.streamix-tv *,
 html.streamix-tv *::before,
 html.streamix-tv *::after {
@@ -133,13 +194,13 @@ html.streamix-tv *::after {
     backdrop-filter: none !important;
 }
 
-/* Dialogs and pop-up menus: plain grey surfaces */
+/* Dialogs and pop-up menus: navy glass surfaces */
 html.streamix-tv .dialog,
 html.streamix-tv .actionSheet,
 html.streamix-tv .formDialog {
-    background: var(--sx-surface) !important;
-    border-radius: 10px !important;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6) !important;
+    background: linear-gradient(180deg, #1e1a38 0%, #16132a 100%) !important;
+    border-radius: var(--sx-radius-lg) !important;
+    box-shadow: 0 0 0 1px var(--sx-border), 0 24px 60px rgba(0, 0, 0, 0.6) !important;
 }
 
 html.streamix-tv .dialog .formDialogHeader,
@@ -148,58 +209,65 @@ html.streamix-tv .dialog .formDialogFooter {
 }
 
 /* ---------------------------------------------------------------------------------------------
- * Focus: one amber accent everywhere the remote can land
+ * Focus: a white pill on controls, a blue rim on artwork, blue for where you are
  * ------------------------------------------------------------------------------------------- */
 
 html.streamix-tv .emby-button.show-focus:focus,
 html.streamix-tv .paper-icon-button-light.show-focus:focus,
 html.streamix-tv .emby-button:focus-visible {
-    box-shadow: 0 0 0 3px var(--sx-accent) !important;
+    box-shadow: 0 0 0 3px var(--sx-accent-2) !important;
 }
 
-/* Raised buttons (Save, Sign in, dialog buttons): grey surface, amber when focused */
+/* Raised buttons (Save, Sign in, dialog buttons): a navy surface; the main one white */
 html.streamix-tv .button-submit,
 html.streamix-tv .raised.emby-button {
-    background: var(--sx-surface-raised) !important;
+    background: color-mix(in srgb, var(--sx-tint) 10%, transparent) !important;
     color: var(--sx-text) !important;
-    border-radius: var(--sx-radius) !important;
+    border: 1px solid var(--sx-border-strong) !important;
+    border-radius: var(--sx-pill) !important;
+    min-height: var(--sx-h-action);
     font-weight: 600 !important;
-    transition: transform var(--sx-spring-dur) var(--sx-spring), background-color var(--sx-fast) ease, color var(--sx-fast) ease !important;
+    transition: transform var(--sx-spring-dur) var(--sx-spring) !important;
 }
 
 html.streamix-tv .button-submit {
-    background: var(--sx-accent) !important;
-    color: var(--sx-on-accent) !important;
+    background: var(--sx-focus) !important;
+    color: var(--sx-on-focus) !important;
+    border-color: transparent !important;
 }
 
 html.streamix-tv .raised.emby-button.show-focus:focus,
-html.streamix-tv .button-submit.show-focus:focus,
 html.streamix-tv .raised.emby-button:focus-visible {
-    background: var(--sx-accent-bright) !important;
-    color: var(--sx-on-accent) !important;
-    box-shadow: 0 0 0 2px var(--sx-bg), 0 0 0 4px var(--sx-accent) !important;
+    background: var(--sx-focus) !important;
+    color: var(--sx-on-focus) !important;
+    box-shadow: var(--sx-glow) !important;
+    transform: scale(1.04);
+}
+
+html.streamix-tv .button-submit.show-focus:focus {
+    box-shadow: 0 0 0 3px var(--sx-accent-2), var(--sx-glow) !important;
     transform: scale(1.04);
 }
 
 /* Flat dialog / menu buttons */
 html.streamix-tv .button-flat.show-focus:focus:not(.detailButton),
 html.streamix-tv .actionSheetMenuItem:focus {
-    background: rgba(229, 160, 13, 0.16) !important;
+    background: var(--sx-accent-soft) !important;
     color: var(--sx-text) !important;
-    box-shadow: inset 3px 0 0 var(--sx-accent) !important;
-    border-radius: var(--sx-radius) !important;
+    box-shadow: inset 3px 0 0 var(--sx-accent-2) !important;
+    border-radius: 12px !important;
 }
 
-/* Checkboxes, switches and sliders: focus shows on the control itself, an amber ring around the tick box,
+/* Checkboxes, switches and sliders: focus shows on the control itself, a blue ring around the tick box,
    switch or slider knob. (Jellyfin's checkbox input is invisible, so by default nothing shows at all.) */
 html.streamix-tv .checkboxOutline {
-    border-radius: 4px !important;
-    transition: transform 140ms ease, box-shadow 140ms ease;
+    border-radius: var(--sx-r-xs) !important;
+    transition: transform 140ms ease;
 }
 
 html.streamix-tv .emby-checkbox:focus + span + .checkboxOutline,
 html.streamix-tv .emby-checkbox:focus ~ .checkboxOutline {
-    box-shadow: 0 0 0 2px var(--sx-bg), 0 0 0 5px var(--sx-accent) !important;
+    box-shadow: 0 0 0 2px var(--sx-bg), 0 0 0 5px var(--sx-accent-2) !important;
     transform: scale(1.12);
 }
 
@@ -209,11 +277,11 @@ html.streamix-tv .emby-checkbox:focus ~ .checkboxLabel {
 }
 
 html.streamix-tv .mdl-switch__input:focus ~ .mdl-switch__track {
-    box-shadow: 0 0 0 2px var(--sx-bg), 0 0 0 5px var(--sx-accent) !important;
+    box-shadow: 0 0 0 2px var(--sx-bg), 0 0 0 5px var(--sx-accent-2) !important;
 }
 
 html.streamix-tv .mdl-switch__input:checked ~ .mdl-switch__track {
-    background: rgba(229, 160, 13, 0.55) !important;
+    background: color-mix(in srgb, var(--sx-accent) 55%, transparent) !important;
 }
 
 html.streamix-tv .mdl-switch__input:checked ~ .mdl-switch__thumb {
@@ -225,24 +293,24 @@ html.streamix-tv .mdl-slider::-webkit-slider-thumb {
 }
 
 html.streamix-tv .mdl-slider:focus::-webkit-slider-thumb {
-    box-shadow: 0 0 0 3px var(--sx-bg), 0 0 0 6px var(--sx-accent) !important;
+    box-shadow: 0 0 0 3px var(--sx-bg), 0 0 0 6px var(--sx-accent-2) !important;
 }
 
 html.streamix-tv .mdl-slider-background-lower {
     background: var(--sx-accent) !important;
 }
 
-/* Radio buttons (sort order, filters, choices in dialogs): amber dot, an amber halo when focused */
+/* Radio buttons (sort order, filters, choices in dialogs): a blue dot, a blue halo when focused */
 html.streamix-tv .mdl-radio__button:checked + .mdl-radio__circles {
-    color: var(--sx-accent) !important;
+    color: var(--sx-accent-2) !important;
 }
 
 html.streamix-tv .mdl-radio__focus-circle {
-    background-color: var(--sx-accent) !important;
+    background-color: var(--sx-accent-2) !important;
 }
 
 html.streamix-tv .mdl-radio__button:focus + .mdl-radio__circles .mdl-radio__focus-circle {
-    opacity: 0.32 !important;
+    opacity: 0.3 !important;
 }
 
 html.streamix-tv .mdl-radio__button:focus ~ .mdl-radio__label {
@@ -251,31 +319,30 @@ html.streamix-tv .mdl-radio__button:focus ~ .mdl-radio__label {
 
 /* Ticked boxes in the accent */
 html.streamix .emby-checkbox:checked + span + .checkboxOutline {
-    background-color: var(--sx-accent, #e5a00d) !important;
-    border-color: var(--sx-accent, #e5a00d) !important;
+    background-color: var(--sx-accent, #7c5cff) !important;
+    border-color: var(--sx-accent, #7c5cff) !important;
 }
 
 html.streamix-tv .emby-checkbox:checked + span + .checkboxOutline .checkboxIcon-checked {
-    color: var(--sx-on-accent) !important;
+    color: #fff !important;
 }
 
-/* Text boxes and drop-downs: grey fields with an amber edge when focused */
+/* Text boxes and drop-downs: navy fields with a blue edge when focused */
 html.streamix-tv .emby-input,
 html.streamix-tv .emby-select-withcolor,
 html.streamix-tv .emby-textarea {
-    background: var(--sx-surface) !important;
-    border: 2px solid transparent !important;
+    background: color-mix(in srgb, var(--sx-app) 85%, transparent) !important;
+    border: 1px solid var(--sx-border) !important;
     border-radius: var(--sx-radius) !important;
     color: var(--sx-text) !important;
-    transition: border-color var(--sx-fast) ease, background-color var(--sx-fast) ease;
 }
 
 html.streamix-tv .emby-input:focus,
 html.streamix-tv .emby-select-withcolor:focus,
 html.streamix-tv .emby-textarea:focus {
-    border-color: var(--sx-accent) !important;
-    background: var(--sx-surface-raised) !important;
-    box-shadow: none !important;
+    border-color: var(--sx-accent-2) !important;
+    background: var(--sx-surface) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sx-accent) 25%, transparent) !important;
 }
 
 /* Wide boxes and rows don't grow when focused (they spilled past the page edges); the outline or soft
@@ -287,15 +354,15 @@ html.streamix-tv .listItem-focusscale:focus {
     transform: none !important;
 }
 
-/* Rows in lists (the settings menu and its pages): a soft highlight with an amber edge, so the text stays
-   white and readable */
+/* Rows in lists (the settings menu and its pages): a soft blue highlight with a bright edge, so the text
+   stays white and readable */
 html.streamix-tv a.listItem-border.show-focus:focus,
 html.streamix-tv .listItem.show-focus:focus,
 html.streamix-tv button.listItem-button:focus {
-    background: rgba(255, 255, 255, 0.09) !important;
+    background: var(--sx-accent-soft) !important;
     color: #fff !important;
     border-radius: var(--sx-radius) !important;
-    box-shadow: inset 4px 0 0 var(--sx-accent) !important;
+    box-shadow: inset 3px 0 0 var(--sx-accent-2) !important;
 }
 
 html.streamix-tv a.listItem-border.show-focus:focus .listItem,
@@ -305,23 +372,26 @@ html.streamix-tv a.listItem-border.show-focus:focus .secondary {
 
 html.streamix-tv a.listItem-border.show-focus:focus .listItemIcon,
 html.streamix-tv .listItem.show-focus:focus .listItemIcon {
-    color: var(--sx-accent) !important;
+    color: var(--sx-accent-2) !important;
 }
 
 html.streamix-tv .listItemIcon {
     background: transparent !important;
 }
 
-/* A focused section title ("Recently Added in Movies >"): an amber pill */
+html.streamix-tv .listItem-border {
+    border-color: var(--sx-border) !important;
+}
+
+/* A focused section title ("Recently Added in Movies >"): a white capsule */
 html.streamix-tv .sectionTitleTextButton {
-    border-radius: var(--sx-radius) !important;
-    transition: background-color var(--sx-fast) ease, color var(--sx-fast) ease;
+    border-radius: var(--sx-pill) !important;
 }
 
 html.streamix-tv .sectionTitleTextButton:focus {
-    background: var(--sx-accent) !important;
-    color: var(--sx-on-accent) !important;
-    box-shadow: none !important;
+    background: var(--sx-focus) !important;
+    color: var(--sx-on-focus) !important;
+    box-shadow: var(--sx-glow) !important;
 }
 
 html.streamix-tv .sectionTitleTextButton:focus .sectionTitle,
@@ -332,19 +402,287 @@ html.streamix-tv .sectionTitleTextButton:focus .material-icons {
 }
 
 /* ---------------------------------------------------------------------------------------------
- * Navigation rail (built by nativeshell.js): icons down the left edge, opening out with labels
+ * Navigation, part 1: the top bar (built by nativeshell.js inside Jellyfin's header)
+ *   menu · logo · section pills ............ search field · profile
+ * The header's own back, home and icon buttons go (the bar and the remote cover them); its tabs (a
+ * library's Suggestions, Genres...) become a second row of smaller pills.
+ * ------------------------------------------------------------------------------------------- */
+
+html.streamix-tv .skinHeader:not(.osdHeader) {
+    display: block !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--sx-bg) 70%, transparent) 0%, color-mix(in srgb, var(--sx-bg) 0%, transparent) 100%) !important;
+    box-shadow: none !important;
+    z-index: 998 !important;
+    /* No paint containment, so focused pills can grow without being clipped */
+    contain: layout style !important;
+}
+
+html.streamix-tv .sxTopBar {
+    display: none;
+}
+
+html.streamix-tv.sx-rail .sxTopBar {
+    display: flex;
+    align-items: center;
+    height: var(--sx-bar-h);
+    /* The menu button sits over the sidebar's column (centred on its icons), the logo on the page's edge */
+    padding: 0 var(--sx-gutter) 0 calc((var(--sx-rail-w) - var(--sx-h-bar)) / 2);
+    box-sizing: border-box;
+}
+
+/* With the bar in place, Jellyfin's header row (title, back, search, profile, clock) stands down */
+html.streamix-tv.sx-rail .skinHeader:not(.osdHeader) > .headerTop {
+    display: none !important;
+}
+
+/* Pages without the bar (sign-in, server selection) keep just the page title */
+html.streamix-tv:not(.sx-rail) .skinHeader:not(.osdHeader) .headerButton,
+html.streamix-tv:not(.sx-rail) .skinHeader:not(.osdHeader) .headerSelectedPlayer,
+html.streamix-tv .skinHeader .pageTitleWithLogo {
+    display: none !important;
+}
+
+html.streamix-tv:not(.sx-rail) .skinHeader:not(.osdHeader) .headerTop {
+    padding: 12px 32px !important;
+}
+
+html.streamix-tv .sxTopBar button {
+    font-family: var(--sx-font);
+    outline: none;
+    cursor: pointer;
+    transition: transform var(--sx-spring-dur) var(--sx-spring);
+}
+
+html.streamix-tv .sxTopIcon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sx-h-bar);
+    height: var(--sx-h-bar);
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--sx-text);
+}
+
+html.streamix-tv .sxTopBar svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    flex: 0 0 auto;
+}
+
+html.streamix-tv .sxTopLogo {
+    flex: 0 0 auto;
+    width: 104px;
+    height: 19px;
+    margin: 0 20px 0 calc(var(--sx-gutter) + (var(--sx-rail-w) - var(--sx-h-bar)) / 2);
+    background: var(--streamix-lockup) left center / contain no-repeat;
+}
+
+html.streamix-tv .sxPills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    /* More libraries than fit scroll sideways as the remote moves along them */
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: 14px 22px 14px 4px;
+    margin: -14px 0;
+    scrollbar-width: none;
+    /* ...and fade out at the edge when there are more than fit */
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent);
+}
+
+html.streamix-tv .sxPills::-webkit-scrollbar {
+    display: none;
+}
+
+html.streamix-tv .sxPill {
+    flex: 0 0 auto;
+    height: var(--sx-h-bar);
+    padding: 0 13px;
+    border: 1px solid var(--sx-border-strong);
+    border-radius: var(--sx-pill);
+    background: transparent;
+    color: var(--sx-text-3);
+    font-size: var(--sx-fs-callout);
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    white-space: nowrap;
+}
+
+/* The section you're in */
+html.streamix-tv .sxPill.active {
+    background: var(--sx-accent-soft);
+    border-color: color-mix(in srgb, var(--sx-accent) 55%, transparent);
+    color: #fff;
+}
+
+/* The search field opens Search, where the keyboard comes up */
+html.streamix-tv .sxSearchField {
+    flex: 0 0 150px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: var(--sx-h-bar);
+    margin-left: auto;
+    padding: 0 16px 0 13px;
+    border: 1px solid var(--sx-border-strong);
+    border-radius: var(--sx-pill);
+    background: color-mix(in srgb, var(--sx-bg) 45%, transparent);
+    color: var(--sx-text-2);
+    font-size: var(--sx-fs-callout);
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+html.streamix-tv .sxSearchField svg {
+    width: 17px;
+    height: 17px;
+}
+
+html.streamix-tv .sxSearchField span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+html.streamix-tv .sxProfile {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: var(--sx-h-bar);
+    margin-left: 12px;
+    padding: 0 10px 0 4px;
+    border: 0;
+    border-radius: var(--sx-pill);
+    background: transparent;
+    color: var(--sx-text);
+    font-size: var(--sx-fs-callout);
+    font-weight: 600;
+}
+
+html.streamix-tv .sxProfile svg {
+    width: 16px;
+    height: 16px;
+    color: var(--sx-text-2);
+}
+
+html.streamix-tv .sxAvatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--sx-surface) center / cover no-repeat;
+    box-shadow: 0 0 0 1px var(--sx-border-strong);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+html.streamix-tv .sxProfileName {
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Focus on anything in the bar: a white pill */
+html.streamix-tv .sxTopBar button:focus {
+    background: var(--sx-focus);
+    border-color: transparent;
+    color: var(--sx-on-focus);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--sx-accent) 45%, transparent);
+    transform: scale(1.06);
+}
+
+html.streamix-tv .sxTopBar button:focus svg {
+    color: var(--sx-on-focus);
+}
+
+html.streamix-tv .sxSearchField:focus {
+    transform: scale(1.03) !important;
+}
+
+/* Second row: a page's own tabs (Movies, Suggestions, Favourites, Collections, Genres) */
+html.streamix-tv .skinHeader:not(.osdHeader) > .headerTabs {
+    display: flex;
+    justify-content: flex-start;
+    min-width: 0;
+    padding: 0 var(--sx-gutter) 8px calc(var(--sx-rail-w) + var(--sx-gutter) - 11px);
+}
+
+/* Home's tabs (Home / Favourites) are in the sidebar and the bar already (sx-home: set by nativeshell.js) */
+html.streamix-tv.sx-home .skinHeader > .headerTabs {
+    display: none !important;
+}
+
+html.streamix-tv .skinHeader:not(.osdHeader) > .headerTabs .emby-tabs-slider {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+}
+
+html.streamix-tv .skinHeader .headerTabs .emby-tab-button {
+    margin: 0 !important;
+    height: 30px;
+    padding: 0 11px !important;
+    font-size: var(--sx-fs-callout) !important;
+    font-weight: 600 !important;
+    border: 0 !important;
+    border-radius: var(--sx-pill) !important;
+    color: var(--sx-text-2) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transition: transform var(--sx-spring-dur) var(--sx-spring) !important;
+}
+
+html.streamix-tv .skinHeader .headerTabs .emby-tab-button.emby-tab-button-active {
+    color: #fff !important;
+    background: var(--sx-accent-soft) !important;
+}
+
+html.streamix-tv .skinHeader .headerTabs .emby-tab-button.show-focus:focus,
+html.streamix-tv .skinHeader .headerTabs .emby-tab-button:focus-visible {
+    color: var(--sx-on-focus) !important;
+    background: var(--sx-focus) !important;
+    box-shadow: var(--sx-glow) !important;
+    transform: scale(1.06) !important;
+}
+
+/* A title's page has no bar at all: Back leaves it */
+html.streamix-tv.streamix-detail .skinHeader:not(.osdHeader) {
+    visibility: hidden;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Navigation, part 2: the slim sidebar (built by nativeshell.js), opening out with labels
  * ------------------------------------------------------------------------------------------- */
 
 html.streamix-tv .sxRail {
     position: fixed;
-    top: 0;
+    top: var(--sx-bar-h);
     bottom: 0;
     left: 0;
     z-index: 999;
     display: flex;
     flex-direction: column;
     width: var(--sx-rail-open-w);
-    padding: 18px 0 18px;
+    padding: 42px 0 24px;
     box-sizing: border-box;
     pointer-events: none;
     visibility: hidden;
@@ -354,12 +692,12 @@ html.streamix-tv.sx-rail .sxRail {
     visibility: visible;
 }
 
-/* The page dims behind the open rail */
+/* The page dims behind the open sidebar */
 html.streamix-tv .sxRail::before {
     content: '';
     position: fixed;
     inset: 0;
-    background: linear-gradient(90deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.55) 40%, rgba(0, 0, 0, 0.25) 100%);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--sx-bg) 82%, transparent) 0%, color-mix(in srgb, var(--sx-bg) 60%, transparent) 40%, color-mix(in srgb, var(--sx-bg) 30%, transparent) 100%);
     opacity: 0;
     transition: opacity var(--sx-med) ease;
 }
@@ -368,79 +706,63 @@ html.streamix-tv.sx-rail-open .sxRail::before {
     opacity: 1;
 }
 
-/* The rail's surface: a strip while closed, sliding out to full width when open (transform only) */
+/* Closed, the icons sit straight on the page; open, a navy panel slides out under them (transform only) */
 html.streamix-tv .sxRailPanel {
-    position: absolute;
-    inset: 0;
-    background: rgba(22, 22, 22, 0.94);
-    box-shadow: 6px 0 22px rgba(0, 0, 0, 0.28);
-    transform: translateX(calc(var(--sx-rail-w) - var(--sx-rail-open-w)));
-    transition: transform var(--sx-spring-dur) var(--sx-spring), box-shadow var(--sx-med) ease, background-color var(--sx-med) ease;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sx-rail-open-w);
+    background: linear-gradient(180deg, #1e1a38 0%, #16132a 60%, #120f24 100%);
+    box-shadow: 1px 0 0 var(--sx-border), 16px 0 48px rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    transform: translateX(-100%);
+    transition: transform var(--sx-spring-dur) var(--sx-spring), opacity var(--sx-med) ease;
 }
 
-/* Open, it's a solid surface over the dimmed page, so the labels read cleanly */
 html.streamix-tv.sx-rail-open .sxRailPanel {
+    opacity: 1;
     transform: translateX(0);
-    background: #181818;
-    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.55);
-}
-
-/* The Streamix mark, opening out to the full logo */
-html.streamix-tv .sxRailLogo {
-    position: relative;
-    flex: 0 0 auto;
-    width: 134px;
-    height: 25px;
-    margin: 4px 0 26px 17px;
-    background: var(--streamix-lockup) left center / contain no-repeat;
-    clip-path: inset(0 108px 0 0);
-    transition: clip-path var(--sx-spring-dur) var(--sx-spring);
-}
-
-html.streamix-tv.sx-rail-open .sxRailLogo {
-    clip-path: inset(0 0 0 0);
 }
 
 html.streamix-tv .sxRailItems {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-}
-
-html.streamix-tv .sxRailFoot {
-    position: relative;
-    flex: 0 0 auto;
+    gap: 8px;
 }
 
 html.streamix-tv .sxRailItem {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 16px;
-    width: calc(var(--sx-rail-open-w) - 20px);
-    height: 40px;
-    margin: 0 10px;
-    padding: 0 0 0 9px;
+    width: var(--sx-h-side);
+    height: var(--sx-h-side);
+    margin: 0 calc((var(--sx-rail-w) - var(--sx-h-side)) / 2);
+    padding: 0 0 0 12px;
     border: 0;
-    border-radius: var(--sx-radius);
+    border-radius: var(--sx-pill);
     background: transparent;
     color: var(--sx-text-2);
     font-family: var(--sx-font);
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     text-align: left;
     white-space: nowrap;
+    overflow: hidden;
     outline: none;
-    transition: background-color var(--sx-fast) ease, color var(--sx-fast) ease, transform var(--sx-spring-dur) var(--sx-spring);
+    transition: width var(--sx-spring-dur) var(--sx-spring), transform var(--sx-spring-dur) var(--sx-spring);
+}
+
+html.streamix-tv.sx-rail-open .sxRailItem {
+    width: calc(var(--sx-rail-open-w) - (var(--sx-rail-w) - var(--sx-h-side)));
 }
 
 html.streamix-tv .sxRailItem svg {
     flex: 0 0 auto;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     fill: currentColor;
 }
 
@@ -457,41 +779,25 @@ html.streamix-tv.sx-rail-open .sxRailItem span {
     transform: translateX(0);
 }
 
-/* The page you're on: an amber icon (and an amber bar beside it while closed) */
+/* The page you're on: the icon on a rounded dark surface */
 html.streamix-tv .sxRailItem.active {
-    color: var(--sx-accent);
-}
-
-html.streamix-tv .sxRailItem.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    width: 3px;
-    height: 22px;
-    border-radius: 0 3px 3px 0;
-    background: var(--sx-accent);
-    transition: opacity var(--sx-fast) ease;
-}
-
-html.streamix-tv.sx-rail-open .sxRailItem.active::before {
-    opacity: 0;
-}
-
-html.streamix-tv .sxRailItem.active:not(:focus) span {
-    color: var(--sx-accent);
-}
-
-/* Focus in the open rail: an amber pill */
-html.streamix-tv.sx-rail-open .sxRailItem:focus {
-    background: var(--sx-accent);
-    color: var(--sx-on-accent);
+    background: color-mix(in srgb, var(--sx-tint) 12%, transparent);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sx-tint) 14%, transparent);
 }
 
 html.streamix-tv.sx-rail-open .sxRailItem:not(:focus):not(.active) {
-    color: #d9d9d9;
+    color: var(--sx-text-3);
 }
 
-/* Everything else moves over to make room for the strip */
+/* Focus in the open sidebar: a white pill */
+html.streamix-tv.sx-rail-open .sxRailItem:focus {
+    background: var(--sx-focus);
+    color: var(--sx-on-focus);
+    box-shadow: var(--sx-glow);
+}
+
+/* Everything else moves over to make room for the sidebar */
 html.streamix-tv.sx-rail .mainAnimatedPage {
     left: var(--sx-rail-w) !important;
 }
@@ -501,176 +807,27 @@ html.streamix-tv.sx-rail .nowPlayingBar {
 }
 
 /* ---------------------------------------------------------------------------------------------
- * Top bar on TV: no logo or icons (the rail has them) - the page's title and tabs on the left, the clock
- * on the right, all in one row
- * ------------------------------------------------------------------------------------------- */
-
-html.streamix-tv .skinHeader:not(.osdHeader) {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center;
-    gap: 18px;
-    min-height: 0 !important;
-    height: 52px;
-    padding: 10px 32px 10px calc(var(--sx-rail-w) + 28px) !important;
-    box-sizing: border-box;
-    background: linear-gradient(180deg, rgba(20, 20, 20, 0.85) 0%, rgba(20, 20, 20, 0) 100%) !important;
-    box-shadow: none !important;
-    z-index: 998 !important;
-    /* No paint containment, so focused tabs can grow without being clipped */
-    contain: layout style !important;
-}
-
-html.streamix-tv .skinHeader:not(.osdHeader) > .headerTop {
-    display: contents !important;
-}
-
-html.streamix-tv .skinHeader:not(.osdHeader) .headerLeft {
-    order: 1;
-    flex: 0 0 auto !important;
-    min-width: 0;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Home shows the logo there, which the rail already has: then the tabs come first */
-html.streamix-tv .skinHeader:not(.osdHeader) .headerLeft:has(.pageTitleWithLogo),
-html.streamix-tv .skinHeader:not(.osdHeader) .headerLeft:not(:has(.pageTitle)) {
-    display: none !important;
-}
-
-html.streamix-tv .skinHeader:not(.osdHeader) > .headerTabs {
-    order: 2;
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    justify-content: flex-start;
-    /* The first tab's words line up with the page's edge; its padding is room for the focus pill */
-    margin-left: -13px;
-}
-
-html.streamix-tv .skinHeader:not(.osdHeader) .headerRight {
-    order: 3;
-    flex: 0 0 auto;
-    margin-left: auto;
-}
-
-/* Back, home, search, profile and SyncPlay live in the rail or on the remote */
-html.streamix-tv .skinHeader:not(.osdHeader) .headerButton:not(.headerAudioPlayerButton),
-html.streamix-tv .skinHeader:not(.osdHeader) .headerSelectedPlayer,
-html.streamix-tv .skinHeader .pageTitleWithLogo {
-    display: none !important;
-}
-
-html.streamix-tv .skinHeader:not(.osdHeader) .pageTitle {
-    margin: 0 !important;
-    padding: 0 !important;
-    font-size: 1.05em !important;
-    font-weight: 700 !important;
-    color: var(--sx-text);
-    white-space: nowrap;
-}
-
-html.streamix-tv .skinHeader:not(.osdHeader) .currentTimeText {
-    margin: 0 !important;
-    padding: 0 !important;
-    font-size: 0.8em !important;
-    font-weight: 500;
-    color: var(--sx-text-2);
-    font-variant-numeric: tabular-nums;
-}
-
-html.streamix-tv .skinHeader:not(.osdHeader) button.headerAudioPlayerButton {
-    width: 36px !important;
-    height: 36px !important;
-    margin: 0 10px 0 0 !important;
-    padding: 0 !important;
-    border-radius: 50% !important;
-}
-
-html.streamix-tv .skinHeader:not(.osdHeader) button.headerAudioPlayerButton:focus {
-    background: var(--sx-accent) !important;
-    color: var(--sx-on-accent) !important;
-}
-
-/* Tabs: plain words, the current one underlined in amber, the focused one an amber pill */
-html.streamix-tv .skinHeader:not(.osdHeader) > .headerTabs .emby-tabs-slider {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 0;
-    background: none;
-    box-shadow: none;
-}
-
-html.streamix-tv .skinHeader .headerTabs .emby-tab-button {
-    position: relative;
-    margin: 0 !important;
-    padding: 0.32em 0.85em !important;
-    font-size: 0.78em !important;
-    font-weight: 600 !important;
-    border-radius: var(--sx-radius) !important;
-    color: var(--sx-text-2) !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    transition: background-color var(--sx-fast) ease, color var(--sx-fast) ease, transform var(--sx-spring-dur) var(--sx-spring) !important;
-}
-
-html.streamix-tv .skinHeader .headerTabs .emby-tab-button::after {
-    content: '';
-    position: absolute;
-    left: 0.85em;
-    right: 0.85em;
-    bottom: 0;
-    height: 2px;
-    border-radius: 1px;
-    background: var(--sx-accent);
-    transform: scaleX(0);
-    transition: transform var(--sx-spring-dur) var(--sx-spring);
-}
-
-html.streamix-tv .skinHeader .headerTabs .emby-tab-button.emby-tab-button-active {
-    color: var(--sx-text) !important;
-    background: transparent !important;
-}
-
-html.streamix-tv .skinHeader .headerTabs .emby-tab-button.emby-tab-button-active::after {
-    transform: scaleX(1);
-}
-
-html.streamix-tv .skinHeader .headerTabs .emby-tab-button.show-focus:focus,
-html.streamix-tv .skinHeader .headerTabs .emby-tab-button:focus-visible {
-    color: var(--sx-on-accent) !important;
-    background: var(--sx-accent) !important;
-    transform: scale(1.05) !important;
-}
-
-html.streamix-tv .skinHeader .headerTabs .emby-tab-button:focus::after {
-    transform: scaleX(0);
-}
-
-/* A title's page has no bar at all: Back leaves it */
-html.streamix-tv.streamix-detail .skinHeader:not(.osdHeader) {
-    visibility: hidden;
-}
-
-/* ---------------------------------------------------------------------------------------------
- * Page layout on TV: one grid for every page
- *  - the bar is one row (12 + 32 + 8 = 52px); content starts 64px from the top on every page
- *  - text, boxes and rows start 28px right of the rail and end 32px from the right edge
+ * Page layout on TV
+ *  - the bar is 56px; a second row of tabs adds 34px; content starts just under whatever is there
+ *  - text, boxes and rows start 28px right of the sidebar and end 32px from the right edge
  * ------------------------------------------------------------------------------------------- */
 html.streamix-tv .mainAnimatedPage.libraryPage:not(.itemDetailPage),
 html.streamix-tv .mainAnimatedPage.withTabs,
 html.streamix-tv .mainAnimatedPage.pageWithAbsoluteTabs,
 html.streamix-tv #searchPage.mainAnimatedPage,
 html.streamix-tv .mainAnimatedPage.userPreferencesPage {
-    padding-top: 60px !important;
+    padding-top: 66px !important;
 }
 
-/* Home and library suggestions: each row title brings its own space above it */
+/* sx-tabs: the header has a row of tabs (set by nativeshell.js) */
+html.streamix-tv.sx-tabs .mainAnimatedPage.withTabs:not(.homePage),
+html.streamix-tv.sx-tabs .mainAnimatedPage.pageWithAbsoluteTabs:not(.homePage) {
+    padding-top: 100px !important;
+}
+
+/* Home: the featured title starts right under the bar */
 html.streamix-tv .mainAnimatedPage.homePage {
-    padding-top: 46px !important;
+    padding-top: 58px !important;
 }
 
 html.streamix-tv .mainAnimatedPage .sectionTitleContainer-cards {
@@ -694,15 +851,18 @@ html.streamix-tv .userPreferencesPage form > .verticalSection:first-child > h2:f
     padding-top: 0 !important;
 }
 
-/* Rows scroll inside the page's edges: 28px of room left of the first poster, 32px on the right */
-html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .emby-scroller {
-    padding-left: 16px !important;
-    padding-right: 20px !important;
+/* Rows scroll inside the page's edges: 28px of room left of the first poster, 32px on the right
+   (home rows are scrollers; a library's suggestion rows scroll natively) */
+html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .emby-scroller,
+html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .itemsContainer-tv.hiddenScroll.padded-left {
+    /* the 10px card margin makes up the rest of the 28px gutter */
+    padding-left: calc(var(--sx-gutter) - 10px) !important;
+    padding-right: calc(var(--sx-gutter) - 10px) !important;
 }
 
 /* Row titles: bold, white, level with the first poster */
 html.streamix-tv .mainAnimatedPage .sectionTitle-cards {
-    font-size: 0.95em !important;
+    font-size: var(--sx-fs-title) !important;
     padding-top: 0.6em !important;
     padding-bottom: 0 !important;
     margin-top: 0 !important;
@@ -711,15 +871,15 @@ html.streamix-tv .mainAnimatedPage .sectionTitle-cards {
 
 /* Seven posters across a row, four wide pictures (episodes, channels, programmes) */
 html.streamix-tv .itemsContainer-tv > .overflowPortraitCard {
-    width: calc((100vw - var(--sx-rail-w) - 64px) / 7) !important;
+    width: calc((100vw - var(--sx-rail-w) - 2 * var(--sx-gutter) + 20px) / 7) !important;
 }
 
 html.streamix-tv .itemsContainer-tv > .overflowBackdropCard {
-    width: calc((100vw - var(--sx-rail-w) - 64px) / 4) !important;
+    width: calc((100vw - var(--sx-rail-w) - 2 * var(--sx-gutter) + 20px) / 4) !important;
 }
 
 html.streamix-tv .itemsContainer-tv > .overflowSquareCard {
-    width: calc((100vw - var(--sx-rail-w) - 64px) / 6) !important;
+    width: calc((100vw - var(--sx-rail-w) - 2 * var(--sx-gutter) + 20px) / 6) !important;
 }
 
 /* ...and in grids */
@@ -737,7 +897,7 @@ html.streamix-tv .vertical-wrap.itemsContainer-tv > .squareCard {
 
 html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .verticalSection > .sectionTitle-cards.padded-left,
 html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .sectionTitleContainer-cards {
-    padding-left: 28px !important;
+    padding-left: var(--sx-gutter) !important;
 }
 
 html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .sectionTitleContainer-cards .sectionTitle-cards {
@@ -759,7 +919,7 @@ html.streamix-tv .userPreferencesPage.padded-left,
 html.streamix-tv #searchPage .searchFields.padded-left,
 html.streamix-tv .libraryPage.noSecondaryNavPage > .padded-left,
 html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .itemsContainer.vertical-wrap.padded-left {
-    padding-left: 28px !important;
+    padding-left: var(--sx-gutter) !important;
 }
 
 html.streamix-tv .userPreferencesPage .padded-right,
@@ -767,7 +927,7 @@ html.streamix-tv .userPreferencesPage.padded-right,
 html.streamix-tv #searchPage .searchFields.padded-right,
 html.streamix-tv .libraryPage.noSecondaryNavPage > .padded-right,
 html.streamix-tv .mainAnimatedPage:not(.itemDetailPage) .itemsContainer.vertical-wrap.padded-right {
-    padding-right: 32px !important;
+    padding-right: var(--sx-gutter) !important;
 }
 
 html.streamix-tv .userPreferencesPage .headerUsername {
@@ -785,7 +945,416 @@ html.streamix-tv .mainAnimatedPage:not(.hide) {
 }
 
 /* ---------------------------------------------------------------------------------------------
- * Posters: 2:3 artwork, 6px corners and a soft shadow; focus lifts the poster 8% with an amber rim
+ * Featured (home): a title, its badges, story and actions on the left, its artwork on the right, and a
+ * carousel underneath that features whichever title the remote is on (built by nativeshell.js)
+ * ------------------------------------------------------------------------------------------- */
+
+html.streamix-tv .sxFeatured {
+    /* It's an items container (for Jellyfin's play / details actions), which would otherwise lay out as a row */
+    display: block !important;
+    position: relative;
+    padding: 6px var(--sx-gutter) 0;
+    opacity: 0;
+    transition: opacity 300ms ease;
+}
+
+html.streamix-tv .sxFeatured.ready {
+    opacity: 1;
+}
+
+html.streamix-tv .sxFeatHero {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    height: 254px;
+}
+
+html.streamix-tv .sxFeatInfo {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+@keyframes sxFeatSwap {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes sxFeatSwapAlt {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+
+html.streamix-tv .sxFeatInfo.sxFeatSwap > :not(.sxFeatButtons) {
+    animation: sxFeatSwap 280ms var(--sx-ease) both;
+}
+
+/* The next title switches to the other copy of the keyframes, which starts the settle-in again */
+html.streamix-tv .sxFeatInfo.sxFeatSwap.sxFeatAlt > :not(.sxFeatButtons) {
+    animation-name: sxFeatSwapAlt;
+}
+
+html.streamix-tv .sxFeatTitle {
+    display: -webkit-box;
+    margin: 0 0 10px !important;
+    overflow: hidden;
+    color: var(--sx-text);
+    font-size: var(--sx-fs-display) !important;
+    font-weight: 800 !important;
+    line-height: 1.06;
+    letter-spacing: -0.024em;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+html.streamix-tv .sxFeatBadges {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-bottom: 9px;
+    overflow: hidden;
+}
+
+html.streamix-tv .sxFeatBadges:empty {
+    display: none;
+}
+
+html.streamix-tv .sxBadge {
+    flex: 0 0 auto;
+    padding: 3px 9px;
+    border-radius: var(--sx-r-xs);
+    background: color-mix(in srgb, var(--sx-tint) 13%, transparent);
+    color: var(--sx-text-3);
+    font-size: var(--sx-fs-caption);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+}
+
+html.streamix-tv .sxBadgeRating {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(244, 242, 255, 0.55);
+    color: var(--sx-text);
+}
+
+html.streamix-tv .sxFeatMeta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+    color: var(--sx-text-2);
+    font-size: var(--sx-fs-callout);
+    font-weight: 500;
+    letter-spacing: 0.006em;
+}
+
+html.streamix-tv .sxFeatStar {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--sx-text);
+}
+
+html.streamix-tv .sxFeatStar svg {
+    width: 13px;
+    height: 13px;
+    fill: #f5c518;
+}
+
+html.streamix-tv .sxFeatProgress {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 9px;
+    color: var(--sx-text-2);
+    font-size: var(--sx-fs-caption);
+    font-weight: 600;
+}
+
+html.streamix-tv .sxFeatProgress:empty {
+    display: none;
+}
+
+html.streamix-tv .sxFeatBar {
+    position: relative;
+    width: 120px;
+    height: 4px;
+    overflow: hidden;
+    border-radius: var(--sx-pill);
+    background: color-mix(in srgb, var(--sx-tint) 20%, transparent);
+}
+
+html.streamix-tv .sxFeatBar > span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: var(--sx-pill);
+    background: var(--sx-progress);
+}
+
+html.streamix-tv .sxFeatOverview {
+    display: -webkit-box;
+    max-width: 34em;
+    margin: 11px 0 17px !important;
+    overflow: hidden;
+    color: var(--sx-text-3);
+    font-size: var(--sx-fs-body) !important;
+    line-height: 1.5;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+html.streamix-tv .sxFeatOverview:empty {
+    display: none;
+}
+
+html.streamix-tv .sxFeatLong .sxFeatOverview {
+    -webkit-line-clamp: 2;
+}
+
+html.streamix-tv .sxFeatInfo {
+    max-height: 100%;
+}
+
+html.streamix-tv .sxFeatButtons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+html.streamix-tv .sxFeatButtons button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--sx-h-action);
+    border-radius: var(--sx-pill);
+    font-family: var(--sx-font);
+    outline: none;
+    cursor: pointer;
+    transition: transform var(--sx-spring-dur) var(--sx-spring);
+}
+
+html.streamix-tv .sxFeatButtons svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    flex: 0 0 auto;
+}
+
+/* The main action: white, like the title's own spotlight */
+html.streamix-tv .sxFeatPlay {
+    gap: 8px;
+    padding: 0 22px 0 16px;
+    border: 0;
+    background: var(--sx-focus);
+    color: var(--sx-on-focus);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+html.streamix-tv .sxFeatIcon {
+    width: var(--sx-h-action);
+    padding: 0;
+    border: 1px solid var(--sx-border-strong);
+    background: color-mix(in srgb, var(--sx-tint) 8%, transparent);
+    color: var(--sx-text);
+}
+
+html.streamix-tv .sxFeatFav.on {
+    color: var(--sx-accent-2);
+}
+
+html.streamix-tv .sxFeatPlay:focus {
+    box-shadow: 0 0 0 3px var(--sx-accent-2), var(--sx-glow);
+    transform: scale(1.06);
+}
+
+html.streamix-tv .sxFeatIcon:focus {
+    background: var(--sx-focus);
+    border-color: transparent;
+    color: var(--sx-on-focus);
+    box-shadow: var(--sx-glow);
+    transform: scale(1.08);
+}
+
+/* The round buttons name themselves when focused, beside the buttons: a label underneath would sit on the
+   carousel and be cut off by its cards */
+html.streamix-tv .sxFeatHint {
+    margin-left: 2px;
+    color: var(--sx-text-2);
+    font-size: var(--sx-fs-callout);
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity var(--sx-fast) ease, transform var(--sx-fast) var(--sx-ease);
+    pointer-events: none;
+}
+
+html.streamix-tv .sxFeatHint.on {
+    opacity: 1;
+    transform: none;
+}
+
+/* The artwork: wide, rounded, softly lit */
+html.streamix-tv .sxFeatArt {
+    position: relative;
+    flex: 0 0 auto;
+    width: 452px;
+    max-width: 55%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--sx-radius-lg);
+    background: var(--sx-surface);
+    box-shadow: 0 0 0 1px var(--sx-border), 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 80px color-mix(in srgb, var(--sx-accent) 18%, transparent);
+}
+
+html.streamix-tv .sxFeatLayer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 450ms ease;
+}
+
+html.streamix-tv .sxFeatLayer.active {
+    opacity: 1;
+}
+
+html.streamix-tv .sxFeatLayer img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* A navy wash on the edge nearest the text ties the picture to the page */
+html.streamix-tv .sxFeatArt::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background:
+        linear-gradient(90deg, color-mix(in srgb, var(--sx-app) 42%, transparent) 0%, color-mix(in srgb, var(--sx-app) 0%, transparent) 38%),
+        linear-gradient(0deg, color-mix(in srgb, var(--sx-bg) 35%, transparent) 0%, color-mix(in srgb, var(--sx-bg) 0%, transparent) 35%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sx-tint) 10%, transparent);
+    pointer-events: none;
+}
+
+/* The carousel */
+html.streamix-tv .sxFeatRow {
+    margin: 12px calc(-1 * var(--sx-gutter)) 0 -14px;
+    padding: 10px var(--sx-gutter) 14px 14px;
+    /* Clipped, not a scroller: focus can't scroll it, so the track's transform is the only thing moving it */
+    overflow: clip;
+}
+
+html.streamix-tv .sxFeatTrack {
+    position: relative;
+    display: flex;
+    column-gap: 12px;
+    transition: transform var(--sx-spring-dur) var(--sx-spring);
+}
+
+html.streamix-tv .sxFeatCard {
+    position: relative;
+    flex: 0 0 auto;
+    /* Five and a half cards across, so the next is always half in view */
+    width: calc((100vw - var(--sx-rail-w) - 2 * var(--sx-gutter) - 5 * 12px) / 5.5);
+    aspect-ratio: 16 / 9;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sx-radius);
+    background: var(--sx-surface);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--sx-tint) 8%, transparent), 0 8px 18px rgba(0, 0, 0, 0.4);
+    outline: none;
+    cursor: pointer;
+    transition: transform var(--sx-spring-dur) var(--sx-spring), opacity var(--sx-fast) ease;
+    /* Its rim sits behind the picture (see below) */
+    isolation: isolate;
+}
+
+/* Cards moved past the left edge fade out (nativeshell.js) */
+html.streamix-tv .sxFeatCard.sxPast {
+    opacity: 0;
+}
+
+html.streamix-tv .sxFeatCard img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 250ms ease;
+}
+
+html.streamix-tv .sxFeatCard img.loaded {
+    opacity: 1;
+}
+
+/* Its title along the bottom of the featured card, the way it reads on the hero */
+html.streamix-tv .sxFeatCardTitle {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 18px 10px 8px;
+    overflow: hidden;
+    border-radius: 0 0 var(--sx-radius) var(--sx-radius);
+    background: linear-gradient(0deg, color-mix(in srgb, var(--sx-bg) 92%, transparent) 0%, color-mix(in srgb, var(--sx-bg) 0%, transparent) 100%);
+    color: var(--sx-text);
+    font-size: var(--sx-fs-caption);
+    font-weight: 700;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--sx-fast) ease;
+}
+
+/* The featured one keeps a thin light rim while the remote is up on the hero */
+html.streamix-tv .sxFeatCard.selected {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--sx-tint) 85%, transparent), 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+html.streamix-tv .sxFeatCard.selected .sxFeatCardTitle,
+html.streamix-tv .sxFeatCard:focus .sxFeatCardTitle {
+    opacity: 1;
+}
+
+html.streamix-tv .sxFeatCard:focus {
+    z-index: 1;
+    transform: scale(1.08);
+}
+
+/* The rim: the picture's hues on a plate just behind the card, so the edge that shows is concentric with
+   its corners. It carries the glow too, and fades in on its own layer: nothing is repainted on focus. */
+html.streamix-tv .sxFeatCard::after {
+    content: '';
+    position: absolute;
+    inset: calc(-1 * var(--sx-rim-w));
+    z-index: -1;
+    border-radius: calc(var(--sx-radius) + var(--sx-rim-w));
+    background: var(--sx-brand);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--sx-accent) 50%, transparent), 0 12px 26px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--sx-fast) ease;
+}
+
+html.streamix-tv .sxFeatCard:focus::after {
+    opacity: 1;
+}
+
+/* The rows below start a little under the carousel */
+html.streamix-tv .sxFeatured + .homeSectionsContainer {
+    margin-top: 0 !important;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Posters and thumbnails: 8px corners and a soft shadow; focus lifts the card with a blue rim
  * ------------------------------------------------------------------------------------------- */
 
 /* jellyfin-web gives every card its own GPU layer (will-change). With hundreds of posters that
@@ -798,7 +1367,7 @@ html.streamix-tv .show-focus:not(.show-animation) .cardBox {
     margin: 0.5em !important;
 }
 
-/* The 10px transparent border was room for Jellyfin's focus outline; the amber rim replaces it */
+/* The 10px transparent border was room for Jellyfin's focus outline; the blue rim replaces it */
 html.streamix-tv .card.show-focus:not(.show-animation) .cardBox:not(.visualCardBox) .cardScalable,
 html.streamix-tv .show-focus:not(.show-animation) .cardBox.visualCardBox {
     border-width: 0 !important;
@@ -814,8 +1383,10 @@ html.streamix-tv .card.show-focus:not(.show-animation) .cardBox:not(.visualCardB
 }
 
 html.streamix-tv .cardScalable {
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45) !important;
+    box-shadow: 0 0 0 1px rgba(205, 200, 235, 0.06), 0 6px 14px rgba(0, 0, 0, 0.45) !important;
     transition: transform var(--sx-spring-dur) var(--sx-spring) !important;
+    /* Its rim sits behind the picture (see below) */
+    isolation: isolate;
 }
 
 html.streamix-tv .cardImageContainer {
@@ -824,21 +1395,23 @@ html.streamix-tv .cardImageContainer {
 
 html.streamix-tv .card.show-focus:focus .cardScalable,
 html.streamix-tv .card.show-animation:focus > .cardBox .cardScalable {
-    transform: scale(1.08) !important;
+    transform: scale(1.07) !important;
 }
 
 html.streamix-tv .card.show-animation:focus > .cardBox {
     transform: none !important;
 }
 
-/* The rim is its own layer that fades in, rather than an animated outline */
+/* The rim: the picture's hues on a plate just behind the poster, so the edge that shows is concentric with
+   its corners, with the glow on the same plate. It fades in on its own layer: nothing is repainted on focus. */
 html.streamix-tv .card .cardScalable::after {
     content: '';
     position: absolute;
-    inset: 0;
-    z-index: 3;
-    border-radius: inherit;
-    box-shadow: 0 0 0 3px var(--sx-accent), 0 10px 24px rgba(0, 0, 0, 0.55);
+    inset: calc(-1 * var(--sx-rim-w));
+    z-index: -1;
+    border-radius: calc(var(--sx-radius) + var(--sx-rim-w));
+    background: var(--sx-brand);
+    box-shadow: 0 0 26px color-mix(in srgb, var(--sx-accent) 45%, transparent), 0 12px 26px rgba(0, 0, 0, 0.55);
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--sx-fast) ease;
@@ -851,6 +1424,7 @@ html.streamix-tv .card:focus .cardScalable::after {
 /* Round person / avatar cards keep a round rim */
 html.streamix-tv .card.personCard .cardScalable,
 html.streamix-tv .card.personCard .cardScalable::after,
+html.streamix-login #divUsers .card .cardScalable,
 html.streamix-tv .card.personCard .cardImageContainer,
 html.streamix-tv .card.personCard .cardPadder,
 html.streamix-tv .card.personCard.show-focus:not(.show-animation) .cardBox:not(.visualCardBox) .cardScalable,
@@ -864,7 +1438,7 @@ html.streamix-tv .card .cardImageContainer::after {
     display: none !important;
 }
 
-/* Blurred previews are a canvas per card; the grey skeleton does the same job for nothing */
+/* Blurred previews are a canvas per card; the skeleton does the same job for nothing */
 html.streamix-tv .blurhash-canvas {
     display: none !important;
 }
@@ -877,11 +1451,12 @@ html.streamix-tv .lazy-image-fadein-fast {
 
 /* Titles under posters: smaller and quieter, the focused one white and bold */
 html.streamix-tv .card .cardText {
-    font-size: 0.7em !important;
+    font-size: 0.66em !important;
     font-weight: 500 !important;
     color: var(--sx-text) !important;
     text-align: left !important;
     padding-left: 0.1em !important;
+    letter-spacing: 0.006em;
 }
 
 html.streamix-tv .card .cardText-secondary {
@@ -911,7 +1486,7 @@ html.streamix-tv .card.personCard .cardText {
     text-align: center !important;
 }
 
-/* Progress: a thin amber bar along the bottom of the poster */
+/* Progress: a thin blue bar along the bottom of the picture */
 html.streamix-tv .innerCardFooter.innerCardFooterClear,
 html.streamix-tv .innerCardFooter {
     margin: 0 !important;
@@ -922,21 +1497,21 @@ html.streamix-tv .itemProgressBar {
     height: 4px !important;
     margin: 0 !important;
     border-radius: 0 !important;
-    background: rgba(0, 0, 0, 0.55) !important;
+    background: color-mix(in srgb, var(--sx-bg) 60%, transparent) !important;
 }
 
 html.streamix-tv .itemProgressBarForeground {
-    background: var(--sx-accent) !important;
+    background: var(--sx-progress) !important;
     border-radius: 0 !important;
 }
 
-/* Watched tick and unwatched-episode count: small dark chips. Amber keeps one meaning across the app
-   (focus, where you are, the main action, progress), so status badges stay neutral. */
+/* Watched tick and unwatched-episode count: small ink chips. Colour keeps its meaning across the app
+   (where you are, focus on artwork, progress), so status badges stay neutral. */
 html.streamix-tv .playedIndicator,
 html.streamix-tv .countIndicator {
-    background: rgba(20, 20, 20, 0.82) !important;
+    background: color-mix(in srgb, var(--sx-bg) 82%, transparent) !important;
     color: #fff !important;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 2px 6px rgba(0, 0, 0, 0.45) !important;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--sx-tint) 25%, transparent), 0 2px 6px rgba(0, 0, 0, 0.45) !important;
     font-weight: 700;
 }
 
@@ -949,36 +1524,22 @@ html.streamix-tv .playedIndicator > svg {
 
 /* A played title's tick in the accent */
 html.streamix .playstatebutton-icon-played {
-    color: var(--sx-accent, #e5a00d) !important;
+    color: var(--sx-accent-2, #a68bff) !important;
 }
 
-/* Skeletons: until its picture arrives a poster is a grey block with a soft light sweeping across it.
-   Only cards still waiting for a picture run the sweep (Jellyfin drops data-src once it's in). */
+/* Skeletons: until its picture arrives a card is a plain block in the surface colour. No sweep: Jellyfin
+   only loads pictures near the screen, so cards further along would sweep forever and keep the TV
+   redrawing every frame. */
 html.streamix-tv .cardBox:not(.visualCardBox) .cardPadder,
 html.streamix-tv .cardImageContainer {
-    background-color: var(--sx-surface) !important;
+    background-color: var(--sx-skeleton) !important;
 }
 
 html.streamix-tv .cardImageContainer.defaultCardBackground {
-    background: var(--sx-surface) !important;
+    background: var(--sx-skeleton) !important;
 }
 
-@keyframes sxShimmer {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(100%); }
-}
-
-html.streamix-tv .cardImageContainer[data-src]::before,
-html.streamix-tv .cardImageContainer.sxPosterPending::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(100deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0) 80%);
-    animation: sxShimmer 1.3s ease-in-out infinite;
-}
-
-/* Rows and grids that haven't filled in yet: a line of grey poster shapes */
+/* Rows and grids that haven't filled in yet: a line of navy poster shapes */
 html.streamix-tv .homeSectionsContainer .verticalSection:not(.hide) .itemsContainer:empty,
 html.streamix-tv .pageTabContent.is-active > .itemsContainer.vertical-wrap:empty {
     display: block !important;
@@ -988,16 +1549,12 @@ html.streamix-tv .pageTabContent.is-active > .itemsContainer.vertical-wrap:empty
     background-size: 100% 9.3em;
     background-repeat: no-repeat;
     border-radius: var(--sx-radius);
-    animation: sxSkeletonPulse 1.4s ease-in-out infinite;
-}
-
-@keyframes sxSkeletonPulse {
-    0%, 100% { opacity: 0.55; }
-    50% { opacity: 1; }
+    opacity: 0.7;
 }
 
 /* ---------------------------------------------------------------------------------------------
- * Backdrops: the focused title's artwork, blurred, behind the rows (layer built by nativeshell.js)
+ * Backdrops: the focused or featured title's artwork, blurred and tinted blue, behind the page
+ * (layer built by nativeshell.js)
  * ------------------------------------------------------------------------------------------- */
 
 #streamixBackdrop {
@@ -1043,18 +1600,11 @@ html.streamix-detail #streamixBackdrop {
         linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0) 60%);
 }
 
-/* TV, browsing: just a hint of the focused title's colours in the charcoal */
+/* TV: the shade and the picture's own colour wash are drawn into the backdrop's canvas (nativeshell.js),
+   so the picture, its tint and its shade cross-fade together as one layer, with no full-screen layer
+   over it to redraw */
 html.streamix-tv #streamixBackdrop .sbScrim {
-    background:
-        linear-gradient(180deg, rgba(31, 31, 31, 0.55) 0%, rgba(31, 31, 31, 0.82) 45%, #1f1f1f 85%),
-        linear-gradient(90deg, rgba(31, 31, 31, 0.7) 0%, rgba(31, 31, 31, 0.3) 100%);
-}
-
-/* TV, a title's page: its blurred artwork fills the screen, darkened enough for white text */
-html.streamix-tv.streamix-detail #streamixBackdrop .sbScrim {
-    background:
-        linear-gradient(90deg, rgba(20, 20, 20, 0.85) 0%, rgba(20, 20, 20, 0.6) 55%, rgba(20, 20, 20, 0.45) 100%),
-        linear-gradient(180deg, rgba(20, 20, 20, 0.2) 0%, rgba(20, 20, 20, 0.35) 50%, rgba(31, 31, 31, 0.96) 100%);
+    display: none;
 }
 
 /* Section titles stay readable over bright artwork */
@@ -1063,7 +1613,7 @@ html.streamix-browse .sectionTitle {
 }
 
 /* ---------------------------------------------------------------------------------------------
- * Home on TV: rows only - the libraries are in the rail, so "My Media" goes
+ * Home on TV: the featured title, then rows - the libraries are in the bar, so "My Media" goes
  * ------------------------------------------------------------------------------------------- */
 html.streamix-tv .homeSectionsContainer > .verticalSection:has(.card[data-type="CollectionFolder"], .card[data-type="UserView"]) {
     display: none !important;
@@ -1086,14 +1636,14 @@ html.streamix-tv .alphaPicker-tv {
 }
 
 html.streamix-tv .itemsContainer.padded-right-withalphapicker {
-    padding-right: 32px !important;
+    padding-right: var(--sx-gutter) !important;
 }
 
 html.streamix-tv .pageTabContent > .flex.justify-content-center:first-child,
 html.streamix-tv .libraryPage > .flex.justify-content-center:first-child {
     justify-content: flex-start !important;
-    padding-left: 28px !important;
-    font-size: 0.8em;
+    padding-left: var(--sx-gutter) !important;
+    font-size: 0.76em;
     color: var(--sx-text-2);
 }
 
@@ -1111,25 +1661,25 @@ html.streamix-tv .libraryPage.noSecondaryNavPage .flex.focuscontainer-x:has(> .p
     padding-left: 0 !important;
 }
 
-/* Play / shuffle / sort / filter above a grid: plain icons, an amber disc when focused */
+/* Play / shuffle / sort / filter above a grid: plain icons, a white disc when focused */
 html.streamix-tv .libraryPage .flex.focuscontainer-x .paper-icon-button-light,
 html.streamix-tv .pageTabContent > .flex .paper-icon-button-light {
     background: transparent !important;
     color: var(--sx-text-2) !important;
     border-radius: 50% !important;
-    transition: background-color var(--sx-fast) ease, color var(--sx-fast) ease, transform var(--sx-spring-dur) var(--sx-spring) !important;
+    transition: transform var(--sx-spring-dur) var(--sx-spring) !important;
 }
 
 html.streamix-tv .libraryPage .flex.focuscontainer-x .paper-icon-button-light.show-focus:focus,
 html.streamix-tv .pageTabContent > .flex .paper-icon-button-light.show-focus:focus {
-    background: var(--sx-accent) !important;
-    color: var(--sx-on-accent) !important;
-    box-shadow: none !important;
+    background: var(--sx-focus) !important;
+    color: var(--sx-on-focus) !important;
+    box-shadow: var(--sx-glow) !important;
 }
 
 /* Genres and studios: titled rows of posters like the home screen */
 html.streamix-tv .genresContainer .sectionTitle {
-    font-size: 0.95em !important;
+    font-size: var(--sx-fs-title) !important;
 }
 
 /* ---------------------------------------------------------------------------------------------
@@ -1163,8 +1713,14 @@ html.streamix-tv .itemDetailPage .detailImageContainer.hide-mobile .card {
     width: 200px !important;
 }
 
+html.streamix-tv .itemDetailPage .detailImageContainer .cardScalable,
+html.streamix-tv .itemDetailPage .detailImageContainer .cardImageContainer,
+html.streamix-tv .itemDetailPage .detailImageContainer .cardPadder {
+    border-radius: var(--sx-r-md) !important;
+}
+
 html.streamix-tv .itemDetailPage .detailImageContainer .cardScalable {
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 0 0 1px var(--sx-border), 0 18px 44px rgba(0, 0, 0, 0.6), 0 0 60px color-mix(in srgb, var(--sx-accent) 15%, transparent) !important;
 }
 
 html.streamix-tv .itemDetailPage .detailImageContainer .card:focus .cardScalable {
@@ -1194,26 +1750,27 @@ html.streamix-tv .itemDetailPage .detailRibbon {
 html.streamix-tv .itemDetailPage .nameContainer .itemName,
 html.streamix-tv .itemDetailPage .itemName.infoText {
     margin: 0 0 0.1em !important;
-    font-size: 1.75em !important;
+    font-size: var(--sx-fs-display) !important;
     font-weight: 800 !important;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+    line-height: 1.06;
+    letter-spacing: -0.024em;
     color: var(--sx-text) !important;
 }
 
 /* Series name above an episode, the "S1:E3" line */
 html.streamix-tv .itemDetailPage .nameContainer .parentName,
 html.streamix-tv .itemDetailPage .nameContainer .itemName:not(.parentNameLast) {
-    font-size: 0.95em !important;
+    font-size: 0.9em !important;
     font-weight: 600 !important;
     color: var(--sx-text-2) !important;
 }
 
-/* Year, runtime, rating... in grey, with the age rating as a small outlined tag */
+/* Year, runtime, rating... in blue-grey, with the age rating as a small outlined tag */
 html.streamix-tv .itemDetailPage .itemMiscInfo {
-    font-size: 0.78em !important;
+    font-size: var(--sx-fs-callout) !important;
     color: var(--sx-text-2) !important;
     gap: 0;
+    letter-spacing: 0.006em;
 }
 
 html.streamix-tv .itemDetailPage .itemMiscInfo .mediaInfoItem {
@@ -1222,55 +1779,69 @@ html.streamix-tv .itemDetailPage .itemMiscInfo .mediaInfoItem {
 }
 
 html.streamix-tv .itemDetailPage .itemMiscInfo .mediaInfoOfficialRating {
-    padding: 0.05em 0.45em !important;
-    border: 1px solid rgba(255, 255, 255, 0.35) !important;
-    border-radius: 4px !important;
+    padding: 0.05em 0.5em !important;
+    border: 1px solid rgba(244, 242, 255, 0.5) !important;
+    border-radius: var(--sx-r-xs) !important;
+    color: var(--sx-text) !important;
 }
 
-html.streamix-tv .itemDetailPage .itemMiscInfo .starIcon {
-    color: var(--sx-accent) !important;
-}
-
-/* Buttons: Play / Resume is an amber pill, the rest grey discs that turn amber when focused */
+/* Buttons: Play / Resume is white, the rest navy glass discs that turn white when focused */
 html.streamix-tv .itemDetailPage .mainDetailButtons {
-    margin-top: 1em !important;
-    margin-bottom: 0.6em !important;
-    gap: 0.55em;
+    margin-top: 16px !important;
+    margin-bottom: 12px !important;
+    gap: 12px;
+}
+
+/* Round buttons at the action height, Play / Resume a capsule of the same height */
+html.streamix-tv .itemDetailPage .detailButton {
+    width: var(--sx-h-action) !important;
+    height: var(--sx-h-action) !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+}
+
+html.streamix-tv .itemDetailPage .detailButton .material-icons,
+html.streamix-tv .itemDetailPage .detailButton-icon {
+    font-size: 21px !important;
 }
 
 html.streamix-tv .itemDetailPage .detailButton {
     margin: 0 !important;
-    background: rgba(255, 255, 255, 0.12) !important;
+    background: color-mix(in srgb, var(--sx-tint) 10%, transparent) !important;
     color: var(--sx-text) !important;
-    border: 0 !important;
+    border: 1px solid var(--sx-border-strong) !important;
     box-shadow: none !important;
-    transition: transform var(--sx-spring-dur) var(--sx-spring), background-color var(--sx-fast) ease, color var(--sx-fast) ease, box-shadow var(--sx-fast) ease !important;
+    transition: transform var(--sx-spring-dur) var(--sx-spring) !important;
 }
 
 html.streamix-tv .itemDetailPage .detailButton.btnPlay,
 html.streamix-tv .itemDetailPage .detailButton.btnResume {
-    background: var(--sx-accent) !important;
-    color: var(--sx-on-accent) !important;
-    border-radius: var(--sx-radius) !important;
-    padding: 0 1.3em 0 1em !important;
+    background: var(--sx-focus) !important;
+    color: var(--sx-on-focus) !important;
+    border-color: transparent !important;
+    border-radius: var(--sx-pill) !important;
+    width: auto !important;
+    padding: 0 22px 0 16px !important;
+    font-size: 15px !important;
     font-weight: 700 !important;
 }
 
 html.streamix-tv .itemDetailPage .detailButton.show-focus:focus,
 html.streamix-tv .itemDetailPage .detailButton:focus-visible {
-    background: var(--sx-accent) !important;
-    color: var(--sx-on-accent) !important;
+    background: var(--sx-focus) !important;
+    color: var(--sx-on-focus) !important;
+    border-color: transparent !important;
     transform: scale(1.08) !important;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+    box-shadow: var(--sx-glow) !important;
 }
 
 html.streamix-tv .itemDetailPage .detailButton.btnPlay.show-focus:focus,
 html.streamix-tv .itemDetailPage .detailButton.btnResume.show-focus:focus,
 html.streamix-tv .itemDetailPage .detailButton.btnPlay:focus-visible,
 html.streamix-tv .itemDetailPage .detailButton.btnResume:focus-visible {
-    background: var(--sx-accent-bright) !important;
     transform: scale(1.05) !important;
-    box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 4px var(--sx-accent), 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+    box-shadow: 0 0 0 3px var(--sx-accent-2), var(--sx-glow) !important;
 }
 
 html.streamix-tv .itemDetailPage .detailButton .detailButton-icon,
@@ -1308,7 +1879,7 @@ html.streamix-tv .itemDetailPage .itemGenres:empty {
 
 html.streamix-tv .itemDetailPage .tagline {
     margin: 0.2em 0 0.35em !important;
-    font-size: 0.8em !important;
+    font-size: var(--sx-fs-body) !important;
     font-weight: 600 !important;
     font-style: normal !important;
     color: var(--sx-text) !important;
@@ -1317,9 +1888,10 @@ html.streamix-tv .itemDetailPage .tagline {
 html.streamix-tv .itemDetailPage .overview {
     margin: 0 0 0.8em !important;
     max-width: 40em;
-    font-size: 0.76em !important;
+    font-size: var(--sx-fs-body) !important;
     line-height: 1.5 !important;
-    color: #d6d6d6 !important;
+    letter-spacing: 0;
+    color: var(--sx-text-3) !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
@@ -1330,15 +1902,16 @@ html.streamix-tv .itemDetailPage .overview-controls {
     display: none !important;
 }
 
-/* Genres line and the other credits: compact grey rows */
+/* Genres line and the other credits: compact blue-grey rows */
 html.streamix-tv .itemDetailPage .itemGenres {
-    font-size: 0.76em !important;
+    font-size: 0.72em !important;
     color: var(--sx-text-2) !important;
 }
 
 html.streamix-tv .itemDetailPage .itemDetailsGroup {
     margin: 0.2em 0 0 !important;
-    font-size: 0.72em !important;
+    font-size: var(--sx-fs-callout) !important;
+    letter-spacing: 0.006em;
 }
 
 html.streamix-tv .itemDetailPage .itemDetailsGroup > div {
@@ -1362,11 +1935,12 @@ html.streamix-tv .itemDetailPage .itemDetailsGroup .content a {
     font-weight: 500 !important;
 }
 
-/* Video / audio / subtitles pickers: one compact grey line each */
+/* Video / audio / subtitles pickers: one compact line each */
 html.streamix-tv .itemDetailPage .trackSelections {
     max-width: 40em;
     margin: 0.2em 0 0.6em !important;
-    font-size: 0.72em !important;
+    font-size: var(--sx-fs-callout) !important;
+    letter-spacing: 0.006em;
 }
 
 html.streamix-tv .itemDetailPage .trackSelections .selectContainer {
@@ -1384,14 +1958,14 @@ html.streamix-tv .itemDetailPage .itemTags {
 /* Rows under the title: full width from the poster's edge */
 html.streamix-tv .itemDetailPage .detailPageSecondaryContainer {
     padding-left: 36px !important;
-    padding-right: 24px !important;
+    padding-right: var(--sx-gutter) !important;
     background: transparent !important;
 }
 
 html.streamix-tv .itemDetailPage .detailPageSecondaryContainer .sectionTitle {
     padding-left: 10px !important;
     margin-left: 0 !important;
-    font-size: 0.95em !important;
+    font-size: var(--sx-fs-title) !important;
 }
 
 html.streamix-tv .itemDetailPage .streamixMovedRow.padded-left,
@@ -1404,13 +1978,13 @@ html.streamix-tv .itemDetailPage .streamixEmptyRow {
     display: none !important;
 }
 
-/* Episode lists on show / season pages: grey rows with an amber edge when focused */
+/* Episode lists on show / season pages */
 html.streamix-tv .itemDetailPage .listItem {
     border-radius: var(--sx-radius) !important;
 }
 
 html.streamix-tv .itemDetailPage .listItemImage {
-    border-radius: 4px !important;
+    border-radius: var(--sx-r-xs) !important;
 }
 
 /* Display settings: custom CSS is for computers (and its text box pops the keyboard up on a TV) */
@@ -1433,9 +2007,9 @@ html.streamix-tv .userPreferencesPage .languageSection .fieldDescription {
     display: none !important;
 }
 
-/* Settings pages: section headings in grey capitals, rows on the charcoal */
+/* Settings pages: section headings in blue-grey capitals, rows on the navy */
 html.streamix-tv .userPreferencesPage h2.sectionTitle {
-    font-size: 0.75em !important;
+    font-size: 0.72em !important;
     font-weight: 700 !important;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -1444,7 +2018,62 @@ html.streamix-tv .userPreferencesPage h2.sectionTitle {
 
 html.streamix-tv .userPreferencesPage .listItem,
 html.streamix-tv .userPreferencesPage .listItemBodyText {
-    font-size: 0.9em;
+    font-size: 0.86em;
+}
+
+/* The settings menu: each section's rows share one rounded panel, with hairlines between them starting where
+   the text does (the way Apple groups settings), rather than a full-width rule under every row. Focus is a
+   soft highlight inside the panel, its corners concentric with the panel's, fading in on its own layer.
+   nativeshell.js marks each section's first and last shown row (sxFirst / sxLast). */
+html.streamix-tv .userPreferencesPage .verticalSection > a.listItem-border {
+    position: relative;
+    isolation: isolate;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: color-mix(in srgb, var(--sx-surface) 55%, transparent) !important;
+    box-shadow: none !important;
+}
+
+html.streamix-tv .userPreferencesPage .verticalSection > a.listItem-border.sxFirst {
+    border-top-left-radius: var(--sx-radius-lg) !important;
+    border-top-right-radius: var(--sx-radius-lg) !important;
+}
+
+html.streamix-tv .userPreferencesPage .verticalSection > a.listItem-border.sxLast {
+    border-bottom-left-radius: var(--sx-radius-lg) !important;
+    border-bottom-right-radius: var(--sx-radius-lg) !important;
+}
+
+html.streamix-tv .userPreferencesPage .verticalSection > a.listItem-border:not(.sxLast)::after {
+    content: '';
+    position: absolute;
+    left: 66px;
+    right: 18px;
+    bottom: 0;
+    height: 1px;
+    background: var(--sx-border);
+    pointer-events: none;
+}
+
+html.streamix-tv .userPreferencesPage .verticalSection > a.listItem-border::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    z-index: -1;
+    border-radius: calc(var(--sx-radius-lg) - 4px);
+    background: var(--sx-accent-soft);
+    opacity: 0;
+    transition: opacity var(--sx-fast) ease;
+    pointer-events: none;
+}
+
+html.streamix-tv .userPreferencesPage .verticalSection > a.listItem-border:focus::before {
+    opacity: 1;
+}
+
+/* The highlight stands on its own: no hairline under it */
+html.streamix-tv .userPreferencesPage .verticalSection > a.listItem-border:focus::after {
+    opacity: 0;
 }
 
 /* ---------------------------------------------------------------------------------------------
@@ -1453,8 +2082,9 @@ html.streamix-tv .userPreferencesPage .listItemBodyText {
 
 /* Response on press: OK on the remote answers the instant it goes down (nativeshell.js marks the
    focused element while the button is held), before anything opens */
-html.streamix-tv .card.sx-pressed .cardScalable {
-    transform: scale(1.03) !important;
+html.streamix-tv .card.sx-pressed .cardScalable,
+html.streamix-tv .sxFeatCard.sx-pressed {
+    transform: scale(1.02) !important;
     transition-duration: 90ms !important;
     transition-timing-function: ease-out !important;
 }
@@ -1462,6 +2092,8 @@ html.streamix-tv .card.sx-pressed .cardScalable {
 html.streamix-tv .emby-button.sx-pressed,
 html.streamix-tv .paper-icon-button-light.sx-pressed,
 html.streamix-tv .sxRailItem.sx-pressed,
+html.streamix-tv .sxTopBar button.sx-pressed,
+html.streamix-tv .sxFeatButtons button.sx-pressed,
 html.streamix-tv .itemDetailPage .detailButton.sx-pressed,
 html.streamix-tv .skinHeader .headerTabs .emby-tab-button.sx-pressed {
     transform: scale(0.95) !important;
@@ -1469,38 +2101,20 @@ html.streamix-tv .skinHeader .headerTabs .emby-tab-button.sx-pressed {
     transition-timing-function: ease-out !important;
 }
 
-/* Rows run on under the rail rather than being cut off at its edge: posters that scroll past the left
-   show through the rail's tint */
-html.streamix-tv.sx-rail .mainAnimatedPage:not(.itemDetailPage) .emby-scroller {
-    margin-left: calc(-1 * var(--sx-rail-w)) !important;
-    padding-left: calc(var(--sx-rail-w) + 16px) !important;
-}
-
 /* Tracking follows size: large titles draw in, small text opens up a touch, body stays neutral */
-html.streamix-tv .card .cardText,
-html.streamix-tv .itemDetailPage .itemMiscInfo,
-html.streamix-tv .itemDetailPage .itemDetailsGroup,
-html.streamix-tv .itemDetailPage .trackSelections,
-html.streamix-tv .skinHeader .currentTimeText,
-html.streamix-tv .sxRailItem {
-    letter-spacing: 0.006em;
-}
-
-html.streamix-tv .itemDetailPage .overview {
-    letter-spacing: 0;
-}
-
-html.streamix-tv .mainAnimatedPage .sectionTitle-cards,
-html.streamix-tv .skinHeader:not(.osdHeader) .pageTitle {
+html.streamix-tv .mainAnimatedPage .sectionTitle-cards {
     letter-spacing: -0.012em;
     line-height: 1.2;
 }
 
-/* Reduced motion: no lifts, slides or sweeps - focus is the amber rim, changes are quick fades */
+/* Reduced motion: no lifts, slides or sweeps - focus is the rim or the white fill, changes are quick fades */
 @media (prefers-reduced-motion: reduce) {
     html.streamix-tv .card.show-focus:focus .cardScalable,
     html.streamix-tv .card.show-animation:focus > .cardBox .cardScalable,
     html.streamix-tv .card.sx-pressed .cardScalable,
+    html.streamix-tv .sxFeatCard:focus,
+    html.streamix-tv .sxFeatButtons button:focus,
+    html.streamix-tv .sxTopBar button:focus,
     html.streamix-tv .itemDetailPage .detailButton.show-focus:focus,
     html.streamix-tv .skinHeader .headerTabs .emby-tab-button.show-focus:focus,
     html.streamix-tv .raised.emby-button.show-focus:focus,
@@ -1514,30 +2128,19 @@ html.streamix-tv .skinHeader:not(.osdHeader) .pageTitle {
     }
 
     html.streamix-tv .sxRailPanel,
-    html.streamix-tv .sxRailItem span {
+    html.streamix-tv .sxRailItem,
+    html.streamix-tv .sxRailItem span,
+    html.streamix-tv .sxFeatTrack {
         transition: opacity 150ms ease !important;
     }
 
-    html.streamix-tv .sxRailPanel {
-        transform: none;
-        opacity: 0.92;
-        width: var(--sx-rail-w);
-    }
-
-    html.streamix-tv.sx-rail-open .sxRailPanel {
-        width: auto;
-        opacity: 1;
-    }
-
+    html.streamix-tv .sxRailPanel,
     html.streamix-tv .sxRailItem span {
-        transform: none;
+        transform: none !important;
     }
 
     html.streamix-tv .mainAnimatedPage:not(.hide),
-    html.streamix-tv .cardImageContainer[data-src]::before,
-    html.streamix-tv .cardImageContainer.sxPosterPending::before,
-    html.streamix-tv .homeSectionsContainer .verticalSection:not(.hide) .itemsContainer:empty,
-    html.streamix-tv .pageTabContent.is-active > .itemsContainer.vertical-wrap:empty {
+    html.streamix-tv .sxFeatInfo.sxFeatSwap > * {
         animation: none !important;
     }
 
@@ -1546,21 +2149,13 @@ html.streamix-tv .skinHeader:not(.osdHeader) .pageTitle {
     }
 }
 
-/* Reduced transparency: the rail is solid */
-@media (prefers-reduced-transparency: reduce) {
-    html.streamix-tv .sxRailPanel {
-        background: #181818;
-    }
-}
-
 /* Increased contrast: brighter secondary text and a heavier focus rim */
 @media (prefers-contrast: more) {
     html.streamix-tv {
-        --sx-text-2: #d0d0d0;
-    }
-
-    html.streamix-tv .card .cardScalable::after {
-        box-shadow: 0 0 0 4px var(--sx-accent), 0 0 0 6px #000;
+        --sx-text-2: var(--sx-text-3);
+        --sx-text-3: var(--sx-text-3);
+        --sx-rim: 0 0 0 3px #ffffff, 0 0 0 5px var(--sx-accent);
+        --sx-border-strong: rgba(228, 222, 255, 0.6);
     }
 }
 
@@ -1581,12 +2176,14 @@ html.streamix-login .backgroundContainer {
     opacity: 1 !important;
 }
 
-/* TV: charcoal with the artwork faintly behind, no colour glows */
+/* TV: the banner's indigo with the artwork faintly behind */
 html.streamix-tv.streamix-login .backgroundContainer {
     background:
-        linear-gradient(180deg, rgba(31, 31, 31, 0.7) 0%, rgba(31, 31, 31, 0.85) 55%, #1f1f1f 100%),
+        radial-gradient(62% 58% at 20% 6%, rgba(76, 64, 170, 0.36) 0%, rgba(76, 64, 170, 0) 64%),
+        radial-gradient(58% 52% at 90% 100%, rgba(130, 34, 96, 0.3) 0%, rgba(130, 34, 96, 0) 64%),
+        linear-gradient(180deg, color-mix(in srgb, var(--sx-bg) 62%, transparent) 0%, color-mix(in srgb, var(--sx-bg) 86%, transparent) 55%, #0e0c19 100%),
         url('../../Branding/Splashscreen') center / cover no-repeat,
-        #1f1f1f !important;
+        var(--sx-bg) !important;
 }
 
 html.streamix-login .page.standalonePage,
@@ -1613,7 +2210,7 @@ html.streamix-login #divUsers .card.show-animation:focus > .cardBox .cardScalabl
 
 html.streamix-tv.streamix-login #divUsers .card:focus .cardScalable,
 html.streamix-tv.streamix-login #divUsers .card.show-animation:focus > .cardBox .cardScalable {
-    box-shadow: 0 0 0 4px var(--sx-accent), 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 0 0 3px var(--sx-accent-2), 0 0 24px color-mix(in srgb, var(--sx-accent) 50%, transparent), 0 16px 40px rgba(0, 0, 0, 0.6) !important;
 }
 
 /* The sign-in form floats on a dark card so it stays readable over any artwork */
@@ -1627,9 +2224,9 @@ html.streamix-login #selectServerPage .padded-left.padded-right {
 
 html.streamix-tv.streamix-login .manualLoginForm,
 html.streamix-tv.streamix-login #selectServerPage .padded-left.padded-right {
-    background: var(--sx-surface);
-    border-radius: 10px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(180deg, rgba(30, 26, 56, 0.94) 0%, color-mix(in srgb, var(--sx-app) 95%, transparent) 100%);
+    border-radius: var(--sx-radius-lg);
+    box-shadow: 0 0 0 1px var(--sx-border), 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
 html.streamix-login .loginDisclaimer,
@@ -1776,12 +2373,15 @@ html.streamix .card.streamixLiveTvTile .cardImageContainer::before {
     letter-spacing: 0.08em;
 }
 
-/* Live TV pages: plain charcoal instead of poster backdrops (channel logos aren't artwork) */
+/* Live TV pages: the plain banner surface instead of poster backdrops (channel logos aren't artwork) */
 html.streamix-tv.streamix-livetv .backgroundContainer {
-    background: var(--sx-bg) !important;
+    background:
+        radial-gradient(62% 58% at 20% 6%, rgba(76, 64, 170, 0.3) 0%, rgba(76, 64, 170, 0) 64%),
+        radial-gradient(58% 52% at 90% 100%, rgba(130, 34, 96, 0.22) 0%, rgba(130, 34, 96, 0) 64%),
+        linear-gradient(180deg, #14112a 0%, #0e0c19 100%) !important;
 }
 
-/* Channel grid: wide tiles with the whole logo on a grey plate, the name on one line underneath */
+/* Channel grid: wide tiles with the whole logo on a navy plate, the name on one line underneath */
 html.streamix-tv .liveTvPage .card[data-type="TvChannel"] .cardPadder {
     padding-bottom: 60% !important;
 }
@@ -1807,7 +2407,7 @@ html.streamix-tv .liveTvPage .card[data-type="TvChannel"] .cardFooter {
 }
 
 html.streamix-tv .liveTvPage .card[data-type="TvChannel"] .cardText {
-    font-size: 0.72em !important;
+    font-size: 0.7em !important;
     text-align: center !important;
 }
 
@@ -1831,15 +2431,15 @@ html.streamix-tv .liveTvPage .pageTabContent > .flex.justify-content-center {
     justify-content: flex-start !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
-    font-size: 0.8em;
+    font-size: 0.76em;
     opacity: 0.75;
 }
 
-/* Guide: an amber rim on the channel or programme the remote is on */
+/* Guide: a blue rim on the channel or programme the remote is on */
 html.streamix-tv .guide-channelHeaderCell:focus,
 html.streamix-tv .programCell:focus {
-    background-color: rgba(229, 160, 13, 0.16) !important;
-    box-shadow: inset 0 0 0 3px var(--sx-accent) !important;
+    background-color: var(--sx-accent-soft) !important;
+    box-shadow: inset 0 0 0 2px var(--sx-accent-2) !important;
     outline: none !important;
 }
 
@@ -1887,6 +2487,37 @@ html.streamix-mobile {
 html.streamix-mobile,
 html.streamix-mobile body {
     -webkit-tap-highlight-color: transparent;
+}
+
+/* Phones share the banner's colours with the TV: the page, the header capsule, the tab bar and the menus sit
+   on indigo-black rather than black (the layout itself is unchanged) */
+html.streamix-mobile {
+    --atv-bg: #0e0c19 !important;
+    --atv-elevated: #16132a !important;
+    --atv-label-2: #aba6c8 !important;
+    --jf-palette-background-default: #0e0c19 !important;
+    --jf-palette-background-defaultChannel: 14 12 25 !important;
+    --jf-palette-background-paper: #16132a !important;
+    --jf-palette-background-paperChannel: 22 19 42 !important;
+    --lg-tint: rgba(22, 19, 42, 0.58) !important;
+    --lg-tint-strong: rgba(22, 19, 42, 0.72) !important;
+}
+
+html.streamix-mobile,
+html.streamix-mobile body,
+html.streamix-mobile .backgroundContainer {
+    background-color: #0e0c19 !important;
+}
+
+html.streamix-mobile .backgroundContainer:not(.withBackdrop) {
+    background:
+        radial-gradient(90% 45% at 15% 0%, rgba(76, 64, 170, 0.34) 0%, rgba(76, 64, 170, 0) 66%),
+        radial-gradient(90% 45% at 90% 100%, rgba(130, 34, 96, 0.26) 0%, rgba(130, 34, 96, 0) 66%),
+        linear-gradient(180deg, #14112a 0%, #0e0c19 60%) !important;
+}
+
+html.streamix-mobile .itemProgressBarForeground {
+    background: linear-gradient(90deg, #45d4ff 0%, #7c5cff 55%, #ff4f9a 100%) !important;
 }
 
 /* Status bar: a soft shade keeps the clock and icons readable over bright artwork */
@@ -2045,7 +2676,7 @@ html.streamix-mobile .itemDetailPage .itemBackdrop {
 
 /* Detail pages: the text runs full width on a phone, so the artwork darkens from the top down */
 html.streamix-mobile.streamix-detail #streamixBackdrop .sbScrim {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.82) 40%, rgba(0, 0, 0, 0.94) 100%);
+    background: linear-gradient(180deg, rgba(14, 12, 25, 0.55) 0%, rgba(14, 12, 25, 0.82) 40%, rgba(14, 12, 25, 0.95) 100%);
 }
 
 /* Live TV on a phone: three channels across, the whole logo on a glass plate, the name underneath */
@@ -2113,7 +2744,7 @@ html.streamix-mobile .streamixHero {
     height: min(64vh, 620px);
     margin: calc(-48px - var(--sx-top)) 0 4px;
     overflow: hidden;
-    background: #000;
+    background: #0e0c19;
 }
 
 html.streamix-mobile .sxHeroTrack {
@@ -2167,7 +2798,7 @@ html.streamix-mobile .sxHeroSlide::after {
     inset: 0;
     background:
         linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 22%),
-        linear-gradient(180deg, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.55) 62%, rgba(0, 0, 0, 0.92) 86%, #000 100%);
+        linear-gradient(180deg, rgba(14, 12, 25, 0) 38%, rgba(14, 12, 25, 0.55) 62%, rgba(14, 12, 25, 0.92) 86%, #0e0c19 100%);
 }
 
 html.streamix-mobile .sxHeroInfo {
@@ -2233,7 +2864,7 @@ html.streamix-mobile .sxHeroBar > span {
     position: absolute;
     inset: 0 auto 0 0;
     border-radius: 2px;
-    background: #fff;
+    background: linear-gradient(90deg, #45d4ff 0%, #7c5cff 55%, #ff4f9a 100%);
 }
 
 html.streamix-mobile .sxHeroButtons {

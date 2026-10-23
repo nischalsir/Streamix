@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Focus on a settings row with a tick box: an amber ring around the tick box only -->
+<!-- Focus on a settings row with a tick box: a violet ring around the tick box only -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:inset="3dp">
     <shape android:shape="rectangle">
         <corners android:radius="8dp" />
         <stroke
             android:width="3dp"
-            android:color="@color/jellyfin_accent" />
+            android:color="@color/streamix_accent_light" />
     </shape>
 </inset>

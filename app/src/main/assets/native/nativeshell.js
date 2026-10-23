@@ -157,15 +157,167 @@ if (isTv) {
         });
     };
 
+    // Colours from the artwork: the picture's strongest hues, measured in OKLab (where equal steps look
+    // equal), give the TV its accent, the rims and progress bars, and dark tones of the same hue for the
+    // page and its surfaces. A picture with little colour keeps its hue but stays quiet.
+    const artColours = (() => {
+        const toLinear = (c) => {
+            c /= 255;
+            return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        };
+        const toOklab = (r, g, b) => {
+            const lr = toLinear(r);
+            const lg = toLinear(g);
+            const lb = toLinear(b);
+            const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+            const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+            const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+            return [
+                0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+                1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+                0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
+            ];
+        };
+        const fromLinear = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+        const rgbOf = (L, C, h) => {
+            const a = C * Math.cos(h * Math.PI / 180);
+            const b = C * Math.sin(h * Math.PI / 180);
+            const l = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3);
+            const m = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3);
+            const s = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3);
+            return [
+                fromLinear(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+                fromLinear(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+                fromLinear(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s)
+            ];
+        };
+        // OKLCH to sRGB, giving up chroma (never lightness or hue) until the colour fits the screen
+        const rgb = (L, C, h) => {
+            let lo = 0;
+            let hi = C;
+            let out = rgbOf(L, C, h);
+            if (out.every((c) => c >= 0 && c <= 1)) return out.map((c) => Math.round(c * 255));
+            for (let i = 0; i < 12; i++) {
+                const mid = (lo + hi) / 2;
+                const test = rgbOf(L, mid, h);
+                if (test.every((c) => c >= 0 && c <= 1)) {
+                    lo = mid;
+                    out = test;
+                } else {
+                    hi = mid;
+                }
+            }
+            out = rgbOf(L, lo, h);
+            return out.map((c) => Math.round(Math.min(1, Math.max(0, c)) * 255));
+        };
+        const css = (L, C, h, alpha = 1) => {
+            const [r, g, b] = rgb(L, C, h);
+            return alpha >= 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+
+        // The picture, shrunk to a few hundred pixels: hues are weighed by how vivid they are (a small bright
+        // red outweighs a big dull brown), ignoring near-black, near-white and grey
+        const BINS = 24;
+        const paletteOf = (img) => {
+            const W = 24;
+            const H = 14;
+            const canvas = document.createElement('canvas');
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return null;
+            let data;
+            try {
+                ctx.drawImage(img, 0, 0, W, H);
+                data = ctx.getImageData(0, 0, W, H).data;
+            } catch (e) {
+                return null;
+            }
+            const weight = new Float64Array(BINS);
+            const sumA = new Float64Array(BINS);
+            const sumB = new Float64Array(BINS);
+            const sumC = new Float64Array(BINS);
+            let total = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const [L, a, b] = toOklab(data[i], data[i + 1], data[i + 2]);
+                const C = Math.hypot(a, b);
+                if (L < 0.2 || L > 0.95 || C < 0.025) continue;
+                const hue = (Math.atan2(b, a) * 180 / Math.PI + 360) % 360;
+                const bin = Math.floor(hue / (360 / BINS)) % BINS;
+                const w = C * C;
+                weight[bin] += w;
+                sumA[bin] += a * w;
+                sumB[bin] += b * w;
+                sumC[bin] += C * w;
+                total += w;
+            }
+            if (total < 0.02) return null;
+            // Neighbouring bins count towards a peak, so a hue split across a boundary isn't lost
+            const score = [...weight].map((w, i) => w + 0.5 * (weight[(i + BINS - 1) % BINS] + weight[(i + 1) % BINS]));
+            const order = score.map((v, i) => i).sort((x, y) => score[y] - score[x]);
+            const picked = [];
+            for (const bin of order) {
+                if (!weight[bin] || score[bin] < score[order[0]] * 0.12) break;
+                const near = picked.some((other) => Math.min(Math.abs(other - bin), BINS - Math.abs(other - bin)) < 3);
+                if (!near) picked.push(bin);
+                if (picked.length === 3) break;
+            }
+            const hues = picked.map((bin) => (Math.atan2(sumB[bin], sumA[bin]) * 180 / Math.PI + 360) % 360);
+            const top = picked[0];
+            return { hues, chroma: sumC[top] / weight[top], vivid: total / (W * H) };
+        };
+
+        // The variables streamix.css is written in (its defaults are the banner's violet). Only ones that colour a
+        // few things (the focused control, rims, progress, pills, panels): changing them restyles the page, and
+        // posters and text keep fixed colours so it never has to repaint them all.
+        const themeOf = (palette) => {
+            const h1 = palette.hues[0];
+            const h2 = palette.hues.length > 1 ? palette.hues[1] : (h1 + 40) % 360;
+            const h3 = palette.hues.length > 2 ? palette.hues[2] : (h1 + 320) % 360;
+            // Quiet pictures get quiet colours; vivid ones as much as reads well on a dark page
+            const c = Math.min(0.19, Math.max(0.07, palette.chroma * (palette.vivid > 0.004 ? 1.6 : 0.9)));
+            return {
+                '--sx-accent': css(0.68, c, h1),
+                '--sx-accent-2': css(0.8, c * 0.75, h1),
+                '--sx-accent-soft': css(0.66, c, h1, 0.26),
+                '--sx-glow': `0 8px 24px ${css(0.6, c, h1, 0.45)}`,
+                '--sx-rim': `0 0 0 2px ${css(0.8, c * 0.75, h1)}, 0 0 22px ${css(0.6, c, h1, 0.5)}`,
+                '--sx-brand': `linear-gradient(135deg, ${css(0.8, c, h2)} 0%, ${css(0.7, c, h1)} 50%, ${css(0.72, c, h3)} 100%)`,
+                '--sx-progress': `linear-gradient(90deg, ${css(0.8, c, h2)} 0%, ${css(0.7, c, h1)} 55%, ${css(0.72, c, h3)} 100%)`,
+                '--sx-tint': css(0.86, 0.06, h1),
+                '--sx-bg': css(0.15, 0.03, h1),
+                '--sx-app': css(0.19, 0.04, h1),
+                '--sx-surface': css(0.24, 0.05, h1),
+                '--sx-on-focus': css(0.18, 0.04, h1)
+            };
+        };
+        // The page colour and the picture's own wash, for drawing into the backdrop
+        const shadeOf = (palette) => {
+            const h1 = palette ? palette.hues[0] : 290;
+            return { bg: rgb(0.15, 0.03, h1), wash: palette ? rgb(0.32, 0.07, h1) : rgb(0.3, 0.07, 290) };
+        };
+        return { paletteOf, themeOf, shadeOf };
+    })();
+
     // Backdrops: while browsing, the focused title's artwork fills the background, and a title's page sits
     // on its own artwork. Waits for focus to settle, decodes off the main thread, then cross-fades two
     // layers on the GPU. On a TV the artwork is blurred, once, into a small canvas that's stretched to the
-    // screen: a CSS blur would be redone by the GPU on every frame of every animation.
+    // screen (a CSS blur would be redone by the GPU on every frame of every animation), with the picture's
+    // colour wash and the shade that keeps text readable drawn into the same canvas: one full-screen layer,
+    // and the colours cross-fade with the picture. The page's colours are set from the same picture.
     const backdrop = (() => {
         const SETTLE_MS = 350;
         const BLUR = isTv;
         const BACKDROP_WIDTH = BLUR ? 480 : 1280;
-        const blurred = (img) => {
+        const rgba = (c, a) => `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`;
+        const gradient = (ctx, x1, y1, stops, colour) => {
+            const g = ctx.createLinearGradient(0, 0, x1, y1);
+            stops.forEach(([at, alpha]) => g.addColorStop(at, rgba(colour, alpha)));
+            return g;
+        };
+        // detail: a title's page (darker on the left for its text); otherwise browsing (the picture shows top
+        // right, fading into the page colour behind the rows)
+        const blurred = (img, palette, detail) => {
             const canvas = document.createElement('canvas');
             const width = 320;
             const height = Math.round(width * (img.naturalHeight || 9) / (img.naturalWidth || 16));
@@ -176,16 +328,54 @@ if (isTv) {
             ctx.filter = 'blur(7px)';
             // Drawn a little oversize, so the blur doesn't fade out towards the edges
             ctx.drawImage(img, -14, -14, width + 28, height + 28);
+            ctx.filter = 'none';
+            const { bg, wash } = artColours.shadeOf(palette);
+            ctx.fillStyle = rgba(wash, detail ? 0.3 : 0.36);
+            ctx.fillRect(0, 0, width, height);
+            if (detail) {
+                ctx.fillStyle = gradient(ctx, 0, height, [[0, 0.2], [0.5, 0.35], [1, 0.96]], bg);
+                ctx.fillRect(0, 0, width, height);
+                ctx.fillStyle = gradient(ctx, width, 0, [[0, 0.86], [0.55, 0.6], [1, 0.42]], bg);
+            } else {
+                ctx.fillStyle = gradient(ctx, width, 0, [[0, 0.7], [0.75, 0.15], [1, 0.15]], bg);
+                ctx.fillRect(0, 0, width, height);
+                ctx.fillStyle = gradient(ctx, 0, height, [[0, 0.2], [0.5, 0.62], [0.92, 1], [1, 1]], bg);
+            }
+            ctx.fillRect(0, 0, width, height);
             return canvas;
         };
         const cache = new Map();
+        // The last few pictures, decoded, and their colours: going from a title on Home to its page redraws
+        // the same picture with the page's shade, without fetching it again
+        const pictures = new Map();
+        const remember = (url, entry) => {
+            pictures.delete(url);
+            pictures.set(url, entry);
+            if (pictures.size > 4) pictures.delete(pictures.keys().next().value);
+        };
         let root = null;
         let layers = [];
         let front = 0;
-        let shownUrl = null;
+        let shownKey = null;
         let timer = null;
         let requested = null;
         let settled = false;
+        let palette = null;
+        let themeKey = '';
+        let themed = false;
+
+        // The page's colours: the picture's on pages with a backdrop, the banner's (the stylesheet) elsewhere
+        const applyTheme = () => {
+            if (!isTv) return;
+            const html = document.documentElement;
+            const vars = themed && palette ? artColours.themeOf(palette) : null;
+            const key = vars ? JSON.stringify(vars) : '';
+            if (key === themeKey) return;
+            const old = themeKey ? Object.keys(JSON.parse(themeKey)) : [];
+            themeKey = key;
+            if (vars) Object.entries(vars).forEach(([name, value]) => html.style.setProperty(name, value));
+            else old.forEach((name) => html.style.removeProperty(name));
+        };
 
         const ensureRoot = () => {
             const container = document.querySelector('.backgroundContainer');
@@ -202,7 +392,7 @@ if (isTv) {
             scrim.className = 'sbScrim';
             root.appendChild(scrim);
             container.appendChild(root);
-            shownUrl = null;
+            shownKey = null;
             return root;
         };
 
@@ -238,23 +428,30 @@ if (isTv) {
         };
 
         const show = async (url) => {
-            if (!url || url === shownUrl || !ensureRoot()) {
+            const detail = document.documentElement.classList.contains('streamix-detail');
+            const key = url && `${url}|${detail}`;
+            if (!url || key === shownKey || !ensureRoot()) {
                 settled = true;
                 return;
             }
-            requested = url;
-            const img = new Image();
-            img.decoding = 'async';
-            img.alt = '';
-            img.src = url;
-            try {
-                await img.decode();
-            } catch (e) {
-                return;
+            requested = key;
+            let entry = pictures.get(url);
+            if (!entry) {
+                const img = new Image();
+                img.decoding = 'async';
+                img.alt = '';
+                img.src = url;
+                try {
+                    await img.decode();
+                } catch (e) {
+                    return;
+                }
+                entry = { img, palette: isTv ? artColours.paletteOf(img) : null };
             }
-            if (requested !== url) return; // focus moved on while this was loading
+            if (requested !== key) return; // focus moved on while this was loading
+            remember(url, entry);
             const back = 1 - front;
-            layers[back].replaceChildren(BLUR ? blurred(img) : img);
+            layers[back].replaceChildren(BLUR ? blurred(entry.img, entry.palette, detail) : entry.img);
             layers[back].classList.add('active');
             layers[front].classList.remove('active');
             const old = layers[front];
@@ -262,8 +459,11 @@ if (isTv) {
                 if (!old.classList.contains('active')) old.replaceChildren();
             }, 900);
             front = back;
-            shownUrl = url;
+            shownKey = key;
             settled = true;
+            // The page takes the picture's colours as it fades in
+            palette = entry.palette;
+            applyTheme();
         };
 
         return {
@@ -275,8 +475,17 @@ if (isTv) {
                 clearTimeout(timer);
                 show(await urlFor(id, null));
             },
+            url(url) {
+                clearTimeout(timer);
+                show(url);
+            },
             refresh() {
                 ensureRoot();
+            },
+            // Pages with a backdrop wear its colours; others (settings, Live TV) the banner's
+            theme(on) {
+                themed = on;
+                applyTheme();
             },
             settled() {
                 return settled;
@@ -318,17 +527,34 @@ if (isTv) {
         });
     };
 
+    // sx-tabs: the header has a row of tabs (a library's Suggestions, Genres...), which Jellyfin fills in and
+    // clears as pages change
+    let tabsHeader = null;
+    const watchHeaderTabs = () => {
+        const header = document.querySelector('.skinHeader');
+        if (!header || header === tabsHeader) return;
+        tabsHeader = header;
+        const check = () => root.classList.toggle('sx-tabs', !!header.querySelector('.headerTabs .emby-tab-button'));
+        new MutationObserver(check).observe(header, { childList: true, subtree: true });
+        check();
+    };
+
     // Backdrops belong to pages with posters (home, libraries, search results), not settings or details
     const updateBrowseState = () => {
         const page = document.querySelector('.mainAnimatedPage:not(.hide)');
         const detail = !!page && page.classList.contains('itemDetailPage');
         // Phones get Jellyfin's newer Live TV page, which has no class of its own
         const liveTv = !!page && (page.classList.contains('liveTvPage') || (!isTv && /^#\/livetv/i.test(window.location.hash)));
-        const browsing = !!page && !detail && !liveTv && !!page.querySelector('.card[data-id]');
+        // Home always counts: its featured title has artwork before any poster row is in (or focused)
+        const browsing = !!page && !detail && !liveTv && (page.classList.contains('homePage') || !!page.querySelector('.card[data-id]'));
         root.classList.toggle('streamix-browse', browsing);
         root.classList.toggle('streamix-detail', detail);
         root.classList.toggle('streamix-livetv', liveTv);
+        // For streamix.css, in place of :has() rules on the whole page (which restyle everything on any change)
+        root.classList.toggle('sx-home', !!page && page.classList.contains('homePage'));
+        watchHeaderTabs();
         if (browsing || detail) backdrop.refresh();
+        backdrop.theme(browsing || detail);
         if (detail) {
             skipTextLinks();
             alignDetailRows();
@@ -450,7 +676,7 @@ if (isTv) {
         // Jellyfin's newer cards (phones) use img tags, with a blurred preview until the picture is in
         if ([...page.querySelectorAll('.cardImageContainer img')].filter(onScreen).some((img) => !img.complete)) return 'images';
         if (artPending > 0) return 'library art';
-        if (phone.pending()) return 'hero';
+        if (phone.pending() || featured.pending()) return 'hero';
         if (root.classList.contains('streamix-browse') && !backdrop.settled()) return 'backdrop';
         return '';
     };
@@ -492,6 +718,15 @@ if (isTv) {
         relabel('.lnkPlaybackPreferences', 'Audio & Playback');
         relabel('.clientSettings', 'Streamix Settings');
         relabel('.selectServer', 'Switch Server');
+        // Each section's rows form one panel (see streamix.css): mark where each panel starts and ends
+        page.querySelectorAll('.verticalSection').forEach((section) => {
+            const rows = [...section.querySelectorAll(':scope > a.listItem-border')];
+            const shown = rows.filter((row) => row.offsetParent !== null);
+            rows.forEach((row) => {
+                row.classList.toggle('sxFirst', row === shown[0]);
+                row.classList.toggle('sxLast', row === shown[shown.length - 1]);
+            });
+        });
     };
 
     // Response on press (TV): OK marks the focused element for as long as it's held, so it answers the
@@ -527,6 +762,12 @@ if (isTv) {
         search: 'M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
         settings: 'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z',
         play: 'M8 5v14l11-7z',
+        menu: 'M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z',
+        favorite: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',
+        add: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
+        check: 'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+        expand: 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z',
+        star: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z',
         info: 'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z'
     };
     const icon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name] || ICONS.library}"/></svg>`;
@@ -548,6 +789,73 @@ if (isTv) {
             } catch (e) { /* no storage */ }
             onViews(views, false);
         });
+    };
+
+    // What to feature at the top of the home screen (the phone's swipeable hero, the TV's hero and its
+    // carousel): what you were watching, then the newest films and shows that have artwork
+    const HERO_FIELDS = 'Overview,Genres,ProductionYear,OfficialRating,CommunityRating,RunTimeTicks,UserData,SeriesName,SeriesId,'
+        + 'ParentIndexNumber,IndexNumber,ParentBackdropItemId,ParentBackdropImageTags,ParentLogoItemId,ParentLogoImageTag,'
+        + 'ParentThumbItemId,ParentThumbImageTag';
+    const backdropOf = (item, maxWidth = 1280) => {
+        const opts = { type: 'Backdrop', index: 0, maxWidth, quality: 80 };
+        if (item.BackdropImageTags && item.BackdropImageTags.length) {
+            return api().getImageUrl(item.Id, { ...opts, tag: item.BackdropImageTags[0] });
+        }
+        if (item.ParentBackdropItemId && item.ParentBackdropImageTags && item.ParentBackdropImageTags.length) {
+            return api().getImageUrl(item.ParentBackdropItemId, { ...opts, tag: item.ParentBackdropImageTags[0] });
+        }
+        return null;
+    };
+    // A wide picture for a small card: the title's thumb (it usually carries the title's logo), else its backdrop
+    const thumbOf = (item) => {
+        const opts = { type: 'Thumb', maxWidth: 480, quality: 85 };
+        if (item.ImageTags && item.ImageTags.Thumb) return api().getImageUrl(item.Id, { ...opts, tag: item.ImageTags.Thumb });
+        if (item.ParentThumbItemId && item.ParentThumbImageTag) {
+            return api().getImageUrl(item.ParentThumbItemId, { ...opts, tag: item.ParentThumbImageTag });
+        }
+        return backdropOf(item, 480);
+    };
+    const logoOf = (item) => {
+        const opts = { type: 'Logo', maxWidth: 600, quality: 90 };
+        if (item.ImageTags && item.ImageTags.Logo) return api().getImageUrl(item.Id, { ...opts, tag: item.ImageTags.Logo });
+        if (item.ParentLogoItemId && item.ParentLogoImageTag) {
+            return api().getImageUrl(item.ParentLogoItemId, { ...opts, tag: item.ParentLogoImageTag });
+        }
+        return null;
+    };
+    const timeLeft = (item) => {
+        const position = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
+        if (!item.RunTimeTicks || !position) return null;
+        const minutes = Math.max(1, Math.round((item.RunTimeTicks - position) / 600000000));
+        return minutes >= 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60} min left` : `${minutes} min left`;
+    };
+    const loadFeatured = async (limit) => {
+        const userId = api().getCurrentUserId();
+        const images = 'Backdrop,Logo,Primary,Thumb';
+        const [resume, latest] = await Promise.all([
+            api().getResumableItems(userId, {
+                Limit: 4, MediaTypes: 'Video', Recursive: true, Fields: HERO_FIELDS, EnableImageTypes: images
+            }).catch(() => null),
+            api().getItems(userId, {
+                IncludeItemTypes: 'Movie,Series', Recursive: true, SortBy: 'DateCreated', SortOrder: 'Descending',
+                Limit: limit + 6, ImageTypes: 'Backdrop', Fields: HERO_FIELDS, EnableImageTypes: images
+            }).catch(() => null)
+        ]);
+        const picked = [];
+        const seen = new Set();
+        for (const item of [...((resume && resume.Items) || []), ...((latest && latest.Items) || [])]) {
+            const key = item.SeriesId || item.Id;
+            if (seen.has(key) || !backdropOf(item)) continue;
+            seen.add(key);
+            picked.push(item);
+            if (picked.length === limit) break;
+        }
+        return picked;
+    };
+    // The home tab (not Favorites) of the home page on screen, if that's where we are
+    const homeTab = () => {
+        const tab = document.querySelector('.mainAnimatedPage.homePage:not(.hide) .pageTabContent.is-active');
+        return tab && tab.querySelector('.homeSectionsContainer') ? tab : null;
     };
 
     // ---------------------------------------------------------------------------------------------
@@ -716,37 +1024,10 @@ if (isTv) {
         const HERO_SLIDES = 6;
         // Often enough that Resume shows where you left off after watching something
         const HERO_REFRESH_MS = 2 * 60 * 1000;
-        const HERO_FIELDS = 'Overview,Genres,ProductionYear,OfficialRating,RunTimeTicks,UserData,SeriesName,'
-            + 'ParentIndexNumber,IndexNumber,ParentBackdropItemId,ParentBackdropImageTags,ParentLogoItemId,ParentLogoImageTag';
         let hero = null;
         let heroUser = null;
         let heroLoadedAt = 0;
         let heroSignature = '';
-
-        const backdropOf = (item) => {
-            const opts = { type: 'Backdrop', index: 0, maxWidth: 1280, quality: 80 };
-            if (item.BackdropImageTags && item.BackdropImageTags.length) {
-                return api().getImageUrl(item.Id, { ...opts, tag: item.BackdropImageTags[0] });
-            }
-            if (item.ParentBackdropItemId && item.ParentBackdropImageTags && item.ParentBackdropImageTags.length) {
-                return api().getImageUrl(item.ParentBackdropItemId, { ...opts, tag: item.ParentBackdropImageTags[0] });
-            }
-            return null;
-        };
-        const logoOf = (item) => {
-            const opts = { type: 'Logo', maxWidth: 600, quality: 90 };
-            if (item.ImageTags && item.ImageTags.Logo) return api().getImageUrl(item.Id, { ...opts, tag: item.ImageTags.Logo });
-            if (item.ParentLogoItemId && item.ParentLogoImageTag) {
-                return api().getImageUrl(item.ParentLogoItemId, { ...opts, tag: item.ParentLogoImageTag });
-            }
-            return null;
-        };
-        const timeLeft = (item) => {
-            const position = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
-            if (!item.RunTimeTicks || !position) return null;
-            const minutes = Math.max(1, Math.round((item.RunTimeTicks - position) / 600000000));
-            return minutes >= 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60} min left` : `${minutes} min left`;
-        };
 
         const slideHtml = (item) => {
             const position = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
@@ -780,40 +1061,13 @@ if (isTv) {
             </div>`;
         };
 
-        const loadHero = async () => {
-            const userId = api().getCurrentUserId();
-            const [resume, latest] = await Promise.all([
-                api().getResumableItems(userId, {
-                    Limit: 3, MediaTypes: 'Video', Recursive: true, Fields: HERO_FIELDS, EnableImageTypes: 'Backdrop,Logo,Primary'
-                }).catch(() => null),
-                api().getItems(userId, {
-                    IncludeItemTypes: 'Movie,Series', Recursive: true, SortBy: 'DateCreated', SortOrder: 'Descending',
-                    Limit: 12, ImageTypes: 'Backdrop', Fields: HERO_FIELDS, EnableImageTypes: 'Backdrop,Logo,Primary'
-                }).catch(() => null)
-            ]);
-            const picked = [];
-            const seen = new Set();
-            for (const item of [...((resume && resume.Items) || []), ...((latest && latest.Items) || [])]) {
-                const key = item.SeriesId || item.Id;
-                if (seen.has(key) || !backdropOf(item)) continue;
-                seen.add(key);
-                picked.push(item);
-                if (picked.length === HERO_SLIDES) break;
-            }
-            return picked;
-        };
+        const loadHero = () => loadFeatured(HERO_SLIDES);
 
         const updateDots = () => {
             const track = hero && hero.querySelector('.sxHeroTrack');
             if (!track) return;
             const index = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
             hero.querySelectorAll('.sxHeroDots span').forEach((dot, i) => dot.classList.toggle('active', i === index));
-        };
-
-        // The home tab (not Favorites) of the home page on screen, if that's where we are
-        const homeTab = () => {
-            const tab = document.querySelector('.mainAnimatedPage.homePage:not(.hide) .pageTabContent.is-active');
-            return tab && tab.querySelector('.homeSectionsContainer') ? tab : null;
         };
 
         // One hero element for every visit: an items container, so Jellyfin handles its buttons' play and
@@ -894,38 +1148,44 @@ if (isTv) {
     })();
 
     // ---------------------------------------------------------------------------------------------
-    // TV navigation rail: Search, Home, each library and Settings down the left edge. A strip of icons
-    // that opens out with labels when the remote moves into it: Left from the first thing on a row, or
-    // Back on a top-level page (see streamix.css). Its buttons stay out of Jellyfin's focus navigation
-    // (tabindex -1); while it's open this handles the remote itself.
+    // TV navigation (see "Navigation" in streamix.css):
+    //  - a top bar inside Jellyfin's header: menu, logo, a pill per section (Home and each library), a
+    //    search field and the profile. Ordinary buttons, so Jellyfin's focus navigation reaches them (▲).
+    //  - a slim sidebar of icons down the left edge (Home, Search, Favorites, Live TV, Settings) that opens
+    //    out with labels when the remote moves into it: ◀ from the first thing on a row, Back on a
+    //    top-level page, or the menu button. Its buttons stay out of Jellyfin's focus navigation
+    //    (tabindex -1); while it's open this handles the remote itself.
     // ---------------------------------------------------------------------------------------------
     const rail = (() => {
         if (!isTv) return { update() {}, onBack: () => false };
 
         const LIBRARY_ROUTES = { movies: 'movies', tvshows: 'tv', music: 'music' };
-        // Pages the rail leads to: Back on one of them opens the rail rather than leaving it
+        // Pages the navigation leads to: Back on one of them opens the sidebar rather than leaving it
         const TOP_LEVEL = /^#\/(home|movies|tv|music|livetv|search|mypreferencesmenu|list|homevideos|musicvideos|books)(\.html)?$/;
         let nav = null;
-        let items = [];
-        let itemsUser = null;
-        let activeKey = 'home';
+        let bar = null;
+        let views = [];
+        let sideItems = [];
+        let viewsUser = null;
+        let profileUser = null;
+        let sideKey = 'home';
+        let topKey = 'home';
         let open = false;
         let shown = false;
         let returnFocus = null;
 
-        const routeFor = (item) => {
-            if (item.route) return item.route;
+        const viewRoute = (view) => {
             // Straight to the channels when there's no guide (see the Live TV tile above)
-            if (item.type === 'livetv') return '#/livetv?collectionType=livetv' + (liveTvHasGuide ? '' : '&tab=2');
+            if (view.type === 'livetv') return '#/livetv?collectionType=livetv' + (liveTvHasGuide ? '' : '&tab=2');
             try {
                 const url = window.Emby && window.Emby.Page && window.Emby.Page.getRouteUrl({
-                    Id: item.id, Name: item.name, Type: 'CollectionFolder', CollectionType: item.type || undefined,
+                    Id: view.id, Name: view.name, Type: 'CollectionFolder', CollectionType: view.type || undefined,
                     IsFolder: true, ServerId: api().serverId()
                 }, {});
                 if (url) return url.startsWith('#') ? url : '#' + url.replace(/^.*?#/, '');
             } catch (e) { /* older web client */ }
-            const route = LIBRARY_ROUTES[item.type] || 'list';
-            return `#/${route}?topParentId=${item.id}` + (item.type ? `&collectionType=${item.type}` : '');
+            const route = LIBRARY_ROUTES[view.type] || 'list';
+            return `#/${route}?topParentId=${view.id}` + (view.type ? `&collectionType=${view.type}` : '');
         };
 
         const parts = () => {
@@ -933,46 +1193,62 @@ if (isTv) {
             return { path: hash.split('?')[0].toLowerCase(), params: new URLSearchParams(hash.split('?')[1] || '') };
         };
 
-        // Which rail entry the page belongs to; null keeps the current one (a title opened from a library stays under it)
-        const keyForRoute = () => {
+        // The library the page belongs to, or null (a title opened from a library stays under it)
+        const viewForRoute = () => {
             const { path, params } = parts();
-            if (path === '' || path === '#/' || path.startsWith('#/home')) return 'home';
-            if (path.startsWith('#/search')) return 'search';
-            if (path.startsWith('#/mypreferences')) return 'settings';
-            if (path.startsWith('#/livetv')) {
-                const live = items.find((i) => i.type === 'livetv');
-                return live ? live.key : null;
-            }
+            if (path.startsWith('#/livetv')) return views.find((v) => v.type === 'livetv') || null;
             const parent = params.get('topParentId') || params.get('parentId');
-            const item = parent && items.find((i) => i.id === parent);
-            return item ? item.key : null;
+            return (parent && views.find((v) => v.id === parent)) || null;
+        };
+
+        const isHome = () => {
+            const { path } = parts();
+            return path === '' || path === '#/' || path.startsWith('#/home');
+        };
+
+        // Which top-bar pill and which sidebar icon the page belongs to; null keeps the current one
+        const keysForRoute = () => {
+            const { path, params } = parts();
+            if (isHome()) {
+                // Switching Home's tabs doesn't always change the address: the tab on screen decides
+                const tab = document.querySelector('.skinHeader .headerTabs .emby-tab-button-active');
+                const favourites = tab ? tab.getAttribute('data-index') === '1' : params.get('tab') === '1';
+                return { top: 'home', side: favourites ? 'favorites' : 'home' };
+            }
+            if (path.startsWith('#/search')) return { top: null, side: 'search' };
+            if (path.startsWith('#/mypreferences')) return { top: null, side: 'settings' };
+            const view = viewForRoute();
+            if (view) return { top: view.id, side: view.type === 'livetv' ? 'livetv' : null };
+            return { top: null, side: null };
         };
 
         const isTopLevel = () => {
             const { path, params } = parts();
             if (!TOP_LEVEL.test(path)) return false;
-            // A plain list is top level only when it's a whole library (a collection folder from the rail)
+            // A plain list is top level only when it's a whole library
             if (path.startsWith('#/list')) {
                 const parent = params.get('topParentId') || params.get('parentId');
-                return !!parent && items.some((i) => i.id === parent);
+                return !!parent && views.some((v) => v.id === parent);
             }
             return true;
         };
 
-        const dialogOpen = () => !!document.querySelector('.dialogContainer .dialog, .dialogContainer');
+        const dialogOpen = () => !!document.querySelector('.dialogContainer');
 
-        const buttons = () => (nav ? [...nav.querySelectorAll('.sxRailItem')] : []);
+        const sideButtons = () => (nav ? [...nav.querySelectorAll('.sxRailItem')] : []);
 
         const markActive = () => {
-            buttons().forEach((button) => {
-                const active = button.getAttribute('data-key') === activeKey;
+            const mark = (button, active) => {
                 button.classList.toggle('active', active);
                 if (active) button.setAttribute('aria-current', 'page');
                 else button.removeAttribute('aria-current');
-            });
+            };
+            sideButtons().forEach((button) => mark(button, button.getAttribute('data-key') === sideKey));
+            if (bar) bar.querySelectorAll('.sxPill').forEach((pill) => mark(pill, pill.getAttribute('data-key') === topKey));
         };
 
-        const render = () => {
+        // --- Sidebar --------------------------------------------------------------------------------
+        const renderSide = () => {
             if (!nav) {
                 nav = document.createElement('nav');
                 nav.className = 'sxRail';
@@ -980,37 +1256,22 @@ if (isTv) {
                 document.body.appendChild(nav);
                 nav.addEventListener('click', (e) => {
                     const button = e.target.closest && e.target.closest('.sxRailItem');
-                    if (button) go(button.getAttribute('data-key'));
+                    if (button) goSide(button.getAttribute('data-key'));
                 });
             }
-            const button = (item) => `<button type="button" class="sxRailItem" tabindex="-1" data-key="${escapeHtml(item.key)}">`
-                + `${icon(item.icon)}<span>${escapeHtml(item.name)}</span></button>`;
-            const top = items.filter((i) => i.key !== 'settings');
-            const settings = items.find((i) => i.key === 'settings');
-            nav.innerHTML = '<div class="sxRailPanel"></div><div class="sxRailLogo" aria-hidden="true"></div>'
-                + `<div class="sxRailItems">${top.map(button).join('')}</div>`
-                + `<div class="sxRailFoot">${settings ? button(settings) : ''}</div>`;
-            markActive();
-        };
-
-        const setItems = (views) => {
-            items = [
-                { key: 'search', name: 'Search', icon: 'search', route: '#/search' },
+            const live = views.find((v) => v.type === 'livetv');
+            sideItems = [
                 { key: 'home', name: 'Home', icon: 'home', route: '#/home' },
-                ...views.map((v) => ({ key: v.id, id: v.id, type: v.type, name: v.name, icon: ICONS[v.type] ? v.type : 'library' })),
+                { key: 'search', name: 'Search', icon: 'search', route: '#/search' },
+                { key: 'favorites', name: 'Favourites', icon: 'favorite', route: '#/home?tab=1' },
+                ...(live ? [{ key: 'livetv', name: live.name, icon: 'livetv', view: live }] : []),
                 { key: 'settings', name: 'Settings', icon: 'settings', route: '#/mypreferencesmenu' }
             ];
-            render();
-        };
-
-        const loadItems = () => {
-            const userId = api().getCurrentUserId();
-            if (itemsUser === userId) return;
-            itemsUser = userId;
-            loadViews(userId, setItems).catch(() => {
-                if (!items.length) setItems([]);
-            });
-            checkLiveTvGuide();
+            nav.innerHTML = '<div class="sxRailPanel"></div><div class="sxRailItems">'
+                + sideItems.map((item) => `<button type="button" class="sxRailItem" tabindex="-1" data-key="${escapeHtml(item.key)}">`
+                    + `${icon(item.icon)}<span>${escapeHtml(item.name)}</span></button>`).join('')
+                + '</div>';
+            markActive();
         };
 
         const visible = (el) => !!el && el.isConnected && el.offsetParent !== null;
@@ -1021,7 +1282,7 @@ if (isTv) {
             returnFocus = active && active !== document.body ? active : null;
             open = true;
             root.classList.add('sx-rail-open');
-            const target = buttons().find((b) => b.getAttribute('data-key') === activeKey) || buttons()[1] || buttons()[0];
+            const target = sideButtons().find((b) => b.getAttribute('data-key') === sideKey) || sideButtons()[0];
             if (target) target.focus({ preventScroll: true });
         };
 
@@ -1038,26 +1299,129 @@ if (isTv) {
             }
         };
 
-        const go = (key) => {
-            const item = items.find((i) => i.key === key);
-            if (!item) return;
-            const here = keyForRoute() === key && isTopLevel();
-            closeRail(here);
-            if (here) return;
-            activeKey = key;
-            markActive();
+        const navigate = (route) => {
             returnFocus = null;
-            // The page lost focus with the rail; the new page's focus comes from its own autofocus / focusContent
-            if (document.activeElement && nav.contains(document.activeElement)) document.activeElement.blur();
-            window.location.hash = routeFor(item);
+            // The page loses focus with the menu; the new page's focus comes from its own autofocus / focusContent
+            const active = document.activeElement;
+            if (active && ((nav && nav.contains(active)) || (bar && bar.contains(active)))) active.blur();
+            window.location.hash = route;
         };
 
+        // Home and Favourites are two tabs of one page: when it's on screen, switch tabs in place
+        const homeTabInPlace = (index) => {
+            if (!isHome()) return false;
+            const tab = document.querySelector(`.skinHeader .headerTabs .emby-tab-button[data-index="${index}"]`);
+            if (!tab) return false;
+            const active = document.activeElement;
+            if (active && ((nav && nav.contains(active)) || (bar && bar.contains(active)))) active.blur();
+            tab.click();
+            setTimeout(focusContent, 300);
+            return true;
+        };
+
+        const goSide = (key) => {
+            const item = sideItems.find((i) => i.key === key);
+            if (!item) return;
+            const here = keysForRoute().side === key && isTopLevel();
+            closeRail(here);
+            if (here) return;
+            sideKey = key;
+            markActive();
+            if ((key === 'home' || key === 'favorites') && homeTabInPlace(key === 'favorites' ? 1 : 0)) return;
+            navigate(item.view ? viewRoute(item.view) : item.route);
+        };
+
+        // --- Top bar --------------------------------------------------------------------------------
+        const ensureBar = () => {
+            const header = document.querySelector('.skinHeader');
+            if (!header) return null;
+            if (bar && bar.parentElement === header) return bar;
+            bar = document.createElement('div');
+            bar.className = 'sxTopBar';
+            bar.innerHTML = `<button type="button" class="sxTopIcon sxMenuButton" aria-label="Menu">${icon('menu')}</button>`
+                + '<div class="sxTopLogo" role="img" aria-label="Streamix"></div>'
+                + '<div class="sxPills" role="navigation" aria-label="Sections"></div>'
+                + `<button type="button" class="sxSearchField" aria-label="Search films and shows">${icon('search')}<span>Search</span></button>`
+                + `<button type="button" class="sxProfile" aria-label="Profile and settings"><span class="sxAvatar"></span>`
+                + `<span class="sxProfileName"></span>${icon('expand')}</button>`;
+            header.insertBefore(bar, header.firstChild);
+            bar.addEventListener('click', (e) => {
+                const target = e.target.closest && e.target.closest('button');
+                if (!target) return;
+                if (target.classList.contains('sxMenuButton')) {
+                    openRail();
+                } else if (target.classList.contains('sxSearchField')) {
+                    if (!parts().path.startsWith('#/search')) navigate('#/search');
+                } else if (target.classList.contains('sxProfile')) {
+                    if (!parts().path.startsWith('#/mypreferencesmenu')) navigate('#/mypreferencesmenu');
+                } else if (target.classList.contains('sxPill')) {
+                    const key = target.getAttribute('data-key');
+                    if (key === topKey && isTopLevel() && keysForRoute().side !== 'favorites') return;
+                    topKey = key;
+                    markActive();
+                    const view = views.find((v) => v.id === key);
+                    if (!view && homeTabInPlace(0)) {
+                        sideKey = 'home';
+                        markActive();
+                        return;
+                    }
+                    navigate(view ? viewRoute(view) : '#/home');
+                }
+            });
+            renderPills();
+            profileUser = null;
+            return bar;
+        };
+
+        const renderPills = () => {
+            if (!bar) return;
+            // Live TV has its place in the sidebar; the pills are for browsing
+            bar.querySelector('.sxPills').innerHTML = [{ id: 'home', name: 'Home' }, ...views.filter((v) => v.type !== 'livetv')]
+                .map((v) => `<button type="button" class="sxPill" data-key="${escapeHtml(v.id)}">${escapeHtml(v.name)}</button>`).join('');
+            markActive();
+        };
+
+        const renderProfile = () => {
+            const userId = api().getCurrentUserId();
+            if (!bar || profileUser === userId) return;
+            profileUser = userId;
+            api().getCurrentUser().then((user) => {
+                if (!user || !bar) return;
+                bar.querySelector('.sxProfileName').textContent = user.Name || '';
+                const avatar = bar.querySelector('.sxAvatar');
+                if (user.PrimaryImageTag && api().getUserImageUrl) {
+                    avatar.style.backgroundImage = `url("${api().getUserImageUrl(user.Id, { type: 'Primary', tag: user.PrimaryImageTag, height: 72 })}")`;
+                    avatar.textContent = '';
+                } else {
+                    avatar.style.backgroundImage = '';
+                    avatar.textContent = (user.Name || '?').trim().charAt(0).toUpperCase();
+                }
+            }).catch(() => {
+                profileUser = null;
+            });
+        };
+
+        const loadNav = () => {
+            const userId = api().getCurrentUserId();
+            if (viewsUser === userId) return;
+            viewsUser = userId;
+            loadViews(userId, (list) => {
+                views = list;
+                renderSide();
+                renderPills();
+            }).catch(() => {
+                if (!nav) renderSide();
+            });
+            checkLiveTvGuide();
+        };
+
+        // --- Remote ---------------------------------------------------------------------------------
         const typing = (el) => !!el && !!el.matches && el.matches('input:not([type=checkbox]):not([type=radio]), textarea, select, [contenteditable="true"]');
 
         window.addEventListener('keydown', (e) => {
             if (!shown || !nav) return;
             if (open) {
-                const list = buttons();
+                const list = sideButtons();
                 const index = list.indexOf(document.activeElement);
                 switch (e.key) {
                     case 'ArrowUp':
@@ -1070,7 +1434,7 @@ if (isTv) {
                         closeRail(true);
                         break;
                     case 'Enter':
-                        if (index >= 0) go(list[index].getAttribute('data-key'));
+                        if (index >= 0) goSide(list[index].getAttribute('data-key'));
                         break;
                     case 'ArrowLeft':
                         break;
@@ -1081,17 +1445,24 @@ if (isTv) {
                 e.stopImmediatePropagation();
                 return;
             }
-            // Left with nowhere further left to go (the first thing on a row or in a grid) opens the rail
+            // Left with nowhere further left to go (the first thing on a row or in a grid) opens the sidebar
             if (e.key !== 'ArrowLeft' || e.repeat) return;
             const before = document.activeElement;
             if (typing(before) || dialogOpen()) return;
-            // Jellyfin moves focus within this same key press, so by the next task we know whether it went anywhere
+            // Jellyfin moves focus within this same key press, so by the next task we know whether it went anywhere.
+            // Its spatial navigation can also take ◀ from the first poster of a row up into the bar above (the
+            // tabs start on the same edge); ◀ never leaves a row upwards, so that counts as nowhere further left.
             setTimeout(() => {
-                if (!open && shown && document.activeElement === before && !dialogOpen()) openRail();
+                if (open || !shown || dialogOpen()) return;
+                const now = document.activeElement;
+                const intoBar = before && before !== document.body && !(before.closest && before.closest('.skinHeader'))
+                    && now && now.closest && now.closest('.skinHeader');
+                if (intoBar) before.focus();
+                if (intoBar || now === before) openRail();
             }, 0);
         }, true);
 
-        // Focus that leaves the rail some other way (a dialog, a page change) closes it
+        // Focus that leaves the sidebar some other way (a dialog, a page change) closes it
         document.addEventListener('focusin', (e) => {
             if (open && nav && !nav.contains(e.target)) closeRail(false);
         });
@@ -1108,20 +1479,25 @@ if (isTv) {
                 if (!show) closeRail(false);
             }
             if (!show) return;
-            loadItems();
-            const key = keyForRoute();
-            if (key) activeKey = key;
+            ensureBar();
+            loadNav();
+            renderProfile();
+            // A page with no entry of its own (a library, say) lights up nothing in the sidebar
+            const keys = keysForRoute();
+            sideKey = keys.side;
+            topKey = keys.top;
             markActive();
         };
 
         return {
             update,
-            // Back on a top-level page opens the rail; Back with the rail open goes Home, and on Home leaves the app
+            // Back on a top-level page opens the sidebar; Back with it open goes Home, and on Home leaves the app
             onBack() {
                 if (!shown || dialogOpen()) return false;
                 if (open) {
-                    if (keyForRoute() === 'home') return false;
-                    go('home');
+                    if (isHome() && keysForRoute().side === 'home') return false;
+                    closeRail(false);
+                    navigate('#/home');
                     return true;
                 }
                 if (isTopLevel()) {
@@ -1134,6 +1510,362 @@ if (isTv) {
     })();
 
     window.StreamixShell = { onBack: () => rail.onBack() };
+
+    // ---------------------------------------------------------------------------------------------
+    // TV home: a featured title at the top - title, badges, story, Play / More info / Favourite on the left,
+    // its artwork on the right - over a carousel of what you were watching and what's new. Moving along the
+    // carousel features that title. Built as a Jellyfin items container, so Play, Resume and More info are
+    // Jellyfin's own item actions (see "Featured" in streamix.css).
+    // ---------------------------------------------------------------------------------------------
+    const featured = (() => {
+        if (!isTv) return { update() {}, pending: () => false, focusTarget: () => null };
+        const COUNT = 10;
+        // Often enough that Resume shows where you left off after watching something
+        const REFRESH_MS = 60 * 1000;
+        let element = null;
+        let items = [];
+        let current = -1;
+        let user = null;
+        let loadedAt = 0;
+        let loading = false;
+        let signature = '';
+        let front = 0;
+        let artRequest = null;
+        const favourites = new Map();
+        // Moving along the carousel moves the focus and the track straight away; the hero (its text, artwork
+        // and the page's colours) follows once the remote rests, so holding ▶ never queues up work
+        const HERO_SETTLE_MS = 160;
+        let heroTimer = null;
+        let shown = -1;
+        // The carousel's geometry, measured once (the cards are all one size)
+        let slot = 0;
+        let maxX = 0;
+        // Whether a title needs two lines, measured on a canvas rather than by reading the heading's height
+        let measure = null;
+        let titleWidth = 0;
+        window.addEventListener('resize', () => {
+            slot = 0;
+            titleWidth = 0;
+            measure = null;
+        });
+
+        const ticksToRuntime = (ticks) => {
+            const minutes = Math.round((ticks || 0) / 600000000);
+            if (!minutes) return null;
+            return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
+        };
+        const isEpisode = (item) => item.Type === 'Episode';
+        const titleOf = (item) => (isEpisode(item) ? item.SeriesName || item.Name : item.Name);
+        // Favourites and More info act on the show when the featured title is an episode of it
+        const ownerOf = (item) => (isEpisode(item) && item.SeriesId
+            ? { id: item.SeriesId, type: 'Series', isFolder: true }
+            : { id: item.Id, type: item.Type, isFolder: !!item.IsFolder });
+        const attrsFor = (item, owner) => `data-id="${owner ? owner.id : item.Id}" data-serverid="${item.ServerId}" `
+            + `data-type="${owner ? owner.type : item.Type}" data-mediatype="${owner ? '' : item.MediaType || ''}" `
+            + `data-isfolder="${owner ? owner.isFolder : !!item.IsFolder}"`;
+
+        const build = () => {
+            element = document.createElement('div');
+            element.setAttribute('is', 'emby-itemscontainer');
+            element.setAttribute('data-multiselect', 'false');
+            element.className = 'sxFeatured';
+            // Jellyfin centres whatever gets focus on a TV, which would push the title off the top as the remote
+            // reaches the carousel. Its scroller leaves "custom" containers alone; this block scrolls itself.
+            element.setAttribute('data-scroll-mode-x', 'custom');
+            element.setAttribute('data-scroll-mode-y', 'custom');
+            element.innerHTML = `<div class="sxFeatHero">
+                    <div class="sxFeatInfo" aria-live="polite">
+                        <h1 class="sxFeatTitle"></h1>
+                        <div class="sxFeatBadges"></div>
+                        <div class="sxFeatMeta"></div>
+                        <div class="sxFeatProgress"></div>
+                        <p class="sxFeatOverview"></p>
+                        <div class="sxFeatButtons focuscontainer-x">
+                            <button type="button" class="sxFeatPlay itemAction" data-action="play">${icon('play')}<span>Play</span></button>
+                            <button type="button" class="sxFeatIcon sxFeatMore itemAction" data-action="link" aria-label="More info">${icon('info')}</button>
+                            <button type="button" class="sxFeatIcon sxFeatFav" aria-label="Add to Favourites">${icon('add')}</button>
+                            <span class="sxFeatHint" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                    <div class="sxFeatArt"><div class="sxFeatLayer"></div><div class="sxFeatLayer"></div></div>
+                </div>
+                <div class="sxFeatRow focuscontainer-x"><div class="sxFeatTrack"></div></div>`;
+            element.addEventListener('focusin', (e) => {
+                // The featured block reads best whole: coming back up to it shows it from the top
+                if (document.scrollingElement && document.scrollingElement.scrollTop > 0) {
+                    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+                }
+                const from = e.relatedTarget;
+                // Coming into the carousel from above or below lands on the featured card, not merely the nearest
+                const card = e.target.closest && e.target.closest('.sxFeatCard');
+                if (card) {
+                    const row = element.querySelector('.sxFeatRow');
+                    const selected = current >= 0 ? row.querySelectorAll('.sxFeatCard')[current] : null;
+                    if (selected && selected !== card && !(from && row.contains(from))) {
+                        selected.focus();
+                        return;
+                    }
+                    // Moving along the carousel features the title the remote is on
+                    select(Number(card.getAttribute('data-index')));
+                    scrollTo(card);
+                    return;
+                }
+                // ...and coming up to the buttons lands on Play
+                const buttons = e.target.closest && e.target.closest('.sxFeatButtons');
+                const play = buttons && buttons.querySelector('.sxFeatPlay');
+                if (play && e.target !== play && !(from && buttons.contains(from))) play.focus();
+            });
+            element.querySelector('.sxFeatFav').addEventListener('click', toggleFavourite);
+            // The focused round button's name shows beside the buttons
+            const buttons = element.querySelector('.sxFeatButtons');
+            buttons.addEventListener('focusin', showHint);
+            buttons.addEventListener('focusout', (e) => {
+                if (!(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.sxFeatIcon'))) {
+                    element.querySelector('.sxFeatHint').classList.remove('on');
+                }
+            });
+            return element;
+        };
+
+        // The carousel keeps the card the remote is on in its second slot, so the next one is always in view.
+        // The row clips rather than scrolls, and the track moves with a transform.
+        const scrollTo = (card) => {
+            const track = element.querySelector('.sxFeatTrack');
+            if (!slot) {
+                const row = element.querySelector('.sxFeatRow');
+                const first = track.firstElementChild;
+                slot = first ? first.offsetWidth + parseFloat(getComputedStyle(track).columnGap || '0') : 0;
+                maxX = Math.max(0, track.scrollWidth - row.clientWidth);
+            }
+            const index = Number(card.getAttribute('data-index'));
+            const x = Math.min(maxX, Math.max(0, (index - 1) * slot));
+            track.style.transform = `translateX(${-x}px)`;
+            // Cards moved past the left edge fade out rather than leaving a sliver in the margin
+            const firstShown = slot ? Math.round(x / slot) : 0;
+            track.querySelectorAll('.sxFeatCard').forEach((other, i) => other.classList.toggle('sxPast', i < firstShown));
+        };
+
+        const isLong = (title, text) => {
+            if (!measure) {
+                const style = getComputedStyle(title);
+                measure = document.createElement('canvas').getContext('2d');
+                measure.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+                if ('letterSpacing' in measure) measure.letterSpacing = style.letterSpacing;
+            }
+            if (!titleWidth) titleWidth = title.clientWidth;
+            return measure.measureText(text).width > titleWidth;
+        };
+
+        function showHint() {
+            const hint = element.querySelector('.sxFeatHint');
+            const active = document.activeElement;
+            const button = active && active.closest && active.closest('.sxFeatIcon');
+            if (!button || !element.contains(button)) return;
+            hint.textContent = button.getAttribute('aria-label');
+            hint.classList.add('on');
+        }
+
+        const renderFavourite = (item) => {
+            const owner = ownerOf(item);
+            const button = element.querySelector('.sxFeatFav');
+            const known = favourites.get(owner.id);
+            const on = known != null ? known : !isEpisode(item) && !!(item.UserData && item.UserData.IsFavorite);
+            button.innerHTML = icon(on ? 'check' : 'add');
+            button.setAttribute('aria-label', on ? 'In Favourites' : 'Add to Favourites');
+            button.classList.toggle('on', on);
+            showHint();
+        };
+
+        const loadFavourite = (item) => {
+            const owner = ownerOf(item);
+            if (favourites.has(owner.id)) return;
+            if (owner.id === item.Id) {
+                favourites.set(owner.id, !!(item.UserData && item.UserData.IsFavorite));
+                return;
+            }
+            api().getItem(api().getCurrentUserId(), owner.id).then((show) => {
+                favourites.set(owner.id, !!(show && show.UserData && show.UserData.IsFavorite));
+                if (items[current] === item) renderFavourite(item);
+            }).catch(() => {});
+        };
+
+        function toggleFavourite() {
+            const item = items[current];
+            if (!item) return;
+            const owner = ownerOf(item);
+            const next = !favourites.get(owner.id);
+            api().updateFavoriteStatus(api().getCurrentUserId(), owner.id, next).then((data) => {
+                favourites.set(owner.id, data && data.IsFavorite != null ? !!data.IsFavorite : next);
+                if (items[current] === item) renderFavourite(item);
+            }).catch(() => {});
+        }
+
+        // The artwork cross-fades once the new picture is decoded; the text changes straight away
+        const showArt = (item) => {
+            // The frame is 452 CSS px wide: 904 screen pixels on a 1080p TV
+            const url = backdropOf(item, 960);
+            const layers = element.querySelectorAll('.sxFeatLayer');
+            artRequest = url;
+            const img = new Image();
+            img.decoding = 'async';
+            img.alt = '';
+            img.src = url;
+            img.decode().catch(() => {}).then(() => {
+                if (artRequest !== url) return;
+                const back = 1 - front;
+                layers[back].replaceChildren(img);
+                layers[back].classList.add('active');
+                layers[front].classList.remove('active');
+                front = back;
+            });
+            // The page's own background follows, blurred
+            backdrop.url(backdropOf(item, 480));
+        };
+
+        function select(index, now = false) {
+            const item = items[index];
+            if (!item || index === current) return;
+            const cards = element.querySelectorAll('.sxFeatCard');
+            if (cards[current]) cards[current].classList.remove('selected');
+            if (cards[index]) cards[index].classList.add('selected');
+            current = index;
+            clearTimeout(heroTimer);
+            if (now) showHero(index);
+            else heroTimer = setTimeout(() => showHero(current), HERO_SETTLE_MS);
+        }
+
+        function showHero(index) {
+            const item = items[index];
+            if (!item || index === shown) return;
+            shown = index;
+            const info = element.querySelector('.sxFeatInfo');
+            const position = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
+            const left = timeLeft(item);
+            const title = info.querySelector('.sxFeatTitle');
+            // A title that wraps to two lines leaves room for two lines of story, so the hero keeps its height
+            info.classList.toggle('sxFeatLong', isLong(title, titleOf(item)));
+            title.textContent = titleOf(item);
+            const badges = [];
+            if (item.OfficialRating) badges.push(`<span class="sxBadge sxBadgeRating">${escapeHtml(item.OfficialRating)}</span>`);
+            (item.Genres || []).slice(0, 2).forEach((genre) => badges.push(`<span class="sxBadge">${escapeHtml(genre)}</span>`));
+            info.querySelector('.sxFeatBadges').innerHTML = badges.join('');
+            const meta = isEpisode(item)
+                ? [item.ParentIndexNumber != null && item.IndexNumber != null ? `S${item.ParentIndexNumber} · E${item.IndexNumber}` : null, item.Name]
+                : [item.Type === 'Series' ? 'Series' : 'Film', item.ProductionYear, ticksToRuntime(item.RunTimeTicks)];
+            const rating = item.CommunityRating ? `<span class="sxFeatStar">${icon('star')}${item.CommunityRating.toFixed(1)}</span>` : '';
+            info.querySelector('.sxFeatMeta').innerHTML = meta.filter(Boolean).map((m) => `<span>${escapeHtml(m)}</span>`).join('') + rating;
+            const percent = left ? Math.min(100, (position / item.RunTimeTicks) * 100) : 0;
+            info.querySelector('.sxFeatProgress').innerHTML = left
+                ? `<span class="sxFeatBar"><span style="width:${percent.toFixed(1)}%"></span></span>${escapeHtml(left)}`
+                : '';
+            info.querySelector('.sxFeatOverview').textContent = item.Overview || '';
+            const play = info.querySelector('.sxFeatPlay');
+            const playAttrs = { 'data-action': left ? 'resume' : 'play', 'data-id': item.Id, 'data-serverid': item.ServerId,
+                'data-type': item.Type, 'data-mediatype': item.MediaType || '', 'data-isfolder': String(!!item.IsFolder),
+                'data-positionticks': String(position) };
+            Object.entries(playAttrs).forEach(([name, value]) => play.setAttribute(name, value));
+            play.querySelector('span').textContent = left ? 'Resume' : 'Play';
+            const owner = ownerOf(item);
+            const more = info.querySelector('.sxFeatMore');
+            Object.entries({ 'data-id': owner.id, 'data-serverid': item.ServerId, 'data-type': owner.type,
+                'data-isfolder': String(owner.isFolder) }).forEach(([name, value]) => more.setAttribute(name, value));
+            loadFavourite(item);
+            renderFavourite(item);
+            // A short settle-in for the new title (skipped with reduced motion, see streamix.css). Switching
+            // between two copies of the keyframes restarts it without making the browser lay out the page.
+            info.classList.add('sxFeatSwap');
+            info.classList.toggle('sxFeatAlt');
+            showArt(item);
+        }
+
+        const cardHtml = (item, index) => `<button type="button" class="sxFeatCard itemAction" data-action="link" data-index="${index}" `
+            + `${attrsFor(item, ownerOf(item))} aria-label="${escapeHtml(titleOf(item))}">`
+            + `<img src="${thumbOf(item)}" alt="" decoding="async" loading="lazy">`
+            + `<span class="sxFeatCardTitle">${escapeHtml(titleOf(item))}</span></button>`;
+
+        const render = (list) => {
+            const keep = items[current] && list.findIndex((i) => i.Id === items[current].Id);
+            items = list;
+            current = -1;
+            shown = -1;
+            slot = 0;
+            clearTimeout(heroTimer);
+            const track = element.querySelector('.sxFeatTrack');
+            track.innerHTML = list.map(cardHtml).join('');
+            track.style.transform = '';
+            track.querySelectorAll('img').forEach((img) => {
+                if (img.complete) img.classList.add('loaded');
+                else img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+            });
+            element.classList.add('ready');
+            select(keep > 0 ? keep : 0, true);
+        };
+
+        // Lands on Play once the featured title is in, unless the remote has already moved
+        const claimFocus = () => {
+            const active = document.activeElement;
+            if (movedSinceShown || (active && element.contains(active))) return;
+            if (active && active.closest && active.closest('.sxRail')) return;
+            const play = element.querySelector('.sxFeatPlay');
+            if (play && play.offsetParent !== null) play.focus();
+        };
+
+        const place = (attempt = 0) => {
+            const tab = homeTab();
+            if (!tab) {
+                // The home page sets up its tab a moment after it's shown
+                if (attempt < 12 && document.querySelector('.mainAnimatedPage.homePage:not(.hide)')) {
+                    setTimeout(() => place(attempt + 1), 250);
+                }
+                return;
+            }
+            if (!element) build();
+            if (tab.firstElementChild !== element) tab.prepend(element);
+            const userId = api().getCurrentUserId();
+            const fresh = user === userId && Date.now() - loadedAt < REFRESH_MS;
+            if (fresh || loading) {
+                if (items.length) setTimeout(claimFocus, 0);
+                return;
+            }
+            if (user !== userId) {
+                favourites.clear();
+                signature = '';
+            }
+            user = userId;
+            loadedAt = Date.now();
+            loading = true;
+            loadFeatured(COUNT).then(async (list) => {
+                if (!list.length) {
+                    element.remove();
+                    signature = '';
+                    return;
+                }
+                // Nothing new (same titles, same progress): leave the carousel and where it's scrolled to alone
+                const next = list.map((item) => item.Id + ':' + ((item.UserData && item.UserData.PlaybackPositionTicks) || 0)).join();
+                if (next !== signature || !items.length) {
+                    signature = next;
+                    // The first picture is ready before the hero shows
+                    const first = new Image();
+                    first.src = backdropOf(list[0], 960);
+                    await first.decode().catch(() => {});
+                    render(list);
+                }
+                claimFocus();
+            }).catch(() => {
+                loadedAt = 0;
+            }).finally(() => {
+                loading = false;
+            });
+        };
+
+        return {
+            update: place,
+            // For the splash: the home screen isn't complete until its featured title is in
+            pending: () => !!document.querySelector('.mainAnimatedPage.homePage:not(.hide)') && (loading || !loadedAt),
+            focusTarget: () => (element && element.isConnected ? element.querySelector('.sxFeatPlay') : null)
+        };
+    })();
 
     // ---------------------------------------------------------------------------------------------
     // TV posters: "Continue Watching" and "Next Up" come as wide thumbnails; on a TV every row is posters.
@@ -1207,6 +1939,7 @@ if (isTv) {
         retileLibraries();
         phone.update();
         rail.update();
+        featured.update();
         posters.update();
         relabelSettingsMenu();
         setTimeout(relabelSettingsMenu, 300);
@@ -1250,7 +1983,8 @@ if (isTv) {
     const focusContent = () => {
         if (!isTv) return;
         const active = document.activeElement;
-        const inTopBar = active && active.closest && active.closest('.skinHeader');
+        // The top bar is a place the remote goes on purpose (▲); only a page that opened with focus there moves it
+        const inTopBar = !movedSinceShown && active && active.closest && active.closest('.skinHeader');
         const onToolbar = !movedSinceShown && active && active.closest
             && active.closest('.alphaPicker, .pageTabContent > .flex:first-child, .libraryPage > .flex:first-child');
         if (!inTopBar && !onToolbar && active && active !== document.body) return;
@@ -1258,7 +1992,7 @@ if (isTv) {
         // On pages with tabs, the visible tab: hidden tabs keep their cards in the page
         const scope = page && (page.querySelector('.pageTabContent.is-active') || page);
         const visible = (el) => el.offsetParent !== null;
-        const target = scope && ([...scope.querySelectorAll('.btnPlay:not(.hide), .btnResume:not(.hide)')].find(visible)
+        const target = scope && ([...scope.querySelectorAll('.sxFeatPlay, .btnPlay:not(.hide), .btnResume:not(.hide)')].find(visible)
             || [...scope.querySelectorAll('.card[data-id], a.listItem-border:not(.hide)')].find(visible));
         if (target) target.focus();
     };

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -109,7 +110,8 @@ fun StyledTextButton(
             .tvFocusScale(interactionSource),
         enabled = enabled,
         interactionSource = interactionSource,
-        shape = MaterialTheme.shapes.medium,
+        // Buttons are capsules throughout the app
+        shape = RoundedCornerShape(percent = 50),
         colors = ButtonDefaults.buttonColors(
             backgroundColor = if (focused) MaterialTheme.colors.primary else Color.White.copy(alpha = 0.12f),
             contentColor = if (focused) MaterialTheme.colors.onPrimary else Color.White,

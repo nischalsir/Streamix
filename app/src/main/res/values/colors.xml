@@ -1,26 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Brand and base colors: charcoal page, grey surfaces, one amber accent -->
-    <color name="jellyfin_primary">#282828</color>
-    <color name="jellyfin_primary_dark">#1F1F1F</color>
-    <!-- Accent: buttons, whatever is active or focused, progress -->
-    <color name="jellyfin_accent">#E5A00D</color>
-    <color name="streamix_on_accent">#141414</color>
-    <color name="streamix_surface">#282828</color>
-    <color name="streamix_text_secondary">#AAAAAA</color>
+    <!-- Brand and base colors, from the Streamix banner: indigo-black surfaces, the logo's violet as the accent -->
+    <color name="jellyfin_primary">#16132A</color>
+    <color name="jellyfin_primary_dark">#0E0C19</color>
+    <!-- Accent: where you are, progress, focus on artwork (the logo's middle stream) -->
+    <color name="jellyfin_accent">#7C5CFF</color>
+    <color name="streamix_accent_light">#A68BFF</color>
+    <color name="streamix_cyan">#45D4FF</color>
+    <color name="streamix_pink">#FF4F9A</color>
+    <color name="streamix_on_accent">#FFFFFF</color>
+    <color name="streamix_surface">#1E1A38</color>
+    <color name="streamix_text_secondary">#ABA6C8</color>
 
     <!-- Launcher icon background (legacy reference; adaptive icons use @drawable/ic_launcher_background) -->
     <color name="ic_launcher_background">#110F1C</color>
 
-    <!-- App colors. The same charcoal as the web UI, so the system splash, in-app splash and pages join
-         without a seam. -->
-    <color name="theme_background">#1F1F1F</color>
+    <!-- App colors. The same indigo-black as the web UI and the banner, so the system splash, in-app splash
+         and pages join without a seam. -->
+    <color name="theme_background">#0E0C19</color>
     <color name="playback_controls_background">#73000000</color>
-    <color name="playback_info_background">#E6282828</color>
+    <color name="playback_info_background">#E616132A</color>
     <color name="playback_timebar_unplayed">#33FFFFFF</color>
     <color name="playback_timebar_buffered">#59FFFFFF</color>
 
     <!-- Skip Media Segment Button -->
-    <color name="skip_media_segment_background">#E6282828</color>
+    <color name="skip_media_segment_background">#E616132A</color>
     <color name="skip_media_segment_text">#FFFFFF</color>
 </resources>

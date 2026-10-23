@@ -138,7 +138,7 @@
             app:bar_height="4dp"
             app:buffered_color="@color/playback_timebar_buffered"
             app:played_color="@color/jellyfin_accent"
-            app:scrubber_color="@color/jellyfin_accent"
+            app:scrubber_color="@android:color/white"
             app:scrubber_dragged_size="22dp"
             app:scrubber_enabled_size="14dp"
             app:unplayed_color="@color/playback_timebar_unplayed" />
