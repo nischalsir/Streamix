@@ -296,7 +296,16 @@ if (isTv) {
             const h1 = palette ? palette.hues[0] : 290;
             return { bg: rgb(0.15, 0.03, h1), wash: palette ? rgb(0.32, 0.07, h1) : rgb(0.3, 0.07, 290) };
         };
-        return { paletteOf, themeOf, shadeOf };
+        // A phone's page: 1.6's two glows (top left, bottom right) over a dark base, in the picture's tones
+        const ambientOf = (palette) => {
+            const h1 = palette.hues[0];
+            const h2 = palette.hues.length > 1 ? palette.hues[1] : (h1 + 40) % 360;
+            const c = Math.min(0.16, Math.max(0.06, palette.chroma * 1.4));
+            return `radial-gradient(90% 45% at 15% 0%, ${css(0.43, c, h1, 0.34)} 0%, ${css(0.43, c, h1, 0)} 66%), `
+                + `radial-gradient(90% 45% at 90% 100%, ${css(0.4, c * 0.9, h2, 0.26)} 0%, ${css(0.4, c * 0.9, h2, 0)} 66%), `
+                + `linear-gradient(180deg, ${css(0.19, 0.04, h1)} 0%, ${css(0.15, 0.03, h1)} 60%)`;
+        };
+        return { paletteOf, themeOf, shadeOf, ambientOf };
     })();
 
     // Backdrops: while browsing, the focused title's artwork fills the background, and a title's page sits
@@ -361,20 +370,78 @@ if (isTv) {
         let requested = null;
         let settled = false;
         let palette = null;
+        let heroPalette = null;
+        let waiting = false;
         let themeKey = '';
         let themed = false;
 
-        // The page's colours: the picture's on pages with a backdrop, the banner's (the stylesheet) elsewhere
-        const applyTheme = () => {
-            if (!isTv) return;
+        // Which colours the page wears: none (the stylesheet's banner colours) when it isn't themed; on a phone's
+        // Home, the hero slide on screen; otherwise the backdrop picture. undefined keeps what's on screen: a
+        // phone waiting for a title's picture, or a picture with no colour to give, holds the current colours.
+        const wanted = () => {
             const html = document.documentElement;
-            const vars = themed && palette ? artColours.themeOf(palette) : null;
+            if (!themed) return null;
+            if (isTv) return palette;
+            if (html.classList.contains('sx-home')) return heroPalette || undefined;
+            if (waiting) return undefined;
+            return palette || undefined;
+        };
+
+        // The page's colours: the picture's on pages with artwork, the banner's (the stylesheet) elsewhere
+        const applyTheme = () => {
+            const html = document.documentElement;
+            const colours = wanted();
+            if (colours === undefined) return;
+            const vars = colours ? artColours.themeOf(colours) : null;
             const key = vars ? JSON.stringify(vars) : '';
             if (key === themeKey) return;
             const old = themeKey ? Object.keys(JSON.parse(themeKey)) : [];
             themeKey = key;
             if (vars) Object.entries(vars).forEach(([name, value]) => html.style.setProperty(name, value));
             else old.forEach((name) => html.style.removeProperty(name));
+            html.classList.toggle('sx-themed', !!vars);
+        };
+
+        // Phones: Home's page colour, cross-faded between two layers as the hero moves on (the backdrop itself
+        // stays hidden while browsing on a phone). streamix.css shows it on a themed Home only.
+        let ambient = null;
+        let ambientLayers = [];
+        let ambientFront = 0;
+        let ambientKey = '';
+        const showAmbient = (colours) => {
+            if (isTv || !colours) return;
+            const container = document.querySelector('.backgroundContainer');
+            if (!container) return;
+            if (!ambient || ambient.parentElement !== container) {
+                ambient = document.createElement('div');
+                ambient.id = 'streamixAmbient';
+                ambientLayers = [document.createElement('div'), document.createElement('div')];
+                ambientLayers.forEach((layer) => {
+                    layer.className = 'saLayer';
+                    ambient.appendChild(layer);
+                });
+                container.prepend(ambient);
+                ambientKey = '';
+            }
+            const background = artColours.ambientOf(colours);
+            if (background === ambientKey) return;
+            ambientKey = background;
+            const back = 1 - ambientFront;
+            ambientLayers[back].style.background = background;
+            ambientLayers[back].classList.add('active');
+            ambientLayers[ambientFront].classList.remove('active');
+            ambientFront = back;
+        };
+
+        // Phones: each layer carries its own shade (1.6's title-page shade, in the picture's dark tone), so the
+        // picture and its shade fade in together
+        const shaded = (img, colours) => {
+            const { bg } = artColours.shadeOf(colours);
+            const tone = (alpha) => `rgba(${bg[0]}, ${bg[1]}, ${bg[2]}, ${alpha})`;
+            const shade = document.createElement('div');
+            shade.className = 'sbShade';
+            shade.style.background = `linear-gradient(180deg, ${tone(0.55)} 0%, ${tone(0.82)} 40%, ${tone(0.95)} 100%)`;
+            return [img.cloneNode(false), shade];
         };
 
         const ensureRoot = () => {
@@ -432,6 +499,10 @@ if (isTv) {
             const key = url && `${url}|${detail}`;
             if (!url || key === shownKey || !ensureRoot()) {
                 settled = true;
+                if (waiting) {
+                    waiting = false;
+                    applyTheme();
+                }
                 return;
             }
             requested = key;
@@ -444,14 +515,16 @@ if (isTv) {
                 try {
                     await img.decode();
                 } catch (e) {
+                    if (requested === key) waiting = false;
                     return;
                 }
-                entry = { img, palette: isTv ? artColours.paletteOf(img) : null };
+                entry = { img, palette: artColours.paletteOf(img) };
             }
             if (requested !== key) return; // focus moved on while this was loading
             remember(url, entry);
             const back = 1 - front;
-            layers[back].replaceChildren(BLUR ? blurred(entry.img, entry.palette, detail) : entry.img);
+            if (BLUR) layers[back].replaceChildren(blurred(entry.img, entry.palette, detail));
+            else layers[back].replaceChildren(...shaded(entry.img, entry.palette));
             layers[back].classList.add('active');
             layers[front].classList.remove('active');
             const old = layers[front];
@@ -463,6 +536,7 @@ if (isTv) {
             settled = true;
             // The page takes the picture's colours as it fades in
             palette = entry.palette;
+            waiting = false;
             applyTheme();
         };
 
@@ -473,6 +547,8 @@ if (isTv) {
             },
             async item(id) {
                 clearTimeout(timer);
+                // Until this title's picture is in, a phone keeps the colours it has
+                waiting = true;
                 show(await urlFor(id, null));
             },
             url(url) {
@@ -485,6 +561,13 @@ if (isTv) {
             // Pages with a backdrop wear its colours; others (settings, Live TV) the banner's
             theme(on) {
                 themed = on;
+                applyTheme();
+            },
+            // Phones: the colours of the hero slide on screen, for Home
+            useHeroColours(colours) {
+                if (!colours) return;
+                heroPalette = colours;
+                showAmbient(colours);
                 applyTheme();
             },
             settled() {
@@ -554,7 +637,8 @@ if (isTv) {
         root.classList.toggle('sx-home', !!page && page.classList.contains('homePage'));
         watchHeaderTabs();
         if (browsing || detail) backdrop.refresh();
-        backdrop.theme(browsing || detail);
+        // TVs wear the colours of the artwork behind any page with posters; phones of Home's hero and a title's page
+        backdrop.theme(isTv ? browsing || detail : detail || (!!page && page.classList.contains('homePage')));
         if (detail) {
             skipTextLinks();
             alignDetailRows();
@@ -621,7 +705,8 @@ if (isTv) {
         // Checked here too: the page-shown event can fire before this script is listening
         updateBrowseState();
         retileLibraries();
-        if (root.classList.contains('streamix-browse')) backdrop.focus(card);
+        // Phones never show a poster's backdrop (the hero carries the artwork), so they don't load one
+        if (isTv && root.classList.contains('streamix-browse')) backdrop.focus(card);
     });
 
     // Text fields: on a TV, landing on one pops the on-screen keyboard up, even when you were only moving
@@ -728,6 +813,21 @@ if (isTv) {
             });
         });
     };
+
+    // TV: the top bar stays on screen and gets a shade under it once the page has scrolled (see "Navigation,
+    // part 1" in streamix.css). Checked once a frame at most; the class only changes when crossing the top.
+    if (isTv) {
+        let scrollQueued = false;
+        window.addEventListener('scroll', () => {
+            if (scrollQueued) return;
+            scrollQueued = true;
+            requestAnimationFrame(() => {
+                scrollQueued = false;
+                const scrolled = window.scrollY > 8;
+                if (scrolled !== root.classList.contains('sx-scrolled')) root.classList.toggle('sx-scrolled', scrolled);
+            });
+        }, { passive: true });
+    }
 
     // Response on press (TV): OK marks the focused element for as long as it's held, so it answers the
     // moment the button goes down rather than when something opens (see "Feel" in streamix.css)
@@ -1070,6 +1170,37 @@ if (isTv) {
             hero.querySelectorAll('.sxHeroDots span').forEach((dot, i) => dot.classList.toggle('active', i === index));
         };
 
+        // Home's colours come from the slide on screen, once a swipe has settled (fast swipes only count where they
+        // stop). Each slide's colours are worked out once, from its picture, which is already loaded.
+        const slideColours = new Map();
+        let settleTimer = null;
+        const slideIndex = (track) => Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+        const colourFromSlide = () => {
+            const track = hero && hero.querySelector('.sxHeroTrack');
+            if (!track || !track.isConnected) return;
+            const index = slideIndex(track);
+            const slide = track.children[index];
+            const art = slide && slide.querySelector('.sxHeroArt');
+            const play = slide && slide.querySelector('.sxHeroPlay');
+            const id = play && play.getAttribute('data-id');
+            if (!art || !id) return;
+            if (slideColours.has(id)) {
+                backdrop.useHeroColours(slideColours.get(id));
+                return;
+            }
+            const measure = () => {
+                const colours = artColours.paletteOf(art);
+                slideColours.set(id, colours);
+                if (slideIndex(track) === index) backdrop.useHeroColours(colours);
+            };
+            if (art.complete && art.naturalWidth) measure();
+            else art.addEventListener('load', measure, { once: true });
+        };
+        const settleSoon = () => {
+            clearTimeout(settleTimer);
+            settleTimer = setTimeout(colourFromSlide, 150);
+        };
+
         // One hero element for every visit: an items container, so Jellyfin handles its buttons' play and
         // details actions. Its slides are refilled every so often.
         let heroLoading = false;
@@ -1080,7 +1211,10 @@ if (isTv) {
                 hero.setAttribute('data-multiselect', 'false');
                 hero.className = 'streamixHero';
                 // Scroll events don't bubble, but they can be caught on the way down
-                hero.addEventListener('scroll', () => requestAnimationFrame(updateDots), { passive: true, capture: true });
+                hero.addEventListener('scroll', () => {
+                    requestAnimationFrame(updateDots);
+                    settleSoon();
+                }, { passive: true, capture: true });
             }
             return hero;
         };
@@ -1098,6 +1232,8 @@ if (isTv) {
             const fresh = heroUser === userId && Date.now() - heroLoadedAt < HERO_REFRESH_MS;
             if (fresh || heroLoading) {
                 if (hero && hero.childElementCount && tab.firstElementChild !== hero) tab.prepend(hero);
+                // Back on Home: its colours come from the slide still on screen
+                if (hero && hero.childElementCount) colourFromSlide();
                 return;
             }
             heroUser = userId;
@@ -1115,8 +1251,12 @@ if (isTv) {
                 }
                 // Nothing new (same titles, same progress): leave the slides, and where they're swiped to, alone
                 const signature = items.map((item) => item.Id + ':' + ((item.UserData && item.UserData.PlaybackPositionTicks) || 0)).join();
-                if (signature === heroSignature && element.childElementCount) return;
+                if (signature === heroSignature && element.childElementCount) {
+                    colourFromSlide();
+                    return;
+                }
                 heroSignature = signature;
+                slideColours.clear();
                 // The first picture is ready before the hero shows, then each one fades in
                 const first = new Image();
                 first.src = backdropOf(items[0]);
@@ -1130,6 +1270,7 @@ if (isTv) {
                 const current = homeTab();
                 if (current && current.firstElementChild !== element) current.prepend(element);
                 updateDots();
+                colourFromSlide();
             }).catch(() => {
                 heroLoadedAt = 0;
             }).finally(() => {

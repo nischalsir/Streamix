@@ -419,6 +419,35 @@ html.streamix-tv .skinHeader:not(.osdHeader) {
     contain: layout style !important;
 }
 
+/* The bar stays on screen while the page scrolls. Jellyfin's TV layout puts its header in the page itself
+   (position: relative), so it scrolled away with the rows, taking the sections, search and profile with it.
+   Pages are absolutely positioned with their own room for the bar, so nothing moves when it's fixed. */
+html.streamix-tv.sx-rail .skinHeader:not(.osdHeader) {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+/* ...and once the page has scrolled (sx-scrolled, set by nativeshell.js), a shade in the page's colour fades in
+   under it, so rows pass beneath cleanly (opacity only; at the top the hero's picture shows through as before) */
+html.streamix-tv .skinHeader:not(.osdHeader)::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 -40px 0;
+    z-index: -1;
+    /* Nearly solid behind the bar and a page's tab row, whichever the header has, then a 40px fade */
+    background: linear-gradient(180deg, color-mix(in srgb, var(--sx-bg) 97%, transparent) 0%,
+        color-mix(in srgb, var(--sx-bg) 94%, transparent) calc(100% - 40px), color-mix(in srgb, var(--sx-bg) 0%, transparent) 100%);
+    opacity: 0;
+    transition: opacity var(--sx-fast) ease;
+    pointer-events: none;
+}
+
+html.streamix-tv.sx-scrolled .skinHeader:not(.osdHeader)::before {
+    opacity: 1;
+}
+
 html.streamix-tv .sxTopBar {
     display: none;
 }
@@ -2674,9 +2703,15 @@ html.streamix-mobile .itemDetailPage .itemBackdrop {
     padding-top: var(--sx-top);
 }
 
-/* Detail pages: the text runs full width on a phone, so the artwork darkens from the top down */
-html.streamix-mobile.streamix-detail #streamixBackdrop .sbScrim {
-    background: linear-gradient(180deg, rgba(14, 12, 25, 0.55) 0%, rgba(14, 12, 25, 0.82) 40%, rgba(14, 12, 25, 0.95) 100%);
+/* Detail pages: the text runs full width on a phone, so the artwork darkens from the top down. Each backdrop
+   layer carries that shade itself, in the picture's dark tone (nativeshell.js), so they fade in together. */
+html.streamix-mobile #streamixBackdrop .sbScrim {
+    display: none;
+}
+
+html.streamix-mobile #streamixBackdrop .sbShade {
+    position: absolute;
+    inset: 0;
 }
 
 /* Live TV on a phone: three channels across, the whole logo on a glass plate, the name underneath */
@@ -2942,6 +2977,56 @@ html.streamix-mobile .sxHeroDots span {
 html.streamix-mobile .sxHeroDots span.active {
     width: 18px;
     background: #fff;
+}
+
+/* Colours from the artwork: Home takes its colours from the hero slide on screen and a title's page from its
+   backdrop (nativeshell.js sets the --sx-* variables and html.sx-themed); every other page keeps the colours
+   above. Posters, their progress bars and text keep their own colours, so a change never repaints them. */
+
+/* Home's page colour: two layers in the slide's tones, cross-faded (opacity only) */
+html.streamix-mobile #streamixAmbient {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 450ms ease;
+}
+
+html.streamix-mobile.sx-themed.sx-home #streamixAmbient {
+    opacity: 1;
+}
+
+html.streamix-mobile #streamixAmbient .saLayer {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 700ms ease;
+}
+
+html.streamix-mobile #streamixAmbient .saLayer.active {
+    opacity: 1;
+}
+
+/* The glass (header capsule, tab bar, round buttons) and the server theme's accent take the title's tones */
+html.streamix-mobile.sx-themed {
+    --lg-tint: color-mix(in srgb, var(--sx-app) 58%, transparent) !important;
+    --lg-tint-strong: color-mix(in srgb, var(--sx-app) 72%, transparent) !important;
+    --atv-blue: var(--sx-accent) !important;
+}
+
+html.streamix-mobile.sx-themed .sxHeroBar > span {
+    background: var(--sx-progress);
+}
+
+html.streamix-mobile.sx-themed .streamixTabBar a.active {
+    background: var(--lg-fill-bright), var(--sx-accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.streamix-mobile #streamixAmbient,
+    html.streamix-mobile #streamixAmbient .saLayer {
+        transition: none;
+    }
 }
 
 /* Jellyfin's icon in its newer header (signed out) and at the top of the side menu: the Streamix mark */

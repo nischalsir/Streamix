@@ -21,7 +21,7 @@
 Streamix turns your Jellyfin server into a living-room app. Browsing uses the Jellyfin web interface in its
 TV layout with Streamix's own design on top: colours taken from the artwork on screen, a top bar of sections with
 search, a slim sidebar, a featured title over a carousel on the home screen, and title pages on blurred artwork
-(phones keep their touch layout). Video plays in a
+(phones keep their touch layout, in the same artwork colours). Video plays in a
 **native player**, so 4K HDR10 (HEVC 10-bit), Dolby Atmos and DTS play directly from the server without transcoding.
 
 It was built for a **TCL 43V6C (Google TV, 2 GB RAM)** and tuned so a budget TV stays smooth. The same APK
@@ -58,7 +58,7 @@ GitHub [@nischalsir](https://github.com/nischalsir) · nischalpandey.dev@gmail.c
 | **Animated splash** | Three colour streams glide in and merge into the Streamix play arrow, then it fades into your home screen once that has loaded (press OK to skip). |
 | **Updates itself** | Streamix checks GitHub for new releases, downloads the update and installs it, all from the TV. No USB drive needed after the first install. |
 | **Simple settings** | The TV shows only settings a viewer needs, in plain words. Technical options keep sensible defaults and stay reachable from a computer. |
-| **Phone layout too** | On a phone the same app opens a touch layout: artwork runs full screen under the status bar, the home screen starts with a swipeable hero of what you were watching and what's new (Resume / Play right there), a floating glass tab bar takes you to Home, Movies, Shows, Live TV and Search, and the screen runs at its full 90 / 120 Hz while you browse. |
+| **Phone layout too** | On a phone the same app opens a touch layout: artwork runs full screen under the status bar, the home screen starts with a swipeable hero of what you were watching and what's new (Resume / Play right there), a floating glass tab bar takes you to Home, Movies, Shows, Live TV and Search, and the screen runs at its full 90 / 120 Hz while you browse. Home takes its colours from the hero title you swipe to, and a title's page from its artwork, like the TV. |
 | **Everything else from Jellyfin** | TV guide and recordings, music, books, Quick Connect, multiple servers, playback speed, chapter skip, intro/outro skip, trickplay thumbnails. |
 
 ---
